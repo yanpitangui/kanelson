@@ -1,0 +1,59 @@
+﻿@page "/questions"
+@using Kanelson.Services
+@using global::Shared.Models
+@inject IQuestionService _service
+@inject NavigationManager Navigation
+
+@if (_questions is null)
+{
+    <h2>Carregando...</h2>
+}
+else
+{
+  
+    <MudTable Elevation="25" Items="_questions" >
+     <ToolBarContent>
+        <MudText Typo="Typo.h6">Perguntas</MudText>
+     </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Nome</MudTh>
+        <MudTh>Editar/Excluir</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Nome">@context.Name</MudTd>
+        <MudTd DataLabel="">
+            <MudFab @onclick="@(()=>EditQuestion(@context.Id))" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small" />
+            <MudFab @onclick="@(()=>DeleteQuestion(@context.Id))" Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small" />
+        </MudTd>
+    </RowTemplate>
+ </MudTable>
+}
+
+
+
+<button class="btn btn-primary" @onclick="@(()=>EditQuestion(null))">Criar pergunta</button>
+
+
+@code {
+
+    private IEnumerable<QuestionSummary>? _questions;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _questions = await _service.GetQuestions();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task DeleteQuestion(Guid id)
+    {
+        await _service.DeleteQuestion(id);
+        _questions = await _service.GetQuestions();
+
+    }
+
+    private void EditQuestion(Guid? id)
+    {
+        Navigation.NavigateTo($"question/{id}");
+    }
+
+}

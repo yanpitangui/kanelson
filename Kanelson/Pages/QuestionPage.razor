@@ -1,0 +1,203 @@
+﻿@page "/question/{Id:guid?}"
+@using global::Shared.Models
+@using Kanelson.Services
+@using FluentValidation
+@using Severity = MudBlazor.Severity
+@inject IQuestionService _service
+@inject NavigationManager Navigation
+@inject ISnackbar snackBar
+
+<MudCard Elevation="25">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Incluir/Editar perguntas</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudGrid>
+        <MudItem xs="12" sm="7">
+            <MudPaper Class="pa-4">
+                <MudForm @bind-IsValid="@valid" Model="@_question" Validation="@(_questionValidator.ValidateValue)"
+                         ValidationDelay="0">
+                    <MudCardContent>
+                        <MudTextField @bind-Value="_question.Name"
+                                      For="@(() => _question.Name)"
+                                      Immediate="true"
+                                      Label="Nome"/>
+
+                        <MudSelect Immediate="@true"
+                                   T="int" Required="true" For="@(() => _question.TimeLimit)"
+                                   Placeholder="Selecione" @bind-Value="_question.TimeLimit"
+                                   Label="Tempo para responder"
+                                   Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                            @foreach (var tempo in _tempos)
+                            {
+                                <MudSelectItem T="int" Value="@tempo">@tempo seg.</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudSelect Immediate="@true" T="QuestionType"  For="@(() => _question.Type)" 
+                                   Required="true" Placeholder="Selecione" @bind-Value="_question.Type" Label="Tipo"
+                                   Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                            @foreach (QuestionType item in Enum.GetValues<QuestionType>())
+                            {
+                                <MudSelectItem Value="@item">@item.GetDescription()</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudSelect Immediate="@true" T="int" For="@(() => _question.Points)" Required="true" 
+                                   Placeholder="Selecione" @bind-Value="_question.Points" Label="Pontos"
+                                   Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                            <MudSelectItem Value="0">0 pts</MudSelectItem>
+                            <MudSelectItem Value="1000">1000 pts</MudSelectItem>
+                            <MudSelectItem Value="2000">2000 pts</MudSelectItem>
+                        </MudSelect>
+                    </MudCardContent>
+                    <MudCardContent Class="pa-0">
+                        <MudTable Items="@_question.Answers" Hover="true" Breakpoint="Breakpoint.None" Dense="@true" Elevation="0">
+                    		    <HeaderContent>
+                                    <MudTh>Descrição</MudTh>
+                                    <MudTh><MudFab @onclick="AddAnswer"
+                                           Color="Color.Secondary" Icon="@Icons.Material.Filled.Add" 
+                                           Size="Size.Small" IconSize="Size.Small" /></MudTh>
+                    		    </HeaderContent>
+                            <RowTemplate>
+                                    <MudTd DataLabel="Descrição">
+                                        <MudTextField Label="Descrição da resposta" Immediate="@true"
+                                                      @bind-Value="@context.Descricao"
+                                                      For="@(() => context.Descricao)"/>
+    
+                                    </MudTd>
+                                    <MudTd DataLabel="Correto">
+                                        <MudCheckBox @bind-Checked="@context.Correct" @bind-Value="@context.Correct"
+                                                     For="@(() => context.Correct)"
+                                                     Label="Correto" Color="Color.Primary"></MudCheckBox>
+    
+                                    </MudTd>
+                                    <MudTd DataLabel="Excluir">
+                                        <MudFab @onclick="@(() => DeleteAnswer(@context))"
+                                                Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete"
+                                                Size="Size.Small" IconSize="Size.Small"/>
+    
+                                    </MudTd>
+                            </RowTemplate>
+                            </MudTable>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!valid)" OnClick="SaveQuestion"
+                                   Class="ml-auto">
+                            Salvar
+                        </MudButton>
+                    </MudCardActions>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+</MudCard>
+
+
+@code {
+
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    private Question _question = new();
+
+    private static int[] _tempos = new[] {5, 10, 20, 30, 60, 90, 120, 240};
+
+    private readonly QuestionValidator _questionValidator = new QuestionValidator();
+    private static readonly AnswerValidator _answerValidator = new AnswerValidator();
+
+    bool valid;
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            if (Id is null)
+            {
+                _question = new Question();
+            }
+            else
+            {
+                _question = await _service.GetQuestion(Id!.Value);
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task SaveQuestion()
+    {
+        await _service.SaveQuestion(_question!);
+        snackBar.Add("Pergunta salva com sucesso.", Severity.Success);
+        Navigation.NavigateTo("questions");
+    }
+
+    private void DeleteAnswer(Answer answer)
+    {
+        _question.Answers.Remove(answer);
+    }
+
+    private void AddAnswer()
+    {
+        _question.Answers.Add(new Answer());
+    }
+
+
+    public class QuestionValidator : AbstractValidator<Question>
+    {
+        public QuestionValidator()
+        {
+            RuleFor(x => x.Name)
+                .NotEmpty()
+                .MaximumLength(120)
+                .MinimumLength(5);
+
+            RuleFor(x => x.TimeLimit)
+                .GreaterThanOrEqualTo(5)
+                .LessThanOrEqualTo(120);
+
+            RuleFor(x => x.Points)
+                .GreaterThanOrEqualTo(0)
+                .LessThanOrEqualTo(2000);
+
+            RuleFor(x => x.Type)
+                .IsInEnum();
+
+            RuleFor(x => x.Answers)
+                .Must(x => x.Count >= 2)
+                .WithMessage("Pergunta deve conter no mínimo duas respostas.");
+            
+            RuleForEach(x => x.Answers)
+                .SetValidator(_answerValidator);
+        }
+        
+        public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
+        {
+            var result = await ValidateAsync(ValidationContext<Question>.CreateWithOptions((Question) model, x => x.IncludeProperties(propertyName)));
+            if (result.IsValid)
+                return Array.Empty<string>();
+            return result.Errors.Select(e => e.ErrorMessage);
+        };
+    }
+    
+    public class AnswerValidator : AbstractValidator<Answer>
+    {
+        public AnswerValidator()
+        {
+            RuleFor(x => x.Descricao)
+                .NotEmpty()
+                .MaximumLength(75)
+                .MinimumLength(1);
+        }
+        
+        public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
+        {
+            var result = await ValidateAsync(ValidationContext<Answer>.CreateWithOptions((Answer) model, x => x.IncludeProperties(propertyName)));
+            if (result.IsValid)
+                return Array.Empty<string>();
+            return result.Errors.Select(e => e.ErrorMessage);
+        };
+    }
+
+}

@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using Kanelson.Grains;
 using Kanelson.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using MudBlazor.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -21,11 +23,29 @@ var logger = ConfigureBaseLogging()
 builder.Logging.AddSerilog(logger);
 
 // Add services to the container.
+builder.Services.AddAuthentication(o =>
+    {
+        o.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    })
+    .AddCookie(o =>
+    {
+        o.LoginPath = "/signin";
+        o.LogoutPath = "/signout";
+    })
+    .AddGitHub(o =>
+    {
+        o.ClientId = builder.Configuration.GetRequiredSection("GithubAuth")["ClientId"]!;
+        o.ClientSecret = builder.Configuration.GetRequiredSection("GithubAuth")["ClientSecret"]!;
+        o.CallbackPath = "/signin-github";
+        o.Scope.Add("read:user");
+    });
+builder.Services.AddOptions();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<GameService>();
 builder.Services.AddSingleton<IQuestionService, QuestionService>();
 builder.Services.AddMudServices();
+
 
 builder.Host.UseOrleans(siloBuilder =>
 {
@@ -61,14 +81,20 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
 app.UseRouting();
 
+app.MapControllers();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
+
+app.UseAuthentication();
+app.UseAuthorization();
+
 
 app.Run();
 

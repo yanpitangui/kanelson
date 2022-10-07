@@ -1,7 +1,6 @@
 ﻿@page "/question/{Id:guid?}"
 @using global::Shared.Models
 @using Kanelson.Services
-@using FluentValidation
 @using Severity = MudBlazor.Severity
 @inject IQuestionService _service
 @inject NavigationManager Navigation
@@ -16,7 +15,7 @@
     <MudGrid>
         <MudItem xs="12" sm="7">
             <MudPaper Class="pa-4">
-                <MudForm @bind-IsValid="@valid" Model="@_question" Validation="@(_questionValidator.ValidateValue)"
+                <MudForm @ref="@form" @bind-IsValid="@valid" Model="@_question"
                          ValidationDelay="0">
                     <MudCardContent>
                         <MudTextField @bind-Value="_question.Name"
@@ -34,7 +33,7 @@
                                 <MudSelectItem T="int" Value="@tempo">@tempo seg.</MudSelectItem>
                             }
                         </MudSelect>
-                        <MudSelect Immediate="@true" T="QuestionType"  For="@(() => _question.Type)" 
+                        <MudSelect Immediate="@true" T="QuestionType"  For="@(() => _question.Type)"
                                    Required="true" Placeholder="Selecione" @bind-Value="_question.Type" Label="Tipo"
                                    Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
                             @foreach (QuestionType item in Enum.GetValues<QuestionType>())
@@ -63,25 +62,25 @@
                                         <MudTextField Label="Descrição da resposta" Immediate="@true"
                                                       @bind-Value="@context.Descricao"
                                                       For="@(() => context.Descricao)"/>
-    
+
                                     </MudTd>
                                     <MudTd DataLabel="Correto">
                                         <MudCheckBox @bind-Checked="@context.Correct" @bind-Value="@context.Correct"
                                                      For="@(() => context.Correct)"
                                                      Label="Correto" Color="Color.Primary"></MudCheckBox>
-    
+
                                     </MudTd>
                                     <MudTd DataLabel="Excluir">
                                         <MudFab @onclick="@(() => DeleteAnswer(@context))"
                                                 Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete"
                                                 Size="Size.Small" IconSize="Size.Small"/>
-    
+
                                     </MudTd>
                             </RowTemplate>
                             </MudTable>
                     </MudCardContent>
                     <MudCardActions>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!valid)" OnClick="SaveQuestion"
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveQuestion"
                                    Class="ml-auto">
                             Salvar
                         </MudButton>
@@ -102,9 +101,10 @@
     private Question _question = new();
 
     private static int[] _tempos = new[] {5, 10, 20, 30, 60, 90, 120, 240};
+    
+    
+    MudForm form;
 
-    private readonly QuestionValidator _questionValidator = new QuestionValidator();
-    private static readonly AnswerValidator _answerValidator = new AnswerValidator();
 
     bool valid;
 
@@ -128,9 +128,14 @@
 
     private async Task SaveQuestion()
     {
-        await _service.SaveQuestion(_question!);
-        snackBar.Add("Pergunta salva com sucesso.", Severity.Success);
-        Navigation.NavigateTo("questions");
+        await form.Validate();
+
+        if (form.IsValid)
+        {
+            await _service.SaveQuestion(_question!);
+            snackBar.Add("Pergunta salva com sucesso.", Severity.Success);
+            Navigation.NavigateTo("questions");
+        }
     }
 
     private void DeleteAnswer(Answer answer)
@@ -144,60 +149,5 @@
     }
 
 
-    public class QuestionValidator : AbstractValidator<Question>
-    {
-        public QuestionValidator()
-        {
-            RuleFor(x => x.Name)
-                .NotEmpty()
-                .MaximumLength(120)
-                .MinimumLength(5);
-
-            RuleFor(x => x.TimeLimit)
-                .GreaterThanOrEqualTo(5)
-                .LessThanOrEqualTo(120);
-
-            RuleFor(x => x.Points)
-                .GreaterThanOrEqualTo(0)
-                .LessThanOrEqualTo(2000);
-
-            RuleFor(x => x.Type)
-                .IsInEnum();
-
-            RuleFor(x => x.Answers)
-                .Must(x => x.Count >= 2)
-                .WithMessage("Pergunta deve conter no mínimo duas respostas.");
-            
-            RuleForEach(x => x.Answers)
-                .SetValidator(_answerValidator);
-        }
-        
-        public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
-        {
-            var result = await ValidateAsync(ValidationContext<Question>.CreateWithOptions((Question) model, x => x.IncludeProperties(propertyName)));
-            if (result.IsValid)
-                return Array.Empty<string>();
-            return result.Errors.Select(e => e.ErrorMessage);
-        };
-    }
-    
-    public class AnswerValidator : AbstractValidator<Answer>
-    {
-        public AnswerValidator()
-        {
-            RuleFor(x => x.Descricao)
-                .NotEmpty()
-                .MaximumLength(75)
-                .MinimumLength(1);
-        }
-        
-        public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
-        {
-            var result = await ValidateAsync(ValidationContext<Answer>.CreateWithOptions((Answer) model, x => x.IncludeProperties(propertyName)));
-            if (result.IsValid)
-                return Array.Empty<string>();
-            return result.Errors.Select(e => e.ErrorMessage);
-        };
-    }
 
 }

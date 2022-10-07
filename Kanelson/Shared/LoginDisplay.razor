@@ -1,6 +1,7 @@
-﻿<AuthorizeView>
+﻿@using System.Security.Claims
+<AuthorizeView>
     <Authorized>
-        Hello, @context.User.Identity?.Name!
+        Hello, @context.User.Identity?.Name! - @context.User.FindFirstValue(ClaimTypes.NameIdentifier)
         <form method="post" action="signout">
             <button type="submit" class="nav-link btn btn-link">Log out</button>
         </form>

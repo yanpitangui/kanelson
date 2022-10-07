@@ -1,4 +1,5 @@
-﻿using FluentValidation.Results;
+﻿using System.Security.Claims;
+using FluentValidation.Results;
 using Orleans;
 using Shared;
 using Shared.Models;
@@ -8,10 +9,11 @@ namespace Kanelson.Services;
 public class QuestionService : IQuestionService
 {
     private readonly IGrainFactory _grainFactory;
-    private static Guid _currentUser = new("509db63c-22f9-468b-94a5-2ed50f5663a3");
+    private readonly string _currentUser;
 
-    public QuestionService(IGrainFactory grainFactory)
+    public QuestionService(IGrainFactory grainFactory, IHttpContextAccessor httpContextAccessor)
     {
+        _currentUser = httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         _grainFactory = grainFactory;
     }
 

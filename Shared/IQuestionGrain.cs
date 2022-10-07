@@ -3,7 +3,7 @@ using Shared.Models;
 
 namespace Shared;
 
-public interface IQuestionGrain : IGrainWithGuidKey
+public interface IQuestionGrain : IGrainWithStringKey
 {
 
     public Task SaveQuestion(Question question);

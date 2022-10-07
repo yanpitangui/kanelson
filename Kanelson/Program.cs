@@ -42,9 +42,10 @@ builder.Services.AddAuthentication(o =>
 builder.Services.AddOptions();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<GameService>();
-builder.Services.AddSingleton<IQuestionService, QuestionService>();
+builder.Services.AddScoped<GameService>();
+builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddMudServices();
+builder.Services.AddHttpContextAccessor();
 
 
 builder.Host.UseOrleans(siloBuilder =>

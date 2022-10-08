@@ -14,7 +14,7 @@ public class GameService
 
     public async Task<Guid> CreateGame(string name)
     {
-        var grain = _grainFactory.GetGrain<IGameGrain>(Guid.NewGuid());
+        var grain = _grainFactory.GetGrain<IRoomGrain>(Guid.NewGuid());
         await grain.SetName(name);
         return grain.GetPrimaryKey();
     }

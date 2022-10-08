@@ -2,7 +2,7 @@
 
 namespace Shared;
 
-public interface IGameGrain : IGrainWithGuidKey
+public interface IRoomGrain : IGrainWithGuidKey
 {
     public Task SetName(string name);
 }

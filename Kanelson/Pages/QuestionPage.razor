@@ -34,7 +34,9 @@
                             }
                         </MudSelect>
                         <MudSelect Immediate="@true" T="QuestionType"  For="@(() => _question.Type)"
-                                   Required="true" Placeholder="Selecione" @bind-Value="_question.Type" Label="Tipo"
+                                   ValueExpression="@(()=>_question.Type)" Value="_question.Type" 
+                                   ValueChanged="@((QuestionType value) => SelectedValueChange(value))"
+                                   Required="true" Placeholder="Selecione" Label="Tipo"
                                    Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
                             @foreach (QuestionType item in Enum.GetValues<QuestionType>())
                             {
@@ -50,18 +52,19 @@
                         </MudSelect>
                     </MudCardContent>
                     <MudCardContent Class="pa-0">
-                        <MudTable Items="@_question.Answers" Comparer="_comparer" Hover="true" Breakpoint="Breakpoint.None" Dense="@true" Elevation="0">
+                        <MudTable Items="@_question.Answers"  Comparer="_comparer" Hover="true" Breakpoint="Breakpoint.None" Dense="@true" Elevation="0">
                     		    <HeaderContent>
-                                    <MudTh>Descrição</MudTh>
-                                    <MudTh><MudFab @onclick="AddAnswer"
+                                    <MudTh>Respostas</MudTh>
+                                    <MudTh><MudFab @onclick="AddAnswer" Disabled="_question.Type == QuestionType.TrueFalse"
                                            Color="Color.Secondary" Icon="@Icons.Material.Filled.Add" 
                                            Size="Size.Small" IconSize="Size.Small" /></MudTh>
                     		    </HeaderContent>
                             <RowTemplate>
                                     <MudTd DataLabel="Descrição">
-                                        <MudTextField Label="Descrição da resposta" Immediate="@true"
-                                                      @bind-Value="@context.Descricao"
-                                                      For="@(() => context.Descricao)"/>
+                                        <MudTextField Label="Descrição da resposta" Immediate="@true" 
+                                                      Disabled="_question.Type == QuestionType.TrueFalse"
+                                                      @bind-Value="@context.Description"
+                                                      For="@(() => context.Description)"/>
 
                                     </MudTd>
                                     <MudTd DataLabel="Correto">
@@ -72,6 +75,7 @@
                                     </MudTd>
                                     <MudTd DataLabel="Excluir">
                                         <MudFab @onclick="@(() => DeleteAnswer(@context))"
+                                                Disabled="_question.Type == QuestionType.TrueFalse"
                                                 Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete"
                                                 Size="Size.Small" IconSize="Size.Small"/>
 
@@ -110,7 +114,27 @@
 
     bool valid;
 
+    internal void SelectedValueChange(QuestionType value)
+    {
+        _question.Type = value;
 
+        if (value == QuestionType.TrueFalse)
+        {
+            _question.Answers.Clear();
+            _question.Answers.Add(new Answer
+            {
+                Description = "Verdadeiro",
+                Correct = true
+            });
+            
+            _question.Answers.Add(new Answer
+            {
+                Description = "Falso",
+                Correct = false
+            });
+        }
+    }
+    
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);

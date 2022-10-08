@@ -65,7 +65,7 @@ builder.Host.UseOrleans(siloBuilder =>
 
     siloBuilder.ConfigureApplicationParts(parts =>
     {
-        parts.AddApplicationPart(typeof(GameGrain).Assembly).WithReferences();
+        parts.AddApplicationPart(typeof(RoomGrain).Assembly).WithReferences();
     });
     
     

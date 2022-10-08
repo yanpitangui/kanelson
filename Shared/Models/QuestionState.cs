@@ -24,7 +24,19 @@ public record Question
 
     public int Points { get; set; } = 1000;
     
-    public List<Answer> Answers { get; set; } = new();
+    public List<Answer> Answers { get; set; } = new()
+    {
+        new Answer
+        {
+            Correct = true,
+            Description = "Verdadeiro"
+        },
+        new Answer
+        {
+            Correct = false,
+            Description = "Falso"
+        }
+    };
     
     public QuestionType Type { get; set; }
 }
@@ -38,7 +50,7 @@ public class AnswerComparer : IEqualityComparer<Answer>
 public record Answer
 {
     public Guid Id { get; set; } = Guid.NewGuid();
-    public string Descricao { get; set; } = null!;
+    public string Description { get; set; } = null!;
     
     public bool Correct { get; set; }
 }

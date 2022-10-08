@@ -1,7 +1,7 @@
 ﻿namespace Shared.Models;
 
 [Serializable]
-public record GameState
+public record RoomState
 {
     public string Name { get; set; } = null!;
 

@@ -50,7 +50,7 @@
                         </MudSelect>
                     </MudCardContent>
                     <MudCardContent Class="pa-0">
-                        <MudTable Items="@_question.Answers" Hover="true" Breakpoint="Breakpoint.None" Dense="@true" Elevation="0">
+                        <MudTable Items="@_question.Answers" Comparer="_comparer" Hover="true" Breakpoint="Breakpoint.None" Dense="@true" Elevation="0">
                     		    <HeaderContent>
                                     <MudTh>Descrição</MudTh>
                                     <MudTh><MudFab @onclick="AddAnswer"
@@ -99,6 +99,8 @@
     public Guid? Id { get; set; }
 
     private Question _question = new();
+    
+    private AnswerComparer _comparer = new();
 
     private static int[] _tempos = new[] {5, 10, 20, 30, 60, 90, 120, 240};
     
@@ -134,7 +136,7 @@
         {
             await _service.SaveQuestion(_question!);
             snackBar.Add("Pergunta salva com sucesso.", Severity.Success);
-            Navigation.NavigateTo("questions");
+            Navigation.NavigateTo("questions", forceLoad:true);
         }
     }
 

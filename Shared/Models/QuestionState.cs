@@ -29,6 +29,12 @@ public record Question
     public QuestionType Type { get; set; }
 }
 
+public class AnswerComparer : IEqualityComparer<Answer>
+{
+    public bool Equals(Answer? a, Answer? b) => a?.Id == b?.Id;
+    public int GetHashCode(Answer x) => HashCode.Combine(x?.Id);
+}
+
 public record Answer
 {
     public Guid Id { get; set; } = Guid.NewGuid();

@@ -1,6 +1,7 @@
 ﻿using Orleans;
 using Orleans.Runtime;
 using Shared;
+using Shared.Grains;
 using Shared.Models;
 
 namespace Kanelson.Grains;

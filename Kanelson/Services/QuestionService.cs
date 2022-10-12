@@ -1,7 +1,7 @@
 ﻿using System.Security.Claims;
 using FluentValidation.Results;
 using Orleans;
-using Shared;
+using Shared.Grains;
 using Shared.Models;
 
 namespace Kanelson.Services;

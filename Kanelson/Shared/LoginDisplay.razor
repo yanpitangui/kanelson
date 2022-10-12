@@ -1,7 +1,9 @@
 ﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Rendering
 <AuthorizeView>
     <Authorized>
-        Hello, @context.User.Identity?.Name! - @context.User.FindFirstValue(ClaimTypes.NameIdentifier)
+
+        @Avatar(@context.User.FindFirstValue(ClaimTypes.NameIdentifier)!) @context.User.Identity?.Name! 
         <form method="post" action="signout">
             <button type="submit" class="nav-link btn btn-link">Log out</button>
         </form>
@@ -10,3 +12,13 @@
         <a href="signin">Log in</a>
     </NotAuthorized>
 </AuthorizeView>
+
+@code {
+
+
+    RenderFragment Avatar(string nameIdentifier)
+    {
+        var url = $"https://avatars.githubusercontent.com/u/{nameIdentifier}";
+        return @<MudAvatar Class="user-avatar" Image="@url"/>;
+    }
+}

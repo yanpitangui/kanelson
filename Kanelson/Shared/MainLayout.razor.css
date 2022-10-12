@@ -26,6 +26,10 @@ main {
     margin-left: 1.5rem;
 }
 
+.user-avatar {
+    margin-right: 5px;
+}
+
 .top-row a:first-child {
     overflow: hidden;
     text-overflow: ellipsis;

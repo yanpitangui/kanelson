@@ -1,7 +1,7 @@
 ﻿using Orleans;
 using Shared.Models;
 
-namespace Shared;
+namespace Shared.Grains;
 
 public interface IQuestionGrain : IGrainWithStringKey
 {

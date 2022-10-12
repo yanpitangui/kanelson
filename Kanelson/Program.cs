@@ -1,7 +1,8 @@
-using System.Security.Claims;
+using Kanelson;
 using Kanelson.Grains;
 using Kanelson.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.ResponseCompression;
 using MudBlazor.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -46,6 +47,11 @@ builder.Services.AddScoped<GameService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddMudServices();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddResponseCompression(opts =>
+{
+    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+        new[] { "application/octet-stream" });
+});
 
 
 builder.Host.UseOrleans(siloBuilder =>
@@ -65,7 +71,7 @@ builder.Host.UseOrleans(siloBuilder =>
 
     siloBuilder.ConfigureApplicationParts(parts =>
     {
-        parts.AddApplicationPart(typeof(RoomGrain).Assembly).WithReferences();
+        parts.AddApplicationPart(typeof(GameGrain).Assembly).WithReferences();
     });
     
     
@@ -73,6 +79,8 @@ builder.Host.UseOrleans(siloBuilder =>
 
 
 var app = builder.Build();
+
+app.UseResponseCompression();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -92,9 +100,10 @@ app.UseRouting();
 app.MapControllers();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
-
+app.MapHub<GameHub>("/gameHub");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseWebSockets();
 
 
 app.Run();

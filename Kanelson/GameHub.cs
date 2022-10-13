@@ -13,9 +13,12 @@ public class GameHub : Hub
 
 
 
-    public async Task StartGame(Guid id)
+    public async Task Join(Guid id)
     {
-        await _gameService.StartGame(id);
+        if (await _gameService.JoinGame(id))
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, id.ToString());
+        }
     }
     
 }

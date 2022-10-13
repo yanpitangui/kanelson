@@ -19,6 +19,6 @@
     RenderFragment Avatar(string nameIdentifier)
     {
         var url = $"https://avatars.githubusercontent.com/u/{nameIdentifier}";
-        return @<MudAvatar Class="user-avatar" Image="@url"/>;
+        return @<MudAvatar Style="margin-right: 5px" Image="@url"/>;
     }
 }

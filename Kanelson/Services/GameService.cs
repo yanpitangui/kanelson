@@ -61,7 +61,9 @@ public class GameService : IGameService
         }
     }
     
-    public async Task GetLastRoundScore(Guid roomId) {}
+    public async Task GetLastRoundScore(Guid roomId) {
+         
+    }
 }
 
 public interface IGameService

@@ -49,7 +49,8 @@ builder.Services.AddAuthentication(o =>
             var user = context.Principal;
             var factory = context.HttpContext.RequestServices.GetRequiredService<IGrainFactory>();
             var userGrain = factory.GetGrain<IUserManagerGrain>(0);
-            await userGrain.Upsert(user.FindFirstValue(ClaimTypes.NameIdentifier), ClaimTypes.Name);
+            await userGrain.Upsert(user.FindFirstValue(ClaimTypes.NameIdentifier), 
+                user.FindFirstValue(ClaimTypes.Name));
         };
     });
 builder.Services.AddOptions();

@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Kanelson;
 using Kanelson.Grains;
 using Kanelson.Services;
@@ -12,6 +13,7 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Exceptions;
 using Serilog.Sinks.SystemConsole.Themes;
+using Shared.Grains;
 
 var builder = WebApplication.CreateBuilder(args);
 // remove default logging providers
@@ -39,6 +41,16 @@ builder.Services.AddAuthentication(o =>
         o.ClientSecret = builder.Configuration.GetRequiredSection("GithubAuth")["ClientSecret"]!;
         o.CallbackPath = "/signin-github";
         o.Scope.Add("read:user");
+
+        
+        // Atualiza as informações do usuário quando ele faz login com sucesso.
+        o.Events.OnCreatingTicket = async (context) =>
+        {
+            var user = context.Principal;
+            var factory = context.HttpContext.RequestServices.GetRequiredService<IGrainFactory>();
+            var userGrain = factory.GetGrain<IUserManagerGrain>(0);
+            await userGrain.Upsert(user.FindFirstValue(ClaimTypes.NameIdentifier), ClaimTypes.Name);
+        };
     });
 builder.Services.AddOptions();
 builder.Services.AddRazorPages();

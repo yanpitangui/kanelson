@@ -1,13 +1,14 @@
 ﻿using Orleans;
 using Shared.Models;
 
-namespace Shared.Grains;
+namespace Shared.Grains.Questions;
 
 public interface IQuestionGrain : IGrainWithStringKey
 {
 
     public Task SaveQuestion(Question question);
-    public Task<List<QuestionSummary>> GetQuestions();
+    public Task<ImmutableArray<QuestionSummary>> GetQuestionsSummary();
     public Task<bool> DeleteQuestion(Guid id);
     Task<Question?> GetQuestion(Guid id);
+    Task<ImmutableArray<Question>> GetQuestions();
 }

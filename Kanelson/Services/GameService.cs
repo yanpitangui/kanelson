@@ -1,74 +1,96 @@
-﻿using System.Security.Claims;
+﻿using System.Buffers;
+using System.Collections.Immutable;
+using System.Security.Claims;
 using Orleans;
 using Shared.Grains;
+using Shared.Grains.Games;
+using Shared.Models;
 
 namespace Kanelson.Services;
 
 public class GameService : IGameService
 {
-    private readonly IGrainFactory _grainFactory;
+    private readonly IGrainFactory _client;
     private readonly string _currentUser;
 
 
-    public GameService(IGrainFactory grainFactory, IHttpContextAccessor httpContextAccessor)
+    public GameService(IGrainFactory client, IHttpContextAccessor httpContextAccessor)
     {
         _currentUser = httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        _grainFactory = grainFactory;
+        _client = client;
     }
 
-    public async Task<Guid> CreateGame(string name)
+    public async Task UpsertGame(Game game)
     {
-        var manager = _grainFactory.GetGrain<IGameManagerGrain>(0);
-        var game = _grainFactory.GetGrain<IGameGrain>(Guid.NewGuid());
-        await game.SetBase(name, _currentUser);
-        await manager.RegisterGame(game.GetPrimaryKey());
-        return game.GetPrimaryKey();
+        var manager = _client.GetGrain<IGameManagerGrain>(_currentUser);
+        var gameGrain = _client.GetGrain<IGameGrain>(game.Id);
+        await gameGrain.SetBase(game, _currentUser);
+        await manager.RegisterAsync(gameGrain.GetPrimaryKey());
     }
 
-    public async Task<bool> JoinGame(Guid id)
+    public async Task<ImmutableArray<GameSummary>> GetGames()
     {
-        var manager = _grainFactory.GetGrain<IGameManagerGrain>(0);
-        if (await manager.RoomExists(id))
+        var manager = _client.GetGrain<IGameManagerGrain>(_currentUser);
+        var keys = await manager.GetAllAsync();
+        // fan out to get the individual items from the cluster in parallel
+        var tasks = ArrayPool<Task<GameSummary>>.Shared.Rent(keys.Length);
+        try
         {
-            var game = _grainFactory.GetGrain<IGameGrain>(id);
-            await game.JoinGame(_currentUser);
-            return true;
-        }
-
-        return false;
-    }
-
-    public async Task GetCurrentQuestion(Guid id)
-    {
-        
-    }
-
-    public async Task AnswerQuestion(Guid roomId, Guid answerId)
-    {
-        
-    }
-
-    public async Task StartGame(Guid id)
-    {
-        var manager = _grainFactory.GetGrain<IGameManagerGrain>(0);
-        if (await manager.RoomExists(id))
-        {
-            var game = _grainFactory.GetGrain<IGameGrain>(id);
-            if (await game.GetOwner() == _currentUser)
+            // issue all individual requests at the same time
+            for (var i = 0; i < keys.Length; ++i)
             {
-                await game.Start();
+                tasks[i] = _client.GetGrain<IGameGrain>(keys[i]).GetSummary();
             }
+
+            // build the result as requests complete
+            var result = ImmutableArray.CreateBuilder<GameSummary>(keys.Length);
+            for (var i = 0; i < keys.Length; ++i)
+            {
+                var item = await tasks[i];
+                
+                result.Add(item);
+            }
+            return result.ToImmutableArray();
+        }
+        finally
+        {
+            ArrayPool<Task<GameSummary>>.Shared.Return(tasks);
         }
     }
-    
-    public async Task GetLastRoundScore(Guid roomId) {
-         
+
+    public async Task<Game> GetGame(Guid id)
+    {
+        var manager = _client.GetGrain<IGameManagerGrain>(_currentUser);
+        var games = await manager.GetAllAsync();
+        if (!games.Contains(id))
+        {
+            throw new KeyNotFoundException();
+        }
+
+        return await _client.GetGrain<IGameGrain>(id).GetGame();
+    }
+
+    public async Task DeleteGame(Guid id)
+    {
+        var manager = _client.GetGrain<IGameManagerGrain>(_currentUser);
+        var games = await manager.GetAllAsync();
+        if (!games.Contains(id))
+        {
+            throw new KeyNotFoundException();
+        }
+
+        var grain = _client.GetGrain<IGameGrain>(id);
+        await grain.Delete();
+        await manager.UnregisterAsync(id);
+
     }
 }
 
 public interface IGameService
 {
-    Task StartGame(Guid id);
-    Task<bool> JoinGame(Guid id);
-    Task<Guid> CreateGame(string name);
+    Task UpsertGame(Game game);
+    Task<ImmutableArray<GameSummary>> GetGames();
+    
+    Task<Game> GetGame(Guid id);
+    Task DeleteGame(Guid id);
 }

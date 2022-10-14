@@ -1,11 +1,5 @@
 ﻿namespace Shared.Models;
 
-[Serializable]
-public record QuestionState
-{
-    public Dictionary<Guid, Question> Questions { get; set; } = new();
-}
-
 public record QuestionSummary
 {
     public Guid Id { get; set; }

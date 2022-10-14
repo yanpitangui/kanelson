@@ -1,0 +1,131 @@
+﻿@page "/game/{Id:guid?}"
+@using Kanelson.Services
+@using Microsoft.AspNetCore.Components
+@using global::Shared.Models
+@using System.Collections.Immutable
+@inject IGameService _service
+@inject NavigationManager Navigation
+@inject ISnackbar snackBar
+@inject IQuestionService _questionService;
+
+<MudCard Elevation="25">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Incluir/Editar perguntas</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudGrid>
+        <MudItem xs="12" sm="7">
+            <MudPaper Class="pa-4">
+                <MudForm @ref="@form" @bind-IsValid="@valid" Model="@_game"
+                         ValidationDelay="0">
+                    <MudCardContent>
+                        <MudTextField @bind-Value="_game.Name"
+                                      For="@(() => _game.Name)"
+                                      Immediate="true"
+                                      Label="Nome"/>
+                        <MudDropContainer Items="_items"  T="@GameQuestion"
+                                          ItemsSelector="@((item,dropzone) => item.Selector == dropzone)"
+                                          ItemDropped="ItemUpdated" Class="d-flex flex-wrap flex-grow-1">
+                            <ChildContent>
+                                <MudPaper Class="ma-4 flex-grow-1">
+                                    <MudList Clickable="true" Class="d-flex flex-column mud-height-full">
+                                        <MudListSubheader>Perguntas disponíveis</MudListSubheader>
+                                        <MudDropZone Identifier="1" Class="flex-grow-1" T="@GameQuestion"
+                                                     AllowReorder="true" />
+                                    </MudList>
+                                </MudPaper>
+                                 <MudPaper Class="ma-4 flex-grow-1">
+                                     <MudList Clickable="true" Class="d-flex flex-column mud-height-full">
+                                         <MudListSubheader>Perguntas atribuídas</MudListSubheader>
+                                         <MudDropZone Identifier="2" Class="flex-grow-1" T="@GameQuestion"
+                                                      AllowReorder="true" />
+                                     </MudList>
+                                 </MudPaper>
+                            </ChildContent>
+                            <ItemRenderer>
+                                <MudListItem Text="@context.Name"/>
+                            </ItemRenderer>
+                        </MudDropContainer>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveGame"
+                                   Class="ml-auto">
+                            Salvar
+                        </MudButton>
+                    </MudCardActions>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+</MudCard>
+
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+    
+    MudForm form;
+    
+    private Game _game = new();
+    bool valid;
+
+    private List<GameQuestion> _items = new();
+
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            if (Id is null)
+            {
+                _game = new Game();
+            }
+            else
+            {
+                _game = await _service.GetGame(Id!.Value);
+
+            }
+            var items = (await _questionService.GetQuestions())
+                .Select(x => new GameQuestion
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    Selector = "1"
+                }).ToList();
+                
+            foreach (var item in items.Where(x =>
+                _game.Questions.Select(static y => y.Id).Contains(x.Id)))
+            {
+                item.Selector = "2";
+            }
+            _items.AddRange(items);
+            StateHasChanged();
+        }
+    }
+    
+    private void ItemUpdated(MudItemDropInfo<GameQuestion> dropItem)
+    {
+        dropItem.Item.Selector = dropItem.DropzoneIdentifier;
+    }
+    
+    private async Task SaveGame()
+    {
+        await form.Validate();
+
+        if (form.IsValid)
+        {
+            await _service.UpsertGame(_game!);
+            snackBar.Add("Partida salva com sucesso.", Severity.Success);
+            Navigation.NavigateTo("games", forceLoad:true);
+        }
+    }
+
+    public record GameQuestion : QuestionSummary
+    {
+        public string Selector { get; set; } = "1";
+    }
+
+}

@@ -1,0 +1,63 @@
+﻿@page "/games"
+@using Kanelson.Services
+@using global::Shared.Models
+@using System.Collections.Immutable
+@inject IGameService _service
+@inject NavigationManager Navigation
+
+@if (_games is null)
+{
+    <h2>Carregando...</h2>
+}
+else
+{
+    <MudCard>
+        <MudTable Elevation="25" Items="_games" T="GameSummary" >
+         <ToolBarContent>
+             <MudText Typo="Typo.h6">Jogos</MudText>
+             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>EditGame(null))"
+                        Class="ml-auto">
+                 Criar jogo
+             </MudButton>
+         </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Nome</MudTh>
+            <MudTh>Editar/Excluir</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Nome">@context.Name</MudTd>
+            <MudTd DataLabel="">
+                <MudFab @onclick="@(()=>EditGame(@context.Id))" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small" />
+                <MudFab @onclick="@(()=>DeleteGame(@context.Id))" Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small" />
+            </MudTd>
+        </RowTemplate>
+     </MudTable>
+    </MudCard>
+
+
+}
+
+
+@code {
+
+    private ImmutableArray<GameSummary>? _games;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _games = await _service.GetGames();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task DeleteGame(Guid id)
+    {
+        await _service.DeleteGame(id);
+        _games = await _service.GetGames();
+
+    }
+
+    private void EditGame(Guid? id)
+    {
+        Navigation.NavigateTo($"game/{id}");
+    }
+
+}

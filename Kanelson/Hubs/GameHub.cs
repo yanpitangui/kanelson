@@ -1,7 +1,7 @@
 ﻿using Kanelson.Services;
 using Microsoft.AspNetCore.SignalR;
 
-namespace Kanelson;
+namespace Kanelson.Hubs;
 
 public class GameHub : Hub
 {
@@ -10,15 +10,10 @@ public class GameHub : Hub
     {
         _gameService = gameService;
     }
-
-
-
+    
+    
     public async Task Join(Guid id)
     {
-        if (await _gameService.JoinGame(id))
-        {
-            await Groups.AddToGroupAsync(Context.ConnectionId, id.ToString());
-        }
     }
     
 }

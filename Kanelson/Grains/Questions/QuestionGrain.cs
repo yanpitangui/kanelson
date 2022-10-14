@@ -1,10 +1,10 @@
-﻿using Orleans;
+﻿using System.Collections.Immutable;
+using Orleans;
 using Orleans.Runtime;
-using Shared;
-using Shared.Grains;
+using Shared.Grains.Questions;
 using Shared.Models;
 
-namespace Kanelson.Grains;
+namespace Kanelson.Grains.Questions;
 
 public class QuestionGrain : Grain, IQuestionGrain
 {
@@ -30,13 +30,18 @@ public class QuestionGrain : Grain, IQuestionGrain
         await _questions.WriteStateAsync();
     }
 
-    public Task<List<QuestionSummary>> GetQuestions()
+    public Task<ImmutableArray<QuestionSummary>> GetQuestionsSummary()
     {
         return Task.FromResult(_questions.State.Questions.Values.Select(x => new QuestionSummary
         {
             Id = x.Id,
             Name = x.Name
-        }).ToList());
+        }).ToImmutableArray());
+    }
+
+    public Task<ImmutableArray<Question>> GetQuestions()
+    {
+        return Task.FromResult(_questions.State.Questions.Values.ToImmutableArray());
     }
 
     public async Task<bool> DeleteQuestion(Guid id)
@@ -58,3 +63,8 @@ public class QuestionGrain : Grain, IQuestionGrain
     }
 }
 
+[Serializable]
+public record QuestionState
+{
+    public Dictionary<Guid, Question> Questions { get; set; } = new();
+}

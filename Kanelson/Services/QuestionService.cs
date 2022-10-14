@@ -1,7 +1,8 @@
-﻿using System.Security.Claims;
+﻿using System.Collections.Immutable;
+using System.Security.Claims;
 using FluentValidation.Results;
 using Orleans;
-using Shared.Grains;
+using Shared.Grains.Questions;
 using Shared.Models;
 
 namespace Kanelson.Services;
@@ -36,10 +37,10 @@ public class QuestionService : IQuestionService
         return await grain.GetQuestion(id);
     }
 
-    public async Task<List<QuestionSummary>> GetQuestions()
+    public async Task<ImmutableArray<QuestionSummary>> GetQuestions()
     {
         var grain = _grainFactory.GetGrain<IQuestionGrain>(_currentUser);
-        return await grain.GetQuestions();
+        return await grain.GetQuestionsSummary();
     }
 }
 
@@ -47,7 +48,7 @@ public class QuestionService : IQuestionService
 public interface IQuestionService
 {
     public Task<ValidationResult> SaveQuestion(Question question);
-    public Task<List<QuestionSummary>> GetQuestions();
+    public Task<ImmutableArray<QuestionSummary>> GetQuestions();
 
     Task<bool> DeleteQuestion(Guid id);
     Task<Question?> GetQuestion(Guid id);

@@ -1,6 +1,7 @@
 using System.Security.Claims;
-using Kanelson;
 using Kanelson.Grains;
+using Kanelson.Grains.Games;
+using Kanelson.Hubs;
 using Kanelson.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -56,7 +57,7 @@ builder.Services.AddAuthentication(o =>
 builder.Services.AddOptions();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddScoped<GameService>();
+builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddMudServices();
 builder.Services.AddHttpContextAccessor();

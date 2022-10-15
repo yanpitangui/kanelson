@@ -27,15 +27,15 @@
                                           ItemsSelector="@((item,dropzone) => item.Selector == dropzone)"
                                           ItemDropped="ItemUpdated" Class="d-flex flex-wrap flex-grow-1">
                             <ChildContent>
-                                <MudDropZone T="GameQuestion" Identifier="1" Class="rounded pa-6 ma-8 flex-grow-1">
+                                <MudDropZone T="GameQuestion" Identifier="1" item Class="rounded border-1 mud-border-lines-default pa-6 ma-8 flex-grow-1">
                                     <MudText Typo="Typo.h6" Class="mb-4">Perguntas disponíveis</MudText>
                                  </MudDropZone>
-                                <MudDropZone T="GameQuestion" Identifier="2" Class="rounded pa-6 ma-8 flex-grow-1">
+                                <MudDropZone T="GameQuestion" Identifier="2" Class="rounded border-1 mud-border-lines-default pa-6 ma-8 flex-grow-1">
                                     <MudText Typo="Typo.h6" Class="mb-4">Perguntas atribuidas</MudText>
                                 </MudDropZone>
                             </ChildContent>
                             <ItemRenderer>
-                                <MudListItem Text="@context.Name"/>
+                                <MudListItem Class="mud-elevation-25 rounded" Text="@context.Name" />
                             </ItemRenderer>
                         </MudDropContainer>
                     </MudCardContent>

@@ -2,6 +2,8 @@
 @using Kanelson.Services
 @using Microsoft.AspNetCore.Components
 @using global::Shared.Models
+@using System.Collections.Immutable
+@using MudBlazor.Utilities
 @inject IGameService _service
 @inject NavigationManager Navigation
 @inject ISnackbar snackBar
@@ -23,14 +25,16 @@
                                       For="@(() => _game.Name)"
                                       Immediate="true"
                                       Label="Nome"/>
-                        <MudDropContainer Items="_items"  T="GameQuestion"
+                        <MudDropContainer Items="_items"  T="GameQuestionDrop"
                                           ItemsSelector="@((item,dropzone) => item.Selector == dropzone)"
                                           ItemDropped="ItemUpdated" Class="d-flex flex-wrap flex-grow-1">
                             <ChildContent>
-                                <MudDropZone T="GameQuestion" Identifier="1" item Class="rounded border-1 mud-border-lines-default pa-6 ma-8 flex-grow-1">
+                                <MudDropZone T="GameQuestionDrop" Identifier="1" item Class="rounded border-1 mud-border-lines-default pa-6 ma-8 flex-grow-1">
                                     <MudText Typo="Typo.h6" Class="mb-4">Perguntas disponíveis</MudText>
                                  </MudDropZone>
-                                <MudDropZone T="GameQuestion" Identifier="2" Class="rounded border-1 mud-border-lines-default pa-6 ma-8 flex-grow-1">
+                                <MudDropZone T="GameQuestionDrop" Identifier="2"
+                                             AllowReorder="true"
+                                             Class="rounded border-1 mud-border-lines-default pa-6 ma-8 flex-grow-1">
                                     <MudText Typo="Typo.h6" Class="mb-4">Perguntas atribuidas</MudText>
                                 </MudDropZone>
                             </ChildContent>
@@ -62,7 +66,7 @@
     private Game _game = new();
     bool valid;
 
-    private List<GameQuestion> _items = new();
+    private List<GameQuestionDrop> _items = new();
 
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -80,7 +84,7 @@
 
             }
             var items = (await _questionService.GetQuestionsSummary())
-                .Select(x => new GameQuestion
+                .Select(x => new GameQuestionDrop
                 {
                     Id = x.Id,
                     Name = x.Name,
@@ -90,15 +94,29 @@
                 _game.Questions.Select(static y => y.Id).Contains(x.Id)))
             {
                 item.Selector = "2";
+                item.Order = _game.Questions.Where(x => x.Id == item.Id)
+                    .Select(x => x.Order).First();
             }
-            _items.AddRange(items);
+            _items.AddRange(items.OrderBy(x => x.Order));
             StateHasChanged();
         }
     }
     
-    private void ItemUpdated(MudItemDropInfo<GameQuestion> dropItem)
+    private void ItemUpdated(MudItemDropInfo<GameQuestionDrop> dropItem)
     {
+
+        
         dropItem.Item.Selector = dropItem.DropzoneIdentifier;
+        
+        // Como essa mágica funciona??
+        var indexOffset = dropItem.DropzoneIdentifier switch
+        {
+            "2"  => _items.Count(x => x.Selector == "1"),
+            _ => 0,
+            };
+
+        _items.UpdateOrder(dropItem, item => item.Order, indexOffset);
+
     }
     
     private async Task SaveGame()
@@ -107,19 +125,35 @@
 
         if (form.IsValid)
         {
-            var gameQuestions = await _questionService.GetQuestions(_items
+            var availableQuestions = await _questionService.GetQuestions(_items
                 .Where(x => x.Selector == "2").Select(x => x.Id).ToHashSet());
 
-            _game.Questions = gameQuestions;
+            _game.Questions = availableQuestions
+                .Join(_items, original => original.Id, changed => changed.Id, (question, drop) =>
+                
+                    new GameQuestion
+                    {
+                        Id = question.Id,
+                        Answers = question.Answers,
+                        Name = question.Name,
+                        Order = drop.Order,
+                        Points = question.Points,
+                        Type = question.Type,
+                        TimeLimit = question.TimeLimit
+                    }
+                )
+                .OrderBy(x => x.Order)
+                .ToImmutableArray();
             await _service.UpsertGame(_game!);
             snackBar.Add("Partida salva com sucesso.", Severity.Success);
             Navigation.NavigateTo("games", forceLoad:true);
         }
     }
 
-    public record GameQuestion : QuestionSummary
+    public record GameQuestionDrop : QuestionSummary
     {
         public string Selector { get; set; } = "1";
+        public int Order { get; set; }
     }
 
 }

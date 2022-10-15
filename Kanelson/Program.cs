@@ -87,8 +87,12 @@ builder.Host.UseOrleans(siloBuilder =>
     {
         parts.AddApplicationPart(typeof(GameGrain).Assembly).WithReferences();
     });
-    
-    
+
+    siloBuilder.UseDashboard(options =>
+    {
+        options.Port = 8080;
+        options.CounterUpdateIntervalMs = 10000;
+    });
 });
 
 

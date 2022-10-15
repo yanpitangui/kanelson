@@ -23,6 +23,7 @@ builder.Logging.ClearProviders();
 var logger = ConfigureBaseLogging()
     .CreateLogger();
 
+var dashboardPort = builder.Configuration.GetValue<int>("DashboardPort");
 // Register Serilog
 builder.Logging.AddSerilog(logger);
 
@@ -90,7 +91,7 @@ builder.Host.UseOrleans(siloBuilder =>
 
     siloBuilder.UseDashboard(options =>
     {
-        options.Port = 8080;
+        options.Port = dashboardPort;
         options.CounterUpdateIntervalMs = 10000;
     });
 });

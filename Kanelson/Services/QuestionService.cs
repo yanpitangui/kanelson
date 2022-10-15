@@ -37,10 +37,16 @@ public class QuestionService : IQuestionService
         return await grain.GetQuestion(id);
     }
 
-    public async Task<ImmutableArray<QuestionSummary>> GetQuestions()
+    public async Task<ImmutableArray<QuestionSummary>> GetQuestionsSummary()
     {
         var grain = _grainFactory.GetGrain<IQuestionGrain>(_currentUser);
         return await grain.GetQuestionsSummary();
+    }
+
+    public async Task<ImmutableArray<Question>> GetQuestions(HashSet<Guid>? ids = null)
+    {
+        var grain = _grainFactory.GetGrain<IQuestionGrain>(_currentUser);
+        return await grain.GetQuestions(ids);
     }
 }
 
@@ -48,8 +54,9 @@ public class QuestionService : IQuestionService
 public interface IQuestionService
 {
     public Task<ValidationResult> SaveQuestion(Question question);
-    public Task<ImmutableArray<QuestionSummary>> GetQuestions();
+    public Task<ImmutableArray<QuestionSummary>> GetQuestionsSummary();
 
     Task<bool> DeleteQuestion(Guid id);
     Task<Question?> GetQuestion(Guid id);
+    Task<ImmutableArray<Question>> GetQuestions(HashSet<Guid>? ids = null);
 }

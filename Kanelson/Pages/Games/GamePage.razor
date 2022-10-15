@@ -2,7 +2,6 @@
 @using Kanelson.Services
 @using Microsoft.AspNetCore.Components
 @using global::Shared.Models
-@using System.Collections.Immutable
 @inject IGameService _service
 @inject NavigationManager Navigation
 @inject ISnackbar snackBar
@@ -24,24 +23,16 @@
                                       For="@(() => _game.Name)"
                                       Immediate="true"
                                       Label="Nome"/>
-                        <MudDropContainer Items="_items"  T="@GameQuestion"
+                        <MudDropContainer Items="_items"  T="GameQuestion"
                                           ItemsSelector="@((item,dropzone) => item.Selector == dropzone)"
                                           ItemDropped="ItemUpdated" Class="d-flex flex-wrap flex-grow-1">
                             <ChildContent>
-                                <MudPaper Class="ma-4 flex-grow-1">
-                                    <MudList Clickable="true" Class="d-flex flex-column mud-height-full">
-                                        <MudListSubheader>Perguntas disponíveis</MudListSubheader>
-                                        <MudDropZone Identifier="1" Class="flex-grow-1" T="@GameQuestion"
-                                                     AllowReorder="true" />
-                                    </MudList>
-                                </MudPaper>
-                                 <MudPaper Class="ma-4 flex-grow-1">
-                                     <MudList Clickable="true" Class="d-flex flex-column mud-height-full">
-                                         <MudListSubheader>Perguntas atribuídas</MudListSubheader>
-                                         <MudDropZone Identifier="2" Class="flex-grow-1" T="@GameQuestion"
-                                                      AllowReorder="true" />
-                                     </MudList>
-                                 </MudPaper>
+                                <MudDropZone T="GameQuestion" Identifier="1" Class="rounded pa-6 ma-8 flex-grow-1">
+                                    <MudText Typo="Typo.h6" Class="mb-4">Perguntas disponíveis</MudText>
+                                 </MudDropZone>
+                                <MudDropZone T="GameQuestion" Identifier="2" Class="rounded pa-6 ma-8 flex-grow-1">
+                                    <MudText Typo="Typo.h6" Class="mb-4">Perguntas atribuidas</MudText>
+                                </MudDropZone>
                             </ChildContent>
                             <ItemRenderer>
                                 <MudListItem Text="@context.Name"/>
@@ -88,12 +79,11 @@
                 _game = await _service.GetGame(Id!.Value);
 
             }
-            var items = (await _questionService.GetQuestions())
+            var items = (await _questionService.GetQuestionsSummary())
                 .Select(x => new GameQuestion
                 {
                     Id = x.Id,
                     Name = x.Name,
-                    Selector = "1"
                 }).ToList();
                 
             foreach (var item in items.Where(x =>
@@ -117,6 +107,10 @@
 
         if (form.IsValid)
         {
+            var gameQuestions = await _questionService.GetQuestions(_items
+                .Where(x => x.Selector == "2").Select(x => x.Id).ToHashSet());
+
+            _game.Questions = gameQuestions;
             await _service.UpsertGame(_game!);
             snackBar.Add("Partida salva com sucesso.", Severity.Success);
             Navigation.NavigateTo("games", forceLoad:true);

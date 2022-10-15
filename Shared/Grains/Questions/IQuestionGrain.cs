@@ -10,5 +10,5 @@ public interface IQuestionGrain : IGrainWithStringKey
     public Task<ImmutableArray<QuestionSummary>> GetQuestionsSummary();
     public Task<bool> DeleteQuestion(Guid id);
     Task<Question?> GetQuestion(Guid id);
-    Task<ImmutableArray<Question>> GetQuestions();
+    Task<ImmutableArray<Question>> GetQuestions(HashSet<Guid>? ids = null);
 }

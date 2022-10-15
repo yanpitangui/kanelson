@@ -43,14 +43,14 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _questions = await _service.GetQuestions();
+        _questions = await _service.GetQuestionsSummary();
         await base.OnInitializedAsync();
     }
 
     private async Task DeleteQuestion(Guid id)
     {
         await _service.DeleteQuestion(id);
-        _questions = await _service.GetQuestions();
+        _questions = await _service.GetQuestionsSummary();
 
     }
 

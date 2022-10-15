@@ -39,9 +39,11 @@ public class QuestionGrain : Grain, IQuestionGrain
         }).ToImmutableArray());
     }
 
-    public Task<ImmutableArray<Question>> GetQuestions()
+    public Task<ImmutableArray<Question>> GetQuestions(HashSet<Guid>? ids = null)
     {
-        return Task.FromResult(_questions.State.Questions.Values.ToImmutableArray());
+        var items = _questions.State.Questions.Values;
+        return Task.FromResult((ids is not null ?
+            items.Where(x => ids.Contains(x.Id)) : items).ToImmutableArray()); 
     }
 
     public async Task<bool> DeleteQuestion(Guid id)

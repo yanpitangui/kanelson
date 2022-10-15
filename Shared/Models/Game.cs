@@ -6,7 +6,7 @@ public record Game
     public Guid Id { get; init; } = Guid.NewGuid();
     public string Name { get; set; } = null!;
     
-    public ImmutableArray<Question> Questions { get; init; } = ImmutableArray<Question>.Empty;
+    public ImmutableArray<Question> Questions { get; set; } = ImmutableArray<Question>.Empty;
 }
 
 public record GameSummary(Guid Id, string Name){ }

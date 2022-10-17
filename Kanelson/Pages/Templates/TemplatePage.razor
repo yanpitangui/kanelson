@@ -1,10 +1,10 @@
-﻿@page "/game/{Id:guid?}"
+﻿@page "/template/{Id:guid?}"
 @using Kanelson.Services
 @using Microsoft.AspNetCore.Components
 @using global::Shared.Models
 @using System.Collections.Immutable
 @using MudBlazor.Utilities
-@inject IGameService _service
+@inject ITemplateService _service
 @inject NavigationManager Navigation
 @inject ISnackbar snackBar
 @inject IQuestionService _questionService;
@@ -12,27 +12,27 @@
 <MudCard Elevation="25">
     <MudCardHeader>
         <CardHeaderContent>
-            <MudText Typo="Typo.h6">Incluir/Editar perguntas</MudText>
+            <MudText Typo="Typo.h6">Incluir/Editar templates</MudText>
         </CardHeaderContent>
     </MudCardHeader>
     <MudGrid>
         <MudItem xs="12" sm="7">
             <MudPaper Class="pa-4">
-                <MudForm @ref="@form" @bind-IsValid="@valid" Model="@_game"
+                <MudForm @ref="@form" @bind-IsValid="@valid" Model="@_template"
                          ValidationDelay="0">
                     <MudCardContent>
-                        <MudTextField @bind-Value="_game.Name"
-                                      For="@(() => _game.Name)"
+                        <MudTextField @bind-Value="_template.Name"
+                                      For="@(() => _template.Name)"
                                       Immediate="true"
                                       Label="Nome"/>
-                        <MudDropContainer Items="_items"  T="GameQuestionDrop"
+                        <MudDropContainer Items="_items"  T="TemplateQuestionDrop"
                                           ItemsSelector="@((item,dropzone) => item.Selector == dropzone)"
                                           ItemDropped="ItemUpdated" Class="d-flex flex-wrap flex-grow-1">
                             <ChildContent>
-                                <MudDropZone T="GameQuestionDrop" Identifier="1" item Class="rounded border-1 mud-border-lines-default pa-6 ma-8 flex-grow-1">
+                                <MudDropZone T="TemplateQuestionDrop" Identifier="1" item Class="rounded border-1 mud-border-lines-default pa-6 ma-8 flex-grow-1">
                                     <MudText Typo="Typo.h6" Class="mb-4">Perguntas disponíveis</MudText>
                                  </MudDropZone>
-                                <MudDropZone T="GameQuestionDrop" Identifier="2"
+                                <MudDropZone T="TemplateQuestionDrop" Identifier="2"
                                              AllowReorder="true"
                                              Class="rounded border-1 mud-border-lines-default pa-6 ma-8 flex-grow-1">
                                     <MudText Typo="Typo.h6" Class="mb-4">Perguntas atribuidas</MudText>
@@ -44,7 +44,7 @@
                         </MudDropContainer>
                     </MudCardContent>
                     <MudCardActions>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveGame"
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Savetemplate"
                                    Class="ml-auto">
                             Salvar
                         </MudButton>
@@ -63,10 +63,10 @@
     
     MudForm form;
     
-    private Game _game = new();
+    private Template _template = new();
     bool valid;
 
-    private List<GameQuestionDrop> _items = new();
+    private List<TemplateQuestionDrop> _items = new();
 
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -76,25 +76,25 @@
         {
             if (Id is null)
             {
-                _game = new Game();
+                _template = new Template();
             }
             else
             {
-                _game = await _service.GetGame(Id!.Value);
+                _template = await _service.GetTemplate(Id!.Value);
 
             }
             var items = (await _questionService.GetQuestionsSummary())
-                .Select(x => new GameQuestionDrop
+                .Select(x => new TemplateQuestionDrop
                 {
                     Id = x.Id,
                     Name = x.Name,
                 }).ToList();
                 
             foreach (var item in items.Where(x =>
-                _game.Questions.Select(static y => y.Id).Contains(x.Id)))
+                _template.Questions.Select(static y => y.Id).Contains(x.Id)))
             {
                 item.Selector = "2";
-                item.Order = _game.Questions.Where(x => x.Id == item.Id)
+                item.Order = _template.Questions.Where(x => x.Id == item.Id)
                     .Select(x => x.Order).First();
             }
             _items.AddRange(items.OrderBy(x => x.Order));
@@ -102,7 +102,7 @@
         }
     }
     
-    private void ItemUpdated(MudItemDropInfo<GameQuestionDrop> dropItem)
+    private void ItemUpdated(MudItemDropInfo<TemplateQuestionDrop> dropItem)
     {
 
         
@@ -119,7 +119,7 @@
 
     }
     
-    private async Task SaveGame()
+    private async Task Savetemplate()
     {
         await form.Validate();
 
@@ -128,10 +128,10 @@
             var availableQuestions = await _questionService.GetQuestions(_items
                 .Where(x => x.Selector == "2").Select(x => x.Id).ToHashSet());
 
-            _game.Questions = availableQuestions
+            _template.Questions = availableQuestions
                 .Join(_items, original => original.Id, changed => changed.Id, (question, drop) =>
                 
-                    new GameQuestion
+                    new TemplateQuestion
                     {
                         Id = question.Id,
                         Answers = question.Answers,
@@ -144,13 +144,13 @@
                 )
                 .OrderBy(x => x.Order)
                 .ToImmutableArray();
-            await _service.UpsertGame(_game!);
+            await _service.UpsertTemplate(_template!);
             snackBar.Add("Partida salva com sucesso.", Severity.Success);
-            Navigation.NavigateTo("games", forceLoad:true);
+            Navigation.NavigateTo("templates", forceLoad:true);
         }
     }
 
-    public record GameQuestionDrop : QuestionSummary
+    public record TemplateQuestionDrop : QuestionSummary
     {
         public string Selector { get; set; } = "1";
         public int Order { get; set; }

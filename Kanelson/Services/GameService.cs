@@ -3,47 +3,47 @@ using System.Collections.Immutable;
 using System.Security.Claims;
 using Orleans;
 using Shared.Grains;
-using Shared.Grains.Games;
+using Shared.Grains.Templates;
 using Shared.Models;
 
 namespace Kanelson.Services;
 
-public class GameService : IGameService
+public class TemplateService : ITemplateService
 {
     private readonly IGrainFactory _client;
     private readonly string _currentUser;
 
 
-    public GameService(IGrainFactory client, IHttpContextAccessor httpContextAccessor)
+    public TemplateService(IGrainFactory client, IHttpContextAccessor httpContextAccessor)
     {
         _currentUser = httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         _client = client;
     }
 
-    public async Task UpsertGame(Game game)
+    public async Task UpsertTemplate(Template template)
     {
-        var manager = _client.GetGrain<IGameManagerGrain>(_currentUser);
-        var gameGrain = _client.GetGrain<IGameGrain>(game.Id);
-        await gameGrain.SetBase(game, _currentUser);
-        await manager.RegisterAsync(gameGrain.GetPrimaryKey());
+        var manager = _client.GetGrain<ITemplateManagerGrain>(_currentUser);
+        var templateGrain = _client.GetGrain<ITemplateGrain>(template.Id);
+        await templateGrain.SetBase(template, _currentUser);
+        await manager.RegisterAsync(templateGrain.GetPrimaryKey());
     }
 
-    public async Task<ImmutableArray<GameSummary>> GetGames()
+    public async Task<ImmutableArray<TemplateSummary>> GetTemplates()
     {
-        var manager = _client.GetGrain<IGameManagerGrain>(_currentUser);
+        var manager = _client.GetGrain<ITemplateManagerGrain>(_currentUser);
         var keys = await manager.GetAllAsync();
         // fan out to get the individual items from the cluster in parallel
-        var tasks = ArrayPool<Task<GameSummary>>.Shared.Rent(keys.Length);
+        var tasks = ArrayPool<Task<TemplateSummary>>.Shared.Rent(keys.Length);
         try
         {
             // issue all individual requests at the same time
             for (var i = 0; i < keys.Length; ++i)
             {
-                tasks[i] = _client.GetGrain<IGameGrain>(keys[i]).GetSummary();
+                tasks[i] = _client.GetGrain<ITemplateGrain>(keys[i]).GetSummary();
             }
 
             // build the result as requests complete
-            var result = ImmutableArray.CreateBuilder<GameSummary>(keys.Length);
+            var result = ImmutableArray.CreateBuilder<TemplateSummary>(keys.Length);
             for (var i = 0; i < keys.Length; ++i)
             {
                 var item = await tasks[i];
@@ -54,43 +54,43 @@ public class GameService : IGameService
         }
         finally
         {
-            ArrayPool<Task<GameSummary>>.Shared.Return(tasks);
+            ArrayPool<Task<TemplateSummary>>.Shared.Return(tasks);
         }
     }
 
-    public async Task<Game> GetGame(Guid id)
+    public async Task<Template> GetTemplate(Guid id)
     {
-        var manager = _client.GetGrain<IGameManagerGrain>(_currentUser);
-        var games = await manager.GetAllAsync();
-        if (!games.Contains(id))
+        var manager = _client.GetGrain<ITemplateManagerGrain>(_currentUser);
+        var templates = await manager.GetAllAsync();
+        if (!templates.Contains(id))
         {
             throw new KeyNotFoundException();
         }
 
-        return await _client.GetGrain<IGameGrain>(id).GetGame();
+        return await _client.GetGrain<ITemplateGrain>(id).GetById();
     }
 
-    public async Task DeleteGame(Guid id)
+    public async Task DeleteTemplate(Guid id)
     {
-        var manager = _client.GetGrain<IGameManagerGrain>(_currentUser);
-        var games = await manager.GetAllAsync();
-        if (!games.Contains(id))
+        var manager = _client.GetGrain<ITemplateManagerGrain>(_currentUser);
+        var templateIds = await manager.GetAllAsync();
+        if (!templateIds.Contains(id))
         {
             throw new KeyNotFoundException();
         }
 
-        var grain = _client.GetGrain<IGameGrain>(id);
+        var grain = _client.GetGrain<ITemplateGrain>(id);
         await grain.Delete();
         await manager.UnregisterAsync(id);
 
     }
 }
 
-public interface IGameService
+public interface ITemplateService
 {
-    Task UpsertGame(Game game);
-    Task<ImmutableArray<GameSummary>> GetGames();
+    Task UpsertTemplate(Template template);
+    Task<ImmutableArray<TemplateSummary>> GetTemplates();
     
-    Task<Game> GetGame(Guid id);
-    Task DeleteGame(Guid id);
+    Task<Template> GetTemplate(Guid id);
+    Task DeleteTemplate(Guid id);
 }

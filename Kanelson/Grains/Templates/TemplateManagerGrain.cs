@@ -1,17 +1,17 @@
 ﻿using System.Collections.Immutable;
 using Orleans;
 using Orleans.Runtime;
-using Shared.Grains;
+using Shared.Grains.Templates;
 
-namespace Kanelson.Grains.Games;
+namespace Kanelson.Grains.Templates;
 
-public class GameManagerGrain : Grain, IGameManagerGrain
+public class TemplateManagerGrain : Grain, ITemplateManagerGrain
 {
-    private readonly IPersistentState<GameManagerState> _state;
+    private readonly IPersistentState<TemplateManagerState> _state;
 
-    public GameManagerGrain(
-        [PersistentState("gameIndex", "kanelson-storage")]
-        IPersistentState<GameManagerState> state)
+    public TemplateManagerGrain(
+        [PersistentState("templateIndex", "kanelson-storage")]
+        IPersistentState<TemplateManagerState> state)
     {
         _state = state;
     }
@@ -33,7 +33,7 @@ public class GameManagerGrain : Grain, IGameManagerGrain
 }
 
 [Serializable]
-public class GameManagerState
+public class TemplateManagerState
 {
     public HashSet<Guid> Items { get; set; } = new();
 

@@ -1,7 +1,5 @@
 using System.Security.Claims;
-using Kanelson.Grains;
-using Kanelson.Grains.Games;
-using Kanelson.Hubs;
+using Kanelson.Grains.Templates;
 using Kanelson.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -57,7 +55,7 @@ builder.Services.AddAuthentication(o =>
 builder.Services.AddOptions();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddScoped<IGameService, GameService>();
+builder.Services.AddScoped<ITemplateService, TemplateService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddMudServices();
 builder.Services.AddHttpContextAccessor();
@@ -85,7 +83,7 @@ builder.Host.UseOrleans(siloBuilder =>
 
     siloBuilder.ConfigureApplicationParts(parts =>
     {
-        parts.AddApplicationPart(typeof(GameGrain).Assembly).WithReferences();
+        parts.AddApplicationPart(typeof(TemplateGrain).Assembly).WithReferences();
     });
 });
 
@@ -112,7 +110,6 @@ app.UseRouting();
 app.MapControllers();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
-app.MapHub<GameHub>("/gameHub");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseWebSockets();

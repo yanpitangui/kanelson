@@ -25,13 +25,7 @@
       <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
       <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Orleans_CodeGenInputs Remove="Models\GameState.cs" />
-      <Orleans_CodeGenInputs Remove="Models\QuestionState.cs" />
-      <Orleans_CodeGenInputs Remove="Controllers\AuthenticationController.cs" />
-    </ItemGroup>
-
+    
     <ItemGroup>
       <ProjectReference Include="..\Shared\Shared.csproj" />
     </ItemGroup>

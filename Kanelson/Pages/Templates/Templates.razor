@@ -1,0 +1,63 @@
+﻿@page "/templates"
+@using Kanelson.Services
+@using global::Shared.Models
+@using System.Collections.Immutable
+@inject ITemplateService _service
+@inject NavigationManager Navigation
+
+@if (_templates is null)
+{
+    <h2>Carregando...</h2>
+}
+else
+{
+    <MudCard>
+        <MudTable Elevation="25" Items="_templates" T="TemplateSummary" >
+         <ToolBarContent>
+             <MudText Typo="Typo.h6">Templates</MudText>
+             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>EditTemplate(null))"
+                        Class="ml-auto">
+                 Criar template
+             </MudButton>
+         </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Nome</MudTh>
+            <MudTh>Editar/Excluir</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Nome">@context.Name</MudTd>
+            <MudTd DataLabel="">
+                <MudFab @onclick="@(()=>EditTemplate(@context.Id))" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small" />
+                <MudFab @onclick="@(()=>DeleteTemplate(@context.Id))" Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small" />
+            </MudTd>
+        </RowTemplate>
+     </MudTable>
+    </MudCard>
+
+
+}
+
+
+@code {
+
+    private ImmutableArray<TemplateSummary>? _templates;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _templates = await _service.GetTemplates();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task DeleteTemplate(Guid id)
+    {
+        await _service.DeleteTemplate(id);
+        _templates = await _service.GetTemplates();
+
+    }
+
+    private void EditTemplate(Guid? id)
+    {
+        Navigation.NavigateTo($"template/{id}");
+    }
+
+}

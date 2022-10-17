@@ -10,3 +10,17 @@ public class RoomGrain : Grain, IRoomGrain
         throw new NotImplementedException();
     }
 }
+
+[Serializable]
+public record RoomState
+{
+    
+}
+
+public enum RoomStatus
+{
+    Created,
+    Started,
+    Finished,
+    Abandoned
+}

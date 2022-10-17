@@ -30,3 +30,9 @@ public class UserManagerGrain : Grain, IUserManagerGrain
             );
     }
 }
+
+[Serializable]
+public record UsersState
+{
+    public HashSet<UserInfo> Users { get; set; } = new();
+}

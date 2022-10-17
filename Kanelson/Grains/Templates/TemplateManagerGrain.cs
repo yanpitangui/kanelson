@@ -28,6 +28,11 @@ public class TemplateManagerGrain : Grain, ITemplateManagerGrain
         await _state.WriteStateAsync();
     }
 
+    public Task<bool> KeyExists(Guid itemKey)
+    {
+        return Task.FromResult(_state.State.Items.Contains(itemKey));
+    }
+
     public Task<ImmutableArray<Guid>> GetAllAsync() =>
         Task.FromResult(ImmutableArray.CreateRange(_state.State.Items));
 }

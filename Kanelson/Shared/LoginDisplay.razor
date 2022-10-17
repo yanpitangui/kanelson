@@ -3,7 +3,7 @@
 <AuthorizeView>
     <Authorized>
 
-        @Avatar(@context.User.FindFirstValue(ClaimTypes.NameIdentifier)!) @context.User.Identity?.Name! 
+        <Avatar GithubId="@context.User.FindFirstValue(ClaimTypes.NameIdentifier)"/> @context.User.Identity?.Name! 
         <form method="post" action="signout">
             <button type="submit" class="nav-link btn btn-link">Log out</button>
         </form>
@@ -12,13 +12,3 @@
         <a href="signin">Log in</a>
     </NotAuthorized>
 </AuthorizeView>
-
-@code {
-
-
-    RenderFragment Avatar(string nameIdentifier)
-    {
-        var url = $"https://avatars.githubusercontent.com/u/{nameIdentifier}";
-        return @<MudAvatar Style="margin-right: 5px" Image="@url"/>;
-    }
-}

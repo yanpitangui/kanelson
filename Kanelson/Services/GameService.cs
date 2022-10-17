@@ -2,7 +2,6 @@
 using System.Collections.Immutable;
 using System.Security.Claims;
 using Orleans;
-using Shared.Grains;
 using Shared.Grains.Templates;
 using Shared.Models;
 
@@ -67,14 +66,13 @@ public class TemplateService : ITemplateService
             throw new KeyNotFoundException();
         }
 
-        return await _client.GetGrain<ITemplateGrain>(id).GetById();
+        return await _client.GetGrain<ITemplateGrain>(id).Get();
     }
 
     public async Task DeleteTemplate(Guid id)
     {
         var manager = _client.GetGrain<ITemplateManagerGrain>(_currentUser);
-        var templateIds = await manager.GetAllAsync();
-        if (!templateIds.Contains(id))
+        if (!await manager.KeyExists(id))
         {
             throw new KeyNotFoundException();
         }

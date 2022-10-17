@@ -1,0 +1,13 @@
+﻿@Render(GithubId)
+
+@code {
+
+    [Parameter]
+    public string GithubId { get; set; } = null!;
+    
+    RenderFragment Render(string nameIdentifier)
+    {
+        var url = $"https://avatars.githubusercontent.com/u/{nameIdentifier}";
+        return @<MudAvatar Style="margin-right: 5px" Image="@url"/>;
+    }
+}

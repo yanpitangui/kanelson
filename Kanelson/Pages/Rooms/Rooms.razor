@@ -1,0 +1,61 @@
+﻿@page "/rooms"
+@using Kanelson.Services
+@using global::Shared.Models
+@using System.Collections.Immutable
+@inject IRoomService _service
+@inject NavigationManager Navigation
+
+@if (_rooms is null)
+{
+    <h2>Carregando...</h2>
+}
+else
+{
+    <MudCard>
+        <MudTable Elevation="25" Items="_rooms" T="RoomSummary" >
+         <ToolBarContent>
+             <MudText Typo="Typo.h6">Salas</MudText>
+         </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Entrar</MudTh>
+                <MudTh>Id</MudTh>
+                <MudTh>Nome</MudTh>
+                <MudTh>Host</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>
+                   <MudFab @onclick="@(() => JoinRoom(context.Id))"
+                        Disabled="@(context.Status is not (RoomStatus.Created or RoomStatus.Started))"
+                        Color="Color.Secondary" Icon="@Icons.Material.Filled.Outbound"
+                        Size="Size.Small" IconSize="Size.Small"/>
+                </MudTd>
+                <MudTd DataLabel="Id">@context.Id</MudTd>
+                <MudTd DataLabel="Nome">@context.Name</MudTd>
+                <MudTd DataLabel="Host">
+                    <Avatar GithubId="@context.Owner.Id"/>
+                </MudTd>
+
+            </RowTemplate>
+     </MudTable>
+    </MudCard>
+
+
+}
+
+
+@code {
+
+    private ImmutableArray<RoomSummary>? _rooms;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _rooms = await _service.GetAll();
+        await base.OnInitializedAsync();
+    }
+
+    private void JoinRoom(string id)
+    {
+        
+    } 
+    
+}

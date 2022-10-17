@@ -9,4 +9,5 @@ public interface ITemplateManagerGrain : IGrainWithStringKey
 
     Task<ImmutableArray<Guid>> GetAllAsync();
 
+    Task<bool> KeyExists(Guid itemKey);
 }

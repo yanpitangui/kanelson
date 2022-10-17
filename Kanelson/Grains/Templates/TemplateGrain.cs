@@ -28,7 +28,7 @@ public class TemplateGrain : Grain, ITemplateGrain
         return Task.FromResult(new TemplateSummary(this.GetPrimaryKey(), _state.State.Template.Name));
     }
 
-    public Task<Template> GetById()
+    public Task<Template> Get()
     {
         return Task.FromResult(_state.State.Template);
     }

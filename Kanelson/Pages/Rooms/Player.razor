@@ -1,0 +1,45 @@
+﻿@using Microsoft.AspNetCore.SignalR.Client
+@using global::Shared.Models
+@using System.Collections.Immutable
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+<h3>Player</h3>
+
+<MudProgressCircular Color="Color.Default" Indeterminate="true" />
+
+@foreach (var user in _connectedUsers)
+{
+    <span>@user.Name</span>
+}
+
+
+@code {
+
+    [Parameter]
+    public string RoomId { get; set; } = null!;
+    private HubConnection? hubConnection;
+    private ImmutableArray<UserInfo> _connectedUsers = ImmutableArray<UserInfo>.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("roomHub"))
+            .Build();
+
+        hubConnection.On<string, string>("UpdateConnectedUsers", (user, message) =>
+        {
+            
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is IAsyncDisposable disposable)
+        {
+            await disposable.DisposeAsync();
+        }
+    }
+
+}

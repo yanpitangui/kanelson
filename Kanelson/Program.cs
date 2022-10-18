@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Kanelson.Grains.Templates;
+using Kanelson.Hubs;
 using Kanelson.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -12,7 +13,6 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Exceptions;
 using Serilog.Sinks.SystemConsole.Themes;
-using Shared.Grains;
 
 var builder = WebApplication.CreateBuilder(args);
 // remove default logging providers
@@ -110,6 +110,7 @@ app.UseRouting();
 
 app.MapControllers();
 app.MapBlazorHub();
+app.MapHub<RoomHub>("/roomHub");
 app.MapFallbackToPage("/_Host");
 app.UseAuthentication();
 app.UseAuthorization();

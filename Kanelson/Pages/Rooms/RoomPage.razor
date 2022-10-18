@@ -3,17 +3,17 @@
 @using Kanelson.Services
 @inject IRoomService _roomService
 @inject IUserService _userService
-<h3>RoomPage: @Id</h3>
+<h2>Sala: @Id</h2>
 
-@if (_summary != null)
+@if (_summary is not null)
 {
     @if (_summary.Owner.Id == _userService.CurrentUser)
     {
-        <div>TELA DO ADMIN</div>
+        <Admin RoomId="@Id"></Admin>
     }
     else
     {
-        <div>TELA DO PLAYER</div>
+        <Player RoomId="@Id"></Player>
     }
 }
 else
@@ -23,7 +23,10 @@ else
 
 @code {
 
-    RoomSummary _summary;
+    RoomSummary? _summary;
+
+    [Parameter]
+    public string Id { get; set; } = null!;
     
     protected override async Task OnInitializedAsync()
     {
@@ -31,7 +34,6 @@ else
         await base.OnInitializedAsync();
     }
 
-    [Parameter]
-    public string Id { get; set; } = null!;
+
 
 }

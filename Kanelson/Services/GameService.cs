@@ -10,26 +10,26 @@ namespace Kanelson.Services;
 public class TemplateService : ITemplateService
 {
     private readonly IGrainFactory _client;
-    private readonly string _currentUser;
+    private readonly IUserService _userService;
 
 
-    public TemplateService(IGrainFactory client, IHttpContextAccessor httpContextAccessor)
+    public TemplateService(IGrainFactory client, IUserService userService)
     {
-        _currentUser = httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         _client = client;
+        _userService = userService;
     }
 
     public async Task UpsertTemplate(Template template)
     {
-        var manager = _client.GetGrain<ITemplateManagerGrain>(_currentUser);
+        var manager = _client.GetGrain<ITemplateManagerGrain>(_userService.CurrentUser);
         var templateGrain = _client.GetGrain<ITemplateGrain>(template.Id);
-        await templateGrain.SetBase(template, _currentUser);
+        await templateGrain.SetBase(template, _userService.CurrentUser);
         await manager.RegisterAsync(templateGrain.GetPrimaryKey());
     }
 
     public async Task<ImmutableArray<TemplateSummary>> GetTemplates()
     {
-        var manager = _client.GetGrain<ITemplateManagerGrain>(_currentUser);
+        var manager = _client.GetGrain<ITemplateManagerGrain>(_userService.CurrentUser);
         var keys = await manager.GetAllAsync();
         // fan out to get the individual items from the cluster in parallel
         var tasks = ArrayPool<Task<TemplateSummary>>.Shared.Rent(keys.Length);
@@ -59,7 +59,7 @@ public class TemplateService : ITemplateService
 
     public async Task<Template> GetTemplate(Guid id)
     {
-        var manager = _client.GetGrain<ITemplateManagerGrain>(_currentUser);
+        var manager = _client.GetGrain<ITemplateManagerGrain>(_userService.CurrentUser);
         var templates = await manager.GetAllAsync();
         if (!templates.Contains(id))
         {
@@ -71,7 +71,7 @@ public class TemplateService : ITemplateService
 
     public async Task DeleteTemplate(Guid id)
     {
-        var manager = _client.GetGrain<ITemplateManagerGrain>(_currentUser);
+        var manager = _client.GetGrain<ITemplateManagerGrain>(_userService.CurrentUser);
         if (!await manager.KeyExists(id))
         {
             throw new KeyNotFoundException();

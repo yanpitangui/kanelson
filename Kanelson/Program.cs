@@ -46,9 +46,8 @@ builder.Services.AddAuthentication(o =>
         o.Events.OnCreatingTicket = async (context) =>
         {
             var user = context.Principal;
-            var factory = context.HttpContext.RequestServices.GetRequiredService<IGrainFactory>();
-            var userGrain = factory.GetGrain<IUserManagerGrain>(0);
-            await userGrain.Upsert(user.FindFirstValue(ClaimTypes.NameIdentifier), 
+            var userService = context.HttpContext.RequestServices.GetRequiredService<IUserService>();
+            await userService.Upsert(user.FindFirstValue(ClaimTypes.NameIdentifier), 
                 user.FindFirstValue(ClaimTypes.Name));
         };
     });
@@ -57,6 +56,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddScoped<ITemplateService, TemplateService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddMudServices();
 builder.Services.AddHttpContextAccessor();

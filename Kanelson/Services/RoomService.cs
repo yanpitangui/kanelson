@@ -1,6 +1,5 @@
 ﻿using System.Buffers;
 using System.Collections.Immutable;
-using System.Security.Claims;
 using Orleans;
 using Shared.Grains.Rooms;
 using Shared.Grains.Templates;
@@ -12,17 +11,17 @@ namespace Kanelson.Services;
 public class RoomService : IRoomService
 {
     private readonly IGrainFactory _client;
-    private readonly string _currentUser;
+    private readonly IUserService _userService;
 
-    public RoomService(IGrainFactory grainFactory, IHttpContextAccessor httpContextAccessor)
+    public RoomService(IGrainFactory grainFactory, IUserService userService)
     {
-        _currentUser = httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         _client = grainFactory;
+        _userService = userService;
     }
     
     public async Task<string> CreateRoom(Guid templateId, string roomName)
     {
-        var manager = _client.GetGrain<ITemplateManagerGrain>(_currentUser);
+        var manager = _client.GetGrain<ITemplateManagerGrain>(_userService.CurrentUser);
         if (!await manager.KeyExists(templateId))
         {
             throw new KeyNotFoundException();
@@ -38,7 +37,7 @@ public class RoomService : IRoomService
             valid = !await roomManager.Exists(roomId);
         }
         var room = _client.GetGrain<IRoomGrain>(roomId);
-        await room.SetBase(roomName, _currentUser, template);
+        await room.SetBase(roomName, _userService.CurrentUser, template);
         await roomManager.Register(roomId);
         return roomId;
     }
@@ -72,10 +71,22 @@ public class RoomService : IRoomService
             ArrayPool<Task<RoomSummary>>.Shared.Return(tasks);
         }
     }
+
+    public async Task<RoomSummary> Get(string id)
+    {
+        var manager = _client.GetGrain<IRoomManagerGrain>(0);
+        if (!await manager.Exists(id))
+        {
+            throw new KeyNotFoundException();
+        }
+        var grain = _client.GetGrain<IRoomGrain>(id);
+        return await grain.GetSummary();
+    }
 }
 
 public interface IRoomService
 {
     Task<string> CreateRoom(Guid templateId, string roomName);
     Task<ImmutableArray<RoomSummary>> GetAll();
+    Task<RoomSummary> Get(string id);
 }

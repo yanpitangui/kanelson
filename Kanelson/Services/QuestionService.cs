@@ -10,42 +10,42 @@ namespace Kanelson.Services;
 public class QuestionService : IQuestionService
 {
     private readonly IGrainFactory _grainFactory;
-    private readonly string _currentUser;
+    private readonly IUserService _userService;
 
-    public QuestionService(IGrainFactory grainFactory, IHttpContextAccessor httpContextAccessor)
+    public QuestionService(IGrainFactory grainFactory, IUserService userService)
     {
-        _currentUser = httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         _grainFactory = grainFactory;
+        _userService = userService;
     }
 
     public async Task<ValidationResult> SaveQuestion(Question question)
     {
-        var grain = _grainFactory.GetGrain<IQuestionGrain>(_currentUser);
+        var grain = _grainFactory.GetGrain<IQuestionGrain>(_userService.CurrentUser);
         await grain.SaveQuestion(question);
         return new ValidationResult();
     }
 
     public async Task<bool> DeleteQuestion(Guid id)
     {
-        var grain = _grainFactory.GetGrain<IQuestionGrain>(_currentUser);
+        var grain = _grainFactory.GetGrain<IQuestionGrain>(_userService.CurrentUser);
         return await grain.DeleteQuestion(id);
     }
 
     public async Task<Question?> GetQuestion(Guid id)
     {
-        var grain = _grainFactory.GetGrain<IQuestionGrain>(_currentUser);
+        var grain = _grainFactory.GetGrain<IQuestionGrain>(_userService.CurrentUser);
         return await grain.GetQuestion(id);
     }
 
     public async Task<ImmutableArray<QuestionSummary>> GetQuestionsSummary()
     {
-        var grain = _grainFactory.GetGrain<IQuestionGrain>(_currentUser);
+        var grain = _grainFactory.GetGrain<IQuestionGrain>(_userService.CurrentUser);
         return await grain.GetQuestionsSummary();
     }
 
     public async Task<ImmutableArray<Question>> GetQuestions(HashSet<Guid>? ids = null)
     {
-        var grain = _grainFactory.GetGrain<IQuestionGrain>(_currentUser);
+        var grain = _grainFactory.GetGrain<IQuestionGrain>(_userService.CurrentUser);
         return await grain.GetQuestions(ids);
     }
 }

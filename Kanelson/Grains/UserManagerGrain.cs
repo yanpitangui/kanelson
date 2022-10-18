@@ -1,4 +1,5 @@
-﻿using Orleans;
+﻿using System.Collections.Immutable;
+using Orleans;
 using Orleans.Runtime;
 using Shared.Grains;
 using Shared.Models;
@@ -23,10 +24,10 @@ public class UserManagerGrain : Grain, IUserManagerGrain
         await _state.WriteStateAsync();
     }
 
-    public Task<List<UserInfo>> GetUserInfo(params string[] ids)
+    public Task<ImmutableArray<UserInfo>> GetUserInfo(params string[] ids)
     {
         return Task.FromResult(
-            _state.State.Users.Where(x => ids.Contains(x.Id)).ToList()
+            _state.State.Users.Where(x => ids.Contains(x.Id)).ToImmutableArray()
             );
     }
 }

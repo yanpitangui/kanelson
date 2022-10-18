@@ -1,0 +1,37 @@
+﻿@page "/room/{Id}"
+@using global::Shared.Models
+@using Kanelson.Services
+@inject IRoomService _roomService
+@inject IUserService _userService
+<h3>RoomPage: @Id</h3>
+
+@if (_summary != null)
+{
+    @if (_summary.Owner.Id == _userService.CurrentUser)
+    {
+        <div>TELA DO ADMIN</div>
+    }
+    else
+    {
+        <div>TELA DO PLAYER</div>
+    }
+}
+else
+{
+    <div>Carregando...</div>
+}
+
+@code {
+
+    RoomSummary _summary;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        _summary = await _roomService.Get(Id);
+        await base.OnInitializedAsync();
+    }
+
+    [Parameter]
+    public string Id { get; set; } = null!;
+
+}

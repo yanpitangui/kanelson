@@ -10,11 +10,19 @@
 @implements IAsyncDisposable
 <h3>Player</h3>
 
-<MudProgressCircular Color="Color.Default" Indeterminate="true" />
 
-@{
-    string.Join(",", _connectedUsers);
+
+<MudList>
+    
+@foreach (var user in _connectedUsers)
+{
+    <MudListItem>
+        <Avatar GithubId="@user.Id"/>  <span>@user.Name</span>
+    </MudListItem>
 }
+</MudList>
+
+<MudProgressCircular Color="Color.Default" Indeterminate="true" />
 
 @code {
 

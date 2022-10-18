@@ -7,7 +7,12 @@
     
     RenderFragment Render(string nameIdentifier)
     {
+        return @<MudAvatar Style="margin-right: 5px" Image="@GetUrlFromId(nameIdentifier)"/>;
+    }
+
+    private static string GetUrlFromId(string nameIdentifier)
+    {
         var url = $"https://avatars.githubusercontent.com/u/{nameIdentifier}";
-        return @<MudAvatar Style="margin-right: 5px" Image="@url"/>;
+        return url;
     }
 }

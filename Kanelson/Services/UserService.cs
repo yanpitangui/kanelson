@@ -23,10 +23,16 @@ public class UserService : IUserService
         await grain.Upsert(id, name);
     }
 
-    public async Task<ImmutableArray<UserInfo>> GetUserInfo(params string[] ids)
+    public async Task<ImmutableArray<UserInfo>> GetUsersInfo(params string[] ids)
     {
         var grain = _grainFactory.GetGrain<IUserManagerGrain>(0);
-        return await grain.GetUserInfo(ids);
+        return await grain.GetUsersInfo(ids);
+    }
+    
+    public async Task<UserInfo> GetUserInfo(string id)
+    {
+        var grain = _grainFactory.GetGrain<IUserManagerGrain>(0);
+        return await grain.GetUserInfo(id);
     }
 }
 
@@ -36,5 +42,6 @@ public interface IUserService
     
     public Task Upsert(string id, string name);
 
-    public Task<ImmutableArray<UserInfo>> GetUserInfo(params string[] ids);
+    public Task<ImmutableArray<UserInfo>> GetUsersInfo(params string[] ids);
+    Task<UserInfo> GetUserInfo(string id);
 }

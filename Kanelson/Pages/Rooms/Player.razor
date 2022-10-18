@@ -1,7 +1,12 @@
 ﻿@using Microsoft.AspNetCore.SignalR.Client
 @using global::Shared.Models
 @using System.Collections.Immutable
+@using System.Net
+@using Kanelson.Hubs
+@using Kanelson.Services
+@using Microsoft.AspNetCore.SignalR
 @inject NavigationManager Navigation
+@inject IHttpContextAccessor httpAccessor
 @implements IAsyncDisposable
 <h3>Player</h3>
 
@@ -22,16 +27,31 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        httpAccessor.HttpContext.Request.Cookies.TryGetValue(".AspNetCore.Cookies", out var value);
+        var container = new CookieContainer();
+        container.Add(new Cookie
+        {
+            Domain = Navigation.ToAbsoluteUri(Navigation.Uri).Host,
+            Name = ".AspNetCore.Cookies",
+            Value = value
+        
+        });
         hubConnection = new HubConnectionBuilder()
-            .WithUrl(Navigation.ToAbsoluteUri("roomHub"))
+            .WithUrl(Navigation.ToAbsoluteUri("roomHub"), options =>
+            {
+                options.Cookies = container;
+            })
             .Build();
 
-        hubConnection.On<string, string>("UpdateConnectedUsers", (user, message) =>
+        hubConnection.On<HashSet<UserInfo>>("CurrentUsersUpdated", (users) =>
         {
-            
+            _connectedUsers = users.ToImmutableArray();
+            StateHasChanged();
         });
 
         await hubConnection.StartAsync();
+
+        await hubConnection.SendAsync("JoinRoom", RoomId);
     }
 
     public async ValueTask DisposeAsync()

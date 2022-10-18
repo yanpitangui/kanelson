@@ -28,10 +28,21 @@ public class RoomGrain : Grain, IRoomGrain
 
     public async Task<RoomSummary> GetSummary()
     {
-        var owner = (await _userService
-            .GetUserInfo(_state.State.OwnerId)).First();
+        var owner = await _userService
+            .GetUserInfo(_state.State.OwnerId);
 
         return new RoomSummary(this.GetPrimaryKeyString(), _state.State.Name, owner, _state.State.Status);
+    }
+
+    public async Task UpdateCurrentUsers(HashSet<UserInfo> users)
+    {
+        _state.State.CurrentUsers = users;
+        await _state.WriteStateAsync();
+    }
+
+    public Task<HashSet<UserInfo>> GetCurrentUsers()
+    {
+        return Task.FromResult(_state.State.CurrentUsers);
     }
 }
 
@@ -44,4 +55,5 @@ public record RoomState
     
     public RoomStatus Status { get; set; }
 
+    public HashSet<UserInfo> CurrentUsers { get; set; } = new();
 }

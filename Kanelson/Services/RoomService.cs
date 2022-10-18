@@ -82,6 +82,18 @@ public class RoomService : IRoomService
         var grain = _client.GetGrain<IRoomGrain>(id);
         return await grain.GetSummary();
     }
+
+    public async Task UpdateCurrentUsers(string roomId, HashSet<UserInfo> users)
+    {
+        var grain = _client.GetGrain<IRoomGrain>(roomId);
+        await grain.UpdateCurrentUsers(users);
+    }
+
+    public async Task<HashSet<UserInfo>> GetCurrentUsers(string roomId)
+    {
+        var grain = _client.GetGrain<IRoomGrain>(roomId);
+        return await grain.GetCurrentUsers();
+    }
 }
 
 public interface IRoomService
@@ -89,4 +101,7 @@ public interface IRoomService
     Task<string> CreateRoom(Guid templateId, string roomName);
     Task<ImmutableArray<RoomSummary>> GetAll();
     Task<RoomSummary> Get(string id);
+    Task UpdateCurrentUsers(string roomId, HashSet<UserInfo> users);
+
+    Task<HashSet<UserInfo>> GetCurrentUsers(string roomId);
 }

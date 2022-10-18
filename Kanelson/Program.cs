@@ -51,6 +51,7 @@ builder.Services.AddAuthentication(o =>
                 user.FindFirstValue(ClaimTypes.Name));
         };
     });
+
 builder.Services.AddOptions();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
@@ -108,13 +109,16 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+
 app.MapControllers();
-app.MapBlazorHub();
 app.MapHub<RoomHub>("/roomHub");
+app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseWebSockets();
+
+
 
 
 app.Run();

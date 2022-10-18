@@ -24,11 +24,16 @@ public class UserManagerGrain : Grain, IUserManagerGrain
         await _state.WriteStateAsync();
     }
 
-    public Task<ImmutableArray<UserInfo>> GetUserInfo(params string[] ids)
+    public Task<ImmutableArray<UserInfo>> GetUsersInfo(params string[] ids)
     {
         return Task.FromResult(
             _state.State.Users.Where(x => ids.Contains(x.Id)).ToImmutableArray()
             );
+    }
+
+    public Task<UserInfo> GetUserInfo(string id)
+    {
+        return Task.FromResult(_state.State.Users.First(x => x.Id == id));
     }
 }
 

@@ -8,4 +8,6 @@ public interface IRoomGrain : IGrainWithStringKey
 
     Task SetBase(string roomName, string owner, Template template);
     Task<RoomSummary> GetSummary();
+    Task UpdateCurrentUsers(HashSet<UserInfo> users);
+    Task<HashSet<UserInfo>> GetCurrentUsers();
 }

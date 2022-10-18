@@ -27,6 +27,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        // dar um jeito de não repetir isso daqui
         httpAccessor.HttpContext.Request.Cookies.TryGetValue(".AspNetCore.Cookies", out var value);
         var container = new CookieContainer();
         container.Add(new Cookie

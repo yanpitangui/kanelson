@@ -47,11 +47,40 @@ public class RoomHub : Hub
 
     }
 
-    public override Task OnDisconnectedAsync(Exception? exception)
+    public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var userId = Context.GetUserId();
-        
-        return base.OnDisconnectedAsync(exception);
+        var connectionId = Context.ConnectionId;
+
+        var rooms = RoomUsers
+            .Where(x => x.Value.ContainsKey(userId))
+            .Select(x => new
+            {
+                Room = x, 
+                User = x.Value.FirstOrDefault(y => y.Key == userId).Value
+            }).ToList();
+
+        foreach (var room in rooms)
+        {
+
+            lock (room.User.Connections)
+            {
+                room.User.Connections.Remove(connectionId);
+            }
+
+            if (!room.User.Connections.Any())
+            {
+                lock (room.Room.Value)
+                {
+                    room.Room.Value.TryRemove(userId, out _);
+                }
+            }
+            
+            var users = room.Room.Value.Values.Cast<UserInfo>().ToHashSet();
+            await _roomService.UpdateCurrentUsers(room.Room.Key, users);
+        }
+
+        await base.OnDisconnectedAsync(exception);
     }
 }
 

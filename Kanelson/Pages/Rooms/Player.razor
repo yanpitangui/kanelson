@@ -12,11 +12,9 @@
 
 <MudProgressCircular Color="Color.Default" Indeterminate="true" />
 
-@foreach (var user in _connectedUsers)
-{
-    <span>@user.Name</span>
+@{
+    string.Join(",", _connectedUsers);
 }
-
 
 @code {
 

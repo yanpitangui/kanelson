@@ -78,6 +78,8 @@ public class RoomHub : Hub
             
             var users = room.Room.Value.Values.Cast<UserInfo>().ToHashSet();
             await _roomService.UpdateCurrentUsers(room.Room.Key, users);
+            await Clients.Group(room.Room.Key).SendAsync("CurrentUsersUpdated", users);
+
         }
 
         await base.OnDisconnectedAsync(exception);

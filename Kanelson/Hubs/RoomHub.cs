@@ -1,11 +1,13 @@
 ﻿using System.Collections.Concurrent;
 using Kanelson.Extensions;
 using Kanelson.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Shared.Models;
 
 namespace Kanelson.Hubs;
 
+[Authorize]
 public class RoomHub : Hub
 {
     private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, HubUser>> RoomUsers = new();

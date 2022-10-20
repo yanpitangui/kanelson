@@ -10,4 +10,8 @@ public interface IRoomGrain : IGrainWithStringKey
     Task<RoomSummary> GetSummary();
     Task UpdateCurrentUsers(HashSet<UserInfo> users);
     Task<HashSet<UserInfo>> GetCurrentUsers();
+    Task<TemplateQuestion> GetCurrentQuestion();
+    Task<bool> IncrementQuestionIdx();
+    Task<bool> Start();
+    Task<string> GetOwner();
 }

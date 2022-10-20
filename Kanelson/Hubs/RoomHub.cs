@@ -46,7 +46,20 @@ public class RoomHub : Hub
         await _roomService.UpdateCurrentUsers(roomId, users);
 
         await Clients.Group(roomId).SendAsync("CurrentUsersUpdated", users);
+    }
 
+    public async Task Start(string roomId)
+    {
+        var owner = await _roomService.GetOwner(roomId);
+        var userId = Context.GetUserId();
+        if (owner == userId)
+        {
+            if (await _roomService.Start(roomId))
+            {
+                var currentQuestion = await _roomService.GetCurrentQuestion(roomId);
+                await Clients.Group(roomId).SendAsync("Started", currentQuestion);
+            }
+        }
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)

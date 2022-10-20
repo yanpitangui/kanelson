@@ -1,14 +1,47 @@
-﻿<h3>Admin</h3>
+﻿@using Microsoft.AspNetCore.SignalR.Client
+@using global::Shared.Models
+@using System.Collections.Immutable
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor httpAccessor
+<h3>Admin</h3>
+<MudList>
+    
+    @foreach (var user in _connectedUsers)
+    {
+        <MudListItem>
+            <Avatar GithubId="@user.Id"/>  <span>@user.Name</span>
+        </MudListItem>
+    }
+</MudList>
+
+<MudButton @onclick="@(() => Start())" Color="Color.Primary" 
+           Variant="Variant.Filled"
+           StartIcon="@Icons.Filled.Start">Iniciar</MudButton>
+    
 
 @code {
+    private HubConnection? hubConnection;
+    private ImmutableArray<UserInfo> _connectedUsers = ImmutableArray<UserInfo>.Empty;
+
 
     [Parameter]
     public string RoomId { get; set; } = null!;
 
-    protected override Task OnParametersSetAsync()
+    protected override async Task OnParametersSetAsync()
     {
-        
-        return base.OnParametersSetAsync();
+        hubConnection = httpAccessor.GetConnection(Navigation);
+
+
+        await hubConnection.StartAsync();
+        await base.OnParametersSetAsync();
     }
+
+    protected async Task Start()
+    {
+        await hubConnection.SendAsync("Start", RoomId);
+    }
+    
+    
+    
 
 }

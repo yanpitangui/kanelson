@@ -14,18 +14,36 @@
 
 <MudList>
     
-@foreach (var user in _connectedUsers)
-{
-    <MudListItem>
-        <Avatar GithubId="@user.Id"/>  <span>@user.Name</span>
-    </MudListItem>
-}
+    @foreach (var user in _connectedUsers)
+    {
+        <MudListItem>
+            <Avatar GithubId="@user.Id"/>  <span>@user.Name</span>
+        </MudListItem>
+    }
 </MudList>
+
+@if (_currentQuestion is not null)
+{
+    <MudCard>
+        <MudCardHeader>
+            @_currentQuestion.Name
+        </MudCardHeader>
+        <MudCardContent>
+            <MudList>
+                @foreach (var answer in _currentQuestion.Answers)
+                {
+                    <MudListItem>@answer.Description</MudListItem>
+                }
+            </MudList>
+        </MudCardContent>
+    </MudCard>
+}
 
 <MudProgressCircular Color="Color.Default" Indeterminate="true" />
 
 @code {
 
+    TemplateQuestion? _currentQuestion;
     [Parameter]
     public string RoomId { get; set; } = null!;
     private HubConnection? hubConnection;
@@ -33,26 +51,17 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        // dar um jeito de não repetir isso daqui
-        httpAccessor.HttpContext.Request.Cookies.TryGetValue(".AspNetCore.Cookies", out var value);
-        var container = new CookieContainer();
-        container.Add(new Cookie
-        {
-            Domain = Navigation.ToAbsoluteUri(Navigation.Uri).Host,
-            Name = ".AspNetCore.Cookies",
-            Value = value
-        
-        });
-        hubConnection = new HubConnectionBuilder()
-            .WithUrl(Navigation.ToAbsoluteUri("roomHub"), options =>
-            {
-                options.Cookies = container;
-            })
-            .Build();
-
+        hubConnection = httpAccessor.GetConnection(Navigation);
         hubConnection.On<HashSet<UserInfo>>("CurrentUsersUpdated", (users) =>
         {
             _connectedUsers = users.ToImmutableArray();
+            StateHasChanged();
+        });
+        
+        // não trazer a informação de qual questão é correta aqui
+        hubConnection.On<TemplateQuestion>("Started", (question) =>
+        {
+            _currentQuestion = question;
             StateHasChanged();
         });
 

@@ -1,0 +1,37 @@
+﻿@using System.Collections.Immutable
+@using Kanelson.Grains.Rooms
+<MudDialog>
+    <DialogContent>
+        <MudTable Items="Ranking" Hover="true" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>Nr</MudTh>
+                <MudTh>Nome</MudTh>
+                <MudTh>Pontos</MudTh>
+                <MudTh>Tempo médio (segs.)</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Nr">@context.Rank</MudTd>
+                <MudTd DataLabel="Name">
+                    <div class="d-inline-flex">
+                        <div class="d-inline"><Avatar GithubId="@context.Id"/></div>
+                        <div class="d-inline pa-2 mud-theme-dark" style="align-self:center">@context.Name</div>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Points">@context.Points</MudTd>
+                <MudTd DataLabel="Average Time">@context.AverageTime</MudTd>
+            </RowTemplate>
+        </MudTable>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public ImmutableArray<UserRanking> Ranking { get; set; }
+    
+    void Submit() => MudDialog.Close(DialogResult.Ok(true));
+    void Cancel() => MudDialog.Cancel();
+}

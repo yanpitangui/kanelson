@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using Kanelson.Hubs;
 using Kanelson.Services;
 using Microsoft.AspNetCore.SignalR;
@@ -63,22 +64,21 @@ public class RoomGrain : Grain, IRoomGrain
         return Task.FromResult(_state.State.Template.Questions[_state.State.CurrentQuestionIdx]);
     }
 
-    public async Task<bool> IncrementQuestionIdx()
+    public Task<bool> IncrementQuestionIdx()
     {
         if (_state.State.CurrentQuestionIdx + 1 <= _state.State.MaxQuestionIdx)
         {
             _state.State.CurrentQuestionIdx+= 1;
-            await _state.WriteStateAsync();
             _timerHandler = RegisterTimer(WaitForAnswersOrTimeOut, DateTime.Now, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1));
-            return true;
+            return Task.FromResult(true);
         }
 
-        return false;
+        return Task.FromResult(false);
     }
 
     public Task<bool> Start()
     {
-        if (_state.State.Status != RoomStatus.Created) return Task.FromResult(false);
+        //if (_state.State.Status != RoomStatus.Created) return Task.FromResult(false);
         SetEmptyQuestions();
         _state.State.Status = RoomStatus.Started;
         
@@ -91,7 +91,7 @@ public class RoomGrain : Grain, IRoomGrain
     {
         foreach (var question in _state.State.Template.Questions)
         {
-            _state.State.Answers.GetOrAdd(question.Id, _ => new ConcurrentDictionary<string, RoomAnswer>());
+            _state.State.Answers.TryAdd(question.Id, new ConcurrentDictionary<string, RoomAnswer>());
         }
     }
 
@@ -111,10 +111,38 @@ public class RoomGrain : Grain, IRoomGrain
         if (DateTime.Now - time >= TimeSpan.FromSeconds(currentQuestion.TimeLimit) || everyoneAnswered)
         {
             _timerHandler?.Dispose();
-            // Enviar score para todos, com ranking e blabla bla
+
+            var ranking = GetRanking();
+            await _hubContext.Clients
+                .Group(this.GetPrimaryKeyString())
+                .SendAsync("RoundFinished", ranking);
 
             await _state.WriteStateAsync();
         }
+    }
+
+    private ImmutableArray<UserRanking> GetRanking()
+    {
+        var groupedData = _state.State.Answers.Select(x => x.Value)
+            .SelectMany(x => x)
+            .GroupBy(x => x.Key)
+            .Select(x => new
+            {
+                Id = x.Key,
+                Points = x.Sum(y => y.Value.Points),
+                Average = x.Average(y => (decimal)y.Value.TimeToAnswer.TotalSeconds)
+            })
+            .OrderByDescending(x => x.Points)
+            .ThenBy(x => x.Average)
+            .Select((x, i) => new UserRanking
+            {
+                Id = x.Id,
+                AverageTime = x.Average,
+                Points = x.Points,
+                Rank = i + 1
+            })
+            .ToImmutableArray();
+        return groupedData;
     }
 
     public Task<string> GetOwner()
@@ -154,4 +182,15 @@ public record RoomAnswer
     public List<Guid> Alternatives { get; set; } = new();
 
     public TimeSpan TimeToAnswer { get; set; } = new();
+    
+    public decimal Points { get; set; }
+}
+
+public record UserRanking : UserInfo
+{
+    public decimal Points { get; set; }
+    
+    public decimal AverageTime { get; set; }
+    
+    public int Rank { get; set; }
 }

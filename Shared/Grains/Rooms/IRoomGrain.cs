@@ -14,4 +14,5 @@ public interface IRoomGrain : IGrainWithStringKey
     Task<bool> IncrementQuestionIdx();
     Task<bool> Start();
     Task<string> GetOwner();
+    Task Delete();
 }

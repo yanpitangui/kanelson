@@ -26,6 +26,8 @@ public class RoomHub : Hub
 
         var userId = Context.GetUserId();
         var connectionId = Context.ConnectionId;
+        var roomOwner = await _roomService.GetOwner(roomId);
+        if (userId == roomOwner) return;
         var userInfo = await _userService.GetUserInfo(userId);
 
         var room = RoomUsers.GetOrAdd(roomId, _ => 
@@ -44,8 +46,6 @@ public class RoomHub : Hub
 
         var users = room.Values.Cast<UserInfo>().ToHashSet();
         await _roomService.UpdateCurrentUsers(roomId, users);
-
-        await Clients.Group(roomId).SendAsync("CurrentUsersUpdated", users);
     }
 
     public async Task Start(string roomId)
@@ -54,11 +54,7 @@ public class RoomHub : Hub
         var userId = Context.GetUserId();
         if (owner == userId)
         {
-            if (await _roomService.Start(roomId))
-            {
-                var currentQuestion = await _roomService.GetCurrentQuestion(roomId);
-                await Clients.Group(roomId).SendAsync("Started", currentQuestion);
-            }
+            await _roomService.Start(roomId);
         }
     }
 
@@ -93,8 +89,6 @@ public class RoomHub : Hub
             
             var users = room.Room.Value.Values.Cast<UserInfo>().ToHashSet();
             await _roomService.UpdateCurrentUsers(room.Room.Key, users);
-            await Clients.Group(room.Room.Key).SendAsync("CurrentUsersUpdated", users);
-
         }
 
         await base.OnDisconnectedAsync(exception);

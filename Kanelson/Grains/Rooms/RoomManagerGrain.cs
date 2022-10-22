@@ -31,6 +31,12 @@ public class RoomManagerGrain : Grain, IRoomManagerGrain
     {
         return Task.FromResult(_state.State.Items.ToImmutableArray());
     }
+
+    public async Task Unregister(string room)
+    {
+        _state.State.Items.Remove(room);
+        await _state.WriteStateAsync();
+    }
 }
 
 [Serializable]

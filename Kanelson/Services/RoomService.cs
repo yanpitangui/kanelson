@@ -118,6 +118,22 @@ public class RoomService : IRoomService
         var grain = _client.GetGrain<IRoomGrain>(roomId);
         return await grain.GetOwner();
     }
+
+    public async Task Delete(string roomId)
+    {
+        var manager = _client.GetGrain<IRoomManagerGrain>(0);
+        if (!await manager.Exists(roomId))
+        {
+            throw new KeyNotFoundException();
+        }
+        var grain = _client.GetGrain<IRoomGrain>(roomId);
+
+        if (_userService.CurrentUser == await grain.GetOwner())
+        {
+            await manager.Unregister(roomId);
+            await grain.Delete();
+        }
+    }
 }
 
 public interface IRoomService
@@ -132,4 +148,5 @@ public interface IRoomService
     Task<bool> IncrementQuestionIdx(string roomId);
     Task<bool> Start(string roomId);
     Task<string> GetOwner(string roomId);
+    Task Delete(string roomId);
 }

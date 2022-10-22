@@ -3,6 +3,7 @@
 @using global::Shared.Models
 @using System.Collections.Immutable
 @inject IRoomService _service
+@inject IUserService _userService
 @inject NavigationManager Navigation
 
 @if (_rooms is null)
@@ -21,6 +22,8 @@ else
                 <MudTh>Id</MudTh>
                 <MudTh>Nome</MudTh>
                 <MudTh>Host</MudTh>
+                <MudTh>Ações</MudTh>
+
             </HeaderContent>
             <RowTemplate>
                 <MudTd>
@@ -33,6 +36,11 @@ else
                 <MudTd DataLabel="Nome">@context.Name</MudTd>
                 <MudTd DataLabel="Host">
                     <Avatar GithubId="@context.Owner.Id"/>
+                </MudTd>
+                <MudTd>
+                    <MudFab @onclick="@(() => DeleteRoom(@context.Id))" Color="Color.Secondary"
+                            Disabled="@(_userService.CurrentUser != context.Owner.Id)"
+                            Icon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small"/>
                 </MudTd>
 
             </RowTemplate>
@@ -56,6 +64,13 @@ else
     private void JoinRoom(string id)
     { 
         Navigation.NavigateTo($"/room/{id}");
-    } 
+    }
+
+    private async Task DeleteRoom(string id)
+    {
+        await _service.Delete(id);
+        _rooms = await _service.GetAll();
+        StateHasChanged();
+    }
     
 }

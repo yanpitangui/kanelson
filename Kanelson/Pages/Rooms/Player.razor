@@ -10,8 +10,6 @@
 @implements IAsyncDisposable
 <h3>Player</h3>
 
-
-
 <MudList>
     
     @foreach (var user in _connectedUsers)
@@ -64,7 +62,7 @@
             _currentQuestion = question;
             StateHasChanged();
         });
-
+        
         await hubConnection.StartAsync();
 
         await hubConnection.SendAsync("JoinRoom", RoomId);

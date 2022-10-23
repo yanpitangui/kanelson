@@ -32,7 +32,10 @@
             <MudList>
                 @foreach (var answer in _currentQuestion.Answers)
                 {
-                    <MudListItem>@answer.Description</MudListItem>
+                    <MudListItem>
+                        <MudButton OnClick="@(() => Answer(answer.Id))"> @answer.Description</MudButton>
+                    </MudListItem>
+                    <MudDivider />
                 }
             </MudList>
         </MudCardContent>
@@ -49,7 +52,6 @@
     private HubConnection? hubConnection;
     private ImmutableArray<UserInfo> _connectedUsers = ImmutableArray<UserInfo>.Empty;
     
-    private ImmutableArray<UserRanking> _lastRanking = ImmutableArray<UserRanking>.Empty;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -59,26 +61,31 @@
             _connectedUsers = users.ToImmutableArray();
             StateHasChanged();
         });
-        
-        // não trazer a informação de qual questão é correta aqui
-        hubConnection.On<TemplateQuestion>("Started", (question) =>
-        {
-            _currentQuestion = question;
-            StateHasChanged();
-        });
 
         hubConnection.On<ImmutableArray<UserRanking>>("RoundFinished", (ranking) =>
         {
             var parameters = new DialogParameters { ["Ranking"]=ranking };
 
-            var dialog = DialogService.Show<RankingDialog>("Ranking", parameters);
+            DialogService.Show<RankingDialog>("Ranking", parameters);
+            
+            _currentQuestion = null;
+            StateHasChanged();
+        });
 
-            _lastRanking = ranking;
+        hubConnection.On<TemplateQuestion>("NextQuestion", (question) =>
+        {
+            _currentQuestion = question;
+            StateHasChanged();
         });
         
         await hubConnection.StartAsync();
 
         await hubConnection.SendAsync("JoinRoom", RoomId);
+    }
+
+    public async Task Answer(Guid answerId)
+    {
+        await hubConnection!.SendAsync("Answer", RoomId,  answerId);
     }
 
     public async ValueTask DisposeAsync()

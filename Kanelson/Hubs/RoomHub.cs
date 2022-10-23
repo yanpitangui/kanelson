@@ -58,6 +58,12 @@ public class RoomHub : Hub
         }
     }
 
+    public async Task Answer(string roomId, Guid answerId)
+    {
+        var userId = Context.GetUserId();
+        await _roomService.Answer(userId, roomId, answerId);
+    }
+    
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var userId = Context.GetUserId();

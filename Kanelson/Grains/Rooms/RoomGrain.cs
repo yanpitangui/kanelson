@@ -16,6 +16,10 @@ public class RoomGrain : Grain, IRoomGrain
     private readonly IUserService _userService;
     private readonly IHubContext<RoomHub> _hubContext;
     private IDisposable? _timerHandler;
+    private DateTime _currentQuestionStartTime;
+
+    private TemplateQuestion CurrentQuestion => _state.State.Template.Questions[_state.State.CurrentQuestionIdx];
+
 
     public RoomGrain([PersistentState("rooms", "kanelson-storage")]
         IPersistentState<RoomState> users, IUserService userService,
@@ -61,34 +65,48 @@ public class RoomGrain : Grain, IRoomGrain
 
     public Task<TemplateQuestion> GetCurrentQuestion()
     {
-        return Task.FromResult(_state.State.Template.Questions[_state.State.CurrentQuestionIdx]);
+        return Task.FromResult(CurrentQuestion);
     }
 
-    public Task<bool> IncrementQuestionIdx()
+
+    public async Task<bool> NextQuestion()
     {
-        if (_state.State.CurrentQuestionIdx + 1 <= _state.State.MaxQuestionIdx)
-        {
-            _state.State.CurrentQuestionIdx+= 1;
-            _timerHandler = RegisterTimer(WaitForAnswersOrTimeOut, DateTime.Now, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1));
-            return Task.FromResult(true);
-        }
+        if (_state.State.CurrentQuestionIdx + 1 > _state.State.MaxQuestionIdx) return false;
+        _state.State.CurrentQuestionIdx+= 1;
+        await SendNextQuestion();
+        SetTimeHandler();
+        return true;
 
-        return Task.FromResult(false);
     }
 
-    public Task<bool> Start()
+    private void SetTimeHandler()
+    {
+        _currentQuestionStartTime = DateTime.Now;
+        _timerHandler = RegisterTimer(WaitForAnswersOrTimeOut, _currentQuestionStartTime, TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(1));
+    }
+
+    public async Task<bool> Start()
     {
         //if (_state.State.Status != RoomStatus.Created) return Task.FromResult(false);
-        SetEmptyQuestions();
-        _state.State.Status = RoomStatus.Started;
-        
-        _timerHandler = RegisterTimer(WaitForAnswersOrTimeOut, DateTime.Now, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1));
-        return Task.FromResult(true);
+        SetStartedState();
+        await SendNextQuestion();
+        SetTimeHandler();
+        return true;
+    }
+
+    private async Task SendNextQuestion()
+    {
+        await _hubContext.Clients.Group(this.GetPrimaryKeyString())
+            .SendAsync("NextQuestion", CurrentQuestion);
     }
 
 
-    private void SetEmptyQuestions()
+    private void SetStartedState()
     {
+        _state.State.Status = RoomStatus.Started;
+        _state.State.Answers.Clear();
+        _state.State.CurrentQuestionIdx = 0;
         foreach (var question in _state.State.Template.Questions)
         {
             _state.State.Answers.TryAdd(question.Id, new ConcurrentDictionary<string, RoomAnswer>());
@@ -98,7 +116,7 @@ public class RoomGrain : Grain, IRoomGrain
     private bool CheckEveryoneAnswered()
     {
         var users = _state.State.CurrentUsers.Select(x => x.Id).ToHashSet();
-        var currentQuestion = _state.State.Template.Questions[_state.State.CurrentQuestionIdx];
+        var currentQuestion = CurrentQuestion;
         // verifica se para cada usuário logado, existe um registro de resposta, de maneira burra
         return _state.State.Answers[currentQuestion.Id].Keys.ToHashSet().SetEquals(users);
     }
@@ -106,7 +124,7 @@ public class RoomGrain : Grain, IRoomGrain
     private async Task WaitForAnswersOrTimeOut(object initialTime)
     {
         var time = Convert.ToDateTime(initialTime);
-        var currentQuestion = _state.State.Template.Questions[_state.State.CurrentQuestionIdx];
+        var currentQuestion = CurrentQuestion;
         var everyoneAnswered = CheckEveryoneAnswered();
         if (DateTime.Now - time >= TimeSpan.FromSeconds(currentQuestion.TimeLimit) || everyoneAnswered)
         {
@@ -139,6 +157,8 @@ public class RoomGrain : Grain, IRoomGrain
                 Id = x.Id,
                 AverageTime = x.Average,
                 Points = x.Points,
+                // talvez trocar isso aqui se tiver muito lerdo
+                Name = _state.State.CurrentUsers.FirstOrDefault(y => y.Id == x.Id)?.Name!,
                 Rank = i + 1
             })
             .ToImmutableArray();
@@ -155,7 +175,37 @@ public class RoomGrain : Grain, IRoomGrain
         await _state.ClearStateAsync();
         DeactivateOnIdle();
     }
+
+    private RoomAnswer CalculatePoints(Guid answerId)
+    {
+        var timeToAnswer = DateTime.Now - _currentQuestionStartTime;
+        var isCorrect = CurrentQuestion.Answers.Where(x => x.Correct).Select(x => x.Id).Contains(answerId);
+        // Kahoot formula: https://support.kahoot.com/hc/en-us/articles/115002303908-How-points-work
+        var wouldBePoints = Math.Round((decimal)
+            (1 - (timeToAnswer.TotalSeconds /  CurrentQuestion.TimeLimit) / 2) * CurrentQuestion.Points);
+
+        return new RoomAnswer
+        {
+            AnswerId = answerId,
+            Correct = isCorrect,
+            Points = isCorrect ? wouldBePoints : 0,
+            TimeToAnswer = timeToAnswer
+        };
+    }
     
+    public Task Answer(string userId, string roomId, Guid answerId)
+    {
+
+        if (!CurrentQuestion.Answers.Select(x => x.Id).Contains(answerId)) return Task.CompletedTask;
+        var question =
+            _state.State.Answers.GetOrAdd(CurrentQuestion.Id,
+                _ => new ConcurrentDictionary<string, RoomAnswer>());
+        
+        var answerInfo = CalculatePoints(answerId);
+        
+        question.TryAdd(userId, answerInfo);
+        return Task.CompletedTask;
+    }
 }
 
 [Serializable]
@@ -179,11 +229,12 @@ public record RoomState
 
 public record RoomAnswer
 {
-    public List<Guid> Alternatives { get; set; } = new();
+    public Guid AnswerId { get; init; }
 
-    public TimeSpan TimeToAnswer { get; set; } = new();
+    public TimeSpan TimeToAnswer { get; init; } = new();
     
-    public decimal Points { get; set; }
+    public decimal Points { get; init; }
+    public bool Correct { get; set; }
 }
 
 public record UserRanking : UserInfo

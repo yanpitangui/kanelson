@@ -11,8 +11,9 @@ public interface IRoomGrain : IGrainWithStringKey
     Task UpdateCurrentUsers(HashSet<UserInfo> users);
     Task<HashSet<UserInfo>> GetCurrentUsers();
     Task<TemplateQuestion> GetCurrentQuestion();
-    Task<bool> IncrementQuestionIdx();
+    Task<bool> NextQuestion();
     Task<bool> Start();
     Task<string> GetOwner();
     Task Delete();
+    Task Answer(string userId, string roomId, Guid answerId);
 }

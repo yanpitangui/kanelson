@@ -101,10 +101,10 @@ public class RoomService : IRoomService
         return await grain.GetCurrentQuestion();
     }
 
-    public async Task<bool> IncrementQuestionIdx(string roomId)
+    public async Task<bool> NextQuestion(string roomId)
     {
         var grain = _client.GetGrain<IRoomGrain>(roomId);
-        return await grain.IncrementQuestionIdx();
+        return await grain.NextQuestion();
     }
 
     public async Task<bool> Start(string roomId)
@@ -134,6 +134,17 @@ public class RoomService : IRoomService
             await grain.Delete();
         }
     }
+
+    public async Task Answer(string userId, string roomId, Guid answerId)
+    {
+        var manager = _client.GetGrain<IRoomManagerGrain>(0);
+        if (!await manager.Exists(roomId))
+        {
+            throw new KeyNotFoundException();
+        }
+        var grain = _client.GetGrain<IRoomGrain>(roomId);
+        await grain.Answer(userId, roomId, answerId);
+    }
 }
 
 public interface IRoomService
@@ -145,8 +156,9 @@ public interface IRoomService
 
     Task<HashSet<UserInfo>> GetCurrentUsers(string roomId);
     Task<TemplateQuestion> GetCurrentQuestion(string roomId);
-    Task<bool> IncrementQuestionIdx(string roomId);
+    Task<bool> NextQuestion(string roomId);
     Task<bool> Start(string roomId);
     Task<string> GetOwner(string roomId);
     Task Delete(string roomId);
+    Task Answer(string userId, string roomId, Guid answerId);
 }

@@ -34,7 +34,7 @@ public class RoomGrain : Grain, IRoomGrain
         _state.State.Name = roomName;
         _state.State.OwnerId = owner;
         _state.State.Template = template;
-        _state.State.MaxQuestionIdx = Math.Min(template.Questions.Length - 1, 0);
+        _state.State.MaxQuestionIdx = Math.Clamp(template.Questions.Length - 1, 0, int.MaxValue);
         _state.State.CurrentQuestionIdx = 0;
         await _state.WriteStateAsync();
     }

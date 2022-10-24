@@ -1,8 +1,10 @@
 ﻿@using Microsoft.AspNetCore.SignalR.Client
 @using global::Shared.Models
 @using System.Collections.Immutable
+@using Kanelson.Services
 @inject NavigationManager Navigation
 @inject IHttpContextAccessor httpAccessor
+@inject IRoomService roomService
 <h3>Admin</h3>
 <MudList>
     
@@ -14,15 +16,43 @@
     }
 </MudList>
 
+
+
+@if (_currentQuestion is not null)
+{
+    <MudCard>
+        <MudCardHeader>
+            @_currentQuestion.Name
+        </MudCardHeader>
+        <MudCardContent>
+            <MudList>
+                @foreach (var answer in _currentQuestion.Answers)
+                {
+                    <MudListItem>
+                       @answer.Description
+                    </MudListItem>
+                    <MudDivider />
+                }
+            </MudList>
+        </MudCardContent>
+    </MudCard>
+}
+
+@* Dar um jeito de esconder o botão depois do início da partida *@
 <MudButton @onclick="@(() => Start())" Color="Color.Primary" 
            Variant="Variant.Filled"
            StartIcon="@Icons.Filled.Start">Iniciar</MudButton>
+
+@* Dar um jeito de esconder o botão enquanto o round esteja rodando *@
+<MudButton @onclick="@(() => NextQuestion())" Color="Color.Primary" 
+           Variant="Variant.Filled"
+           StartIcon="@Icons.Filled.SkipNext">Próxima pergunta</MudButton>
     
 
 @code {
     private HubConnection? hubConnection;
-    private ImmutableArray<UserInfo> _connectedUsers = ImmutableArray<UserInfo>.Empty;
-
+    private IEnumerable<UserInfo> _connectedUsers = ImmutableArray<UserInfo>.Empty;
+    TemplateQuestion? _currentQuestion;
 
     [Parameter]
     public string RoomId { get; set; } = null!;
@@ -31,8 +61,21 @@
     {
         hubConnection = httpAccessor.GetConnection(Navigation);
 
+        hubConnection.On<HashSet<UserInfo>>("CurrentUsersUpdated", (users) =>
+        {
+            _connectedUsers = users.ToImmutableArray();
+            StateHasChanged();
+        });
+        
+        hubConnection.On<TemplateQuestion>("NextQuestion", (question) =>
+        {
+            _currentQuestion = question;
+            StateHasChanged();
+        });
 
         await hubConnection.StartAsync();
+        _connectedUsers = await roomService.GetCurrentUsers(RoomId);
+
         await base.OnParametersSetAsync();
     }
 
@@ -40,8 +83,10 @@
     {
         await hubConnection.SendAsync("Start", RoomId);
     }
-    
-    
-    
+
+    protected async Task NextQuestion()
+    {
+        await roomService.NextQuestion(RoomId);
+    }
 
 }

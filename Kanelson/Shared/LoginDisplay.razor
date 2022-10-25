@@ -1,5 +1,7 @@
 ﻿@using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Rendering
+@inject NavigationManager NavigationManager
+
 <AuthorizeView>
     <Authorized>
         <div class="d-inline-flex">
@@ -17,6 +19,7 @@
         </div>
         <form action="/signin" method="post">
             <input type="hidden" name="Provider" value="GitHub"/>
+            <input type="hidden" name="RedirectUri" value="@NavigationManager.Uri"/>
             <MudFab ButtonType="ButtonType.Submit"
                     StartIcon="@Icons.Custom.Brands.GitHub" Label="Login with Github" />
         </form>

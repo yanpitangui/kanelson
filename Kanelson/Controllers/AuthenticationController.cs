@@ -8,7 +8,7 @@ namespace Kanelson.Controllers;
 public class AuthenticationController : Controller
 {
     [HttpPost("~/signin")]
-    public async Task<IActionResult> SignIn([FromForm] string provider)
+    public async Task<IActionResult> SignIn([FromForm] string provider, [FromForm] string redirectUri)
     {
         // Note: the "provider" parameter corresponds to the external
         // authentication provider choosen by the user agent.
@@ -25,7 +25,7 @@ public class AuthenticationController : Controller
         // Instruct the middleware corresponding to the requested external identity
         // provider to redirect the user agent to its own authorization endpoint.
         // Note: the authenticationScheme parameter must match the value configured in Startup.cs
-        return Challenge(new AuthenticationProperties { RedirectUri = "/" }, provider);
+        return Challenge(new AuthenticationProperties { RedirectUri = redirectUri }, provider);
     }
 
     [HttpGet("~/signout")]

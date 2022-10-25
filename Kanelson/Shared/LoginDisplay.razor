@@ -2,13 +2,23 @@
 @using Microsoft.AspNetCore.Components.Rendering
 <AuthorizeView>
     <Authorized>
-
-        <Avatar GithubId="@context.User.FindFirstValue(ClaimTypes.NameIdentifier)"/> @context.User.Identity?.Name! 
+        <div class="d-inline-flex">
+            <div class="d-inline"><Avatar GithubId="@context.User.FindFirstValue(ClaimTypes.NameIdentifier)"/></div>
+            <div class="d-inline pa-2 mud-theme-dark" style="align-self:center">@context.User.Identity?.Name!</div>
+        </div>
+        <MudDivider/>
         <form method="post" action="signout">
-            <button type="submit" class="nav-link btn btn-link">Log out</button>
+            <MudButton ButtonType="ButtonType.Submit">Logout</MudButton>
         </form>
     </Authorized>
     <NotAuthorized>
-        <a href="signin">Log in</a>
+        <div >
+            
+        </div>
+        <form action="/signin" method="post">
+            <input type="hidden" name="Provider" value="GitHub"/>
+            <MudFab ButtonType="ButtonType.Submit"
+                    StartIcon="@Icons.Custom.Brands.GitHub" Label="Login with Github" />
+        </form>
     </NotAuthorized>
 </AuthorizeView>

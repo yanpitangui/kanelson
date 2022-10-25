@@ -1,50 +1,11 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Kanelson</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
+﻿<MudNavMenu>
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Página inicial</MudNavLink>
+    <AuthorizeView>
+        <Authorized>
+            <MudNavLink Href="questions" Match="NavLinkMatch.Prefix" Icon="@Icons.Filled.QuestionMark">Perguntas</MudNavLink>
+            <MudNavLink Href="templates" Match="NavLinkMatch.Prefix" Icon="@Icons.Custom.Uncategorized.FolderOpen">Templates</MudNavLink>
+            <MudNavLink Href="rooms" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PlayArrow">Salas</MudNavLink>
+        </Authorized>
+            </AuthorizeView>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Página inicial
-            </NavLink>
-        </div>
-        <AuthorizeView>
-            <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="questions">
-                        <span class="oi oi-question-mark" aria-hidden="true"></span> Perguntas
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="templates">
-                        <span class="oi oi-project" aria-hidden="true"></span> Templates
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="rooms">
-                        <span class="oi oi-media-play" aria-hidden="true"></span> Salas
-                    </NavLink>
-                </div>
-            </Authorized>
-        </AuthorizeView>
-
-    </nav>
-</div>
-
-@code {
-    private bool collapseNavMenu = true;
-
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
-
-}
+</MudNavMenu>

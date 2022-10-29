@@ -109,10 +109,9 @@ builder.Services.AddOpenTelemetryTracing(telemetry =>
                     serviceVersion: OpenTelemetryExtensions.ServiceVersion));
     telemetry.AddSource("orleans.runtime.graincall")
         .AddAspNetCoreInstrumentation()
-        .AddJaegerExporter(exporter =>
+        .AddZipkinExporter(exporter =>
         {
-            exporter.AgentHost = builder.Configuration["Jaeger:AgentHost"];
-            exporter.AgentPort = Convert.ToInt32(builder.Configuration["Jaeger:AgentPort"]);
+            exporter.Endpoint = new Uri(builder.Configuration["ZipkinUri"]);
         });
 });
 

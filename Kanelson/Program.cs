@@ -1,18 +1,25 @@
+using System.Diagnostics;
 using System.Security.Claims;
 using Kanelson.Grains.Templates;
 using Kanelson.Hubs;
 using Kanelson.Services;
+using Kanelson.Tracing;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.ResponseCompression;
 using MudBlazor.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Orleans;
 using Orleans.Hosting;
 using Serilog;
 using Serilog.Events;
 using Serilog.Exceptions;
 using Serilog.Sinks.SystemConsole.Themes;
+
+
+Activity.DefaultIdFormat = ActivityIdFormat.W3C;
 
 var builder = WebApplication.CreateBuilder(args);
 // remove default logging providers
@@ -70,6 +77,9 @@ builder.Services.AddResponseCompression(opts =>
 
 builder.Host.UseOrleans(siloBuilder =>
 {
+    siloBuilder
+        .AddOutgoingGrainCallFilter<ActivityPropagationOutgoingGrainCallFilter>()
+        .AddIncomingGrainCallFilter<ActivityPropagationIncomingGrainCallFilter>();
     siloBuilder.UseLocalhostClustering()
         .UseMongoDBClient(builder.Configuration.GetConnectionString("MongoDb"))
         .AddMongoDBGrainStorage("kanelson-storage", options =>
@@ -87,6 +97,23 @@ builder.Host.UseOrleans(siloBuilder =>
     {
         parts.AddApplicationPart(typeof(TemplateGrain).Assembly).WithReferences();
     });
+});
+
+builder.Services.AddOpenTelemetryTracing(telemetry =>
+{
+    telemetry
+        .AddSource(OpenTelemetryExtensions.ServiceName)
+        .SetResourceBuilder(
+            ResourceBuilder.CreateDefault()
+                .AddService(serviceName: OpenTelemetryExtensions.ServiceName,
+                    serviceVersion: OpenTelemetryExtensions.ServiceVersion));
+    telemetry.AddSource("orleans.runtime.graincall")
+        .AddAspNetCoreInstrumentation()
+        .AddJaegerExporter(exporter =>
+        {
+            exporter.AgentHost = builder.Configuration["Jaeger:AgentHost"];
+            exporter.AgentPort = Convert.ToInt32(builder.Configuration["Jaeger:AgentPort"]);
+        });
 });
 
 

@@ -81,16 +81,11 @@ builder.Host.UseOrleans(siloBuilder =>
         .AddOutgoingGrainCallFilter<ActivityPropagationOutgoingGrainCallFilter>()
         .AddIncomingGrainCallFilter<ActivityPropagationIncomingGrainCallFilter>();
     siloBuilder.UseLocalhostClustering()
-        .UseMongoDBClient(builder.Configuration.GetConnectionString("MongoDb"))
-        .AddMongoDBGrainStorage("kanelson-storage", options =>
+        .AddRedisGrainStorage("kanelson-storage", options =>
         {
-            options.DatabaseName = "Kanelson";
-            options.ConfigureJsonSerializerSettings = settings =>
-            {
-                settings.NullValueHandling = NullValueHandling.Include;
-                settings.ObjectCreationHandling = ObjectCreationHandling.Replace;
-                settings.DefaultValueHandling = DefaultValueHandling.Populate;
-            };
+            options.ConnectionString = builder.Configuration.GetConnectionString("Redis");
+            options.UseJson = true;
+            options.DatabaseNumber = 0;
         });
 
     siloBuilder.ConfigureApplicationParts(parts =>

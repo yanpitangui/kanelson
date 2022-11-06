@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Security.Claims;
+using Azure.Monitor.OpenTelemetry.Exporter;
 using Kanelson.Grains.Templates;
 using Kanelson.Hubs;
 using Kanelson.Services;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using MudBlazor.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Orleans;
@@ -75,6 +77,8 @@ builder.Services.AddResponseCompression(opts =>
 });
 
 
+
+
 builder.Host.UseOrleans(siloBuilder =>
 {
     siloBuilder
@@ -94,6 +98,28 @@ builder.Host.UseOrleans(siloBuilder =>
     });
 });
 
+var appInsightsConnString = builder.Configuration.GetValue<string>("APPLICATIONINSIGHTS_CONNECTION_STRING");
+
+builder.Services.AddOpenTelemetryMetrics(metrics =>
+{
+    metrics.AddRuntimeInstrumentation()
+        .AddMeter(OpenTelemetryExtensions.ServiceName)
+        .AddAspNetCoreInstrumentation()
+        .AddEventCountersInstrumentation(c =>
+        {
+            c.AddEventSources("Microsoft.AspNetCore.Hosting");
+        });
+
+    if (string.IsNullOrWhiteSpace(appInsightsConnString))
+    {
+        metrics.AddAzureMonitorMetricExporter(o =>
+        {
+            o.ConnectionString = appInsightsConnString;
+        });   
+    }
+            
+});
+
 builder.Services.AddOpenTelemetryTracing(telemetry =>
 {
     telemetry
@@ -103,12 +129,17 @@ builder.Services.AddOpenTelemetryTracing(telemetry =>
                 .AddService(serviceName: OpenTelemetryExtensions.ServiceName,
                     serviceVersion: OpenTelemetryExtensions.ServiceVersion));
     telemetry.AddSource("orleans.runtime.graincall")
-        .AddAspNetCoreInstrumentation()
-        .AddZipkinExporter(exporter =>
+        .AddAspNetCoreInstrumentation();
+        
+    if (string.IsNullOrWhiteSpace(appInsightsConnString))
+    {
+        telemetry.AddAzureMonitorTraceExporter(o =>
         {
-            exporter.Endpoint = new Uri(builder.Configuration["ZipkinUri"]);
-        });
+            o.ConnectionString = appInsightsConnString;
+        });   
+    }
 });
+
 
 
 var app = builder.Build();

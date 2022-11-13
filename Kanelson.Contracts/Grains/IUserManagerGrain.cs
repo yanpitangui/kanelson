@@ -1,7 +1,6 @@
-﻿using Orleans;
-using Shared.Models;
+﻿using Kanelson.Contracts.Models;
 
-namespace Shared.Grains;
+namespace Kanelson.Contracts.Grains;
 
 public interface IUserManagerGrain : IGrainWithIntegerKey
 {

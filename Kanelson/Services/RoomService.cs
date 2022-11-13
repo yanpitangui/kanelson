@@ -1,9 +1,9 @@
 ﻿using System.Buffers;
 using System.Collections.Immutable;
 using Orleans;
-using Shared.Grains.Rooms;
-using Shared.Grains.Templates;
-using Shared.Models;
+using Kanelson.Contracts.Grains.Rooms;
+using Kanelson.Contracts.Grains.Templates;
+using Kanelson.Contracts.Models;
 using shortid;
 
 namespace Kanelson.Services;

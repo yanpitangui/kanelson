@@ -5,8 +5,8 @@ using Kanelson.Services;
 using Microsoft.AspNetCore.SignalR;
 using Orleans;
 using Orleans.Runtime;
-using Shared.Grains.Rooms;
-using Shared.Models;
+using Kanelson.Contracts.Grains.Rooms;
+using Kanelson.Contracts.Models;
 
 namespace Kanelson.Grains.Rooms;
 
@@ -208,22 +208,31 @@ public class RoomGrain : Grain, IRoomGrain
     }
 }
 
-[Serializable]
+[GenerateSerializer]
 public record RoomState
 {
+    [Id(0)]
     public string OwnerId { get; set; } = null!;
+    
+    [Id(1)]
     public string Name { get; set; } = null!;
 
+    [Id(2)]
     public ConcurrentDictionary<Guid, ConcurrentDictionary<string, RoomAnswer>> Answers { get; init; } = new();
 
+    [Id(3)]
     public Template Template { get; set; } = null!;
     
+    [Id(3)]
     public RoomStatus Status { get; set; }
 
+    [Id(4)]
     public HashSet<UserInfo> CurrentUsers { get; set; } = new();
     
+    [Id(5)]
     public int CurrentQuestionIdx { get; set; }
     
+    [Id(6)]
     public int MaxQuestionIdx { get; set; }
 }
 

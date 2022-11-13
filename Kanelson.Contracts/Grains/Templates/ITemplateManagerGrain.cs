@@ -1,6 +1,4 @@
-﻿using Orleans;
-
-namespace Shared.Grains.Templates;
+﻿namespace Kanelson.Contracts.Grains.Templates;
 
 public interface ITemplateManagerGrain : IGrainWithStringKey
 {

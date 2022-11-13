@@ -1,7 +1,7 @@
 ﻿using Orleans;
 using Orleans.Runtime;
-using Shared.Grains.Templates;
-using Shared.Models;
+using Kanelson.Contracts.Grains.Templates;
+using Kanelson.Contracts.Models;
 
 namespace Kanelson.Grains.Templates;
 
@@ -45,9 +45,12 @@ public class TemplateGrain : Grain, ITemplateGrain
     }
 }
 
-[Serializable]
+[GenerateSerializer]
 public record TemplateState
 {
+    [Id(0)]
     public string OwnerId { get; set; } = null!;
+    
+    [Id(1)]
     public Template Template { get; set; } = null!;
 }

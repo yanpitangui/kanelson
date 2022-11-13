@@ -1,7 +1,7 @@
 ﻿using System.Collections.Immutable;
 using Orleans;
 using Orleans.Runtime;
-using Shared.Grains.Rooms;
+using Kanelson.Contracts.Grains.Rooms;
 
 namespace Kanelson.Grains.Rooms;
 
@@ -39,8 +39,9 @@ public class RoomManagerGrain : Grain, IRoomManagerGrain
     }
 }
 
-[Serializable]
+[GenerateSerializer]
 public class RoomManagerState
 {
+    [Id(0)]
     public HashSet<string> Items { get; set; } = new();
 }

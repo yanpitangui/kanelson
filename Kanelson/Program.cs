@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Security.Claims;
-using Kanelson.Grains.Templates;
 using Kanelson.Hubs;
 using Kanelson.Services;
 using Kanelson.Tracing;
@@ -11,8 +10,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using Orleans;
-using Orleans.Hosting;
 using Serilog;
 using Serilog.Events;
 using Serilog.Exceptions;
@@ -78,8 +75,7 @@ builder.Services.AddResponseCompression(opts =>
 builder.Host.UseOrleans(siloBuilder =>
 {
     siloBuilder
-        .AddOutgoingGrainCallFilter<ActivityPropagationOutgoingGrainCallFilter>()
-        .AddIncomingGrainCallFilter<ActivityPropagationIncomingGrainCallFilter>();
+        .AddActivityPropagation();
     siloBuilder.UseLocalhostClustering()
         .UseMongoDBClient(builder.Configuration.GetConnectionString("MongoDb"))
         .AddMongoDBGrainStorage("kanelson-storage", options =>
@@ -92,11 +88,11 @@ builder.Host.UseOrleans(siloBuilder =>
                 settings.DefaultValueHandling = DefaultValueHandling.Populate;
             };
         });
+});
 
-    siloBuilder.ConfigureApplicationParts(parts =>
-    {
-        parts.AddApplicationPart(typeof(TemplateGrain).Assembly).WithReferences();
-    });
+builder.Services.AddOpenTelemetryMetrics(metrics =>
+{
+    metrics.AddMeter("Microsoft.Orleans");
 });
 
 builder.Services.AddOpenTelemetryTracing(telemetry =>
@@ -107,8 +103,7 @@ builder.Services.AddOpenTelemetryTracing(telemetry =>
             ResourceBuilder.CreateDefault()
                 .AddService(serviceName: OpenTelemetryExtensions.ServiceName,
                     serviceVersion: OpenTelemetryExtensions.ServiceVersion));
-    telemetry.AddSource("orleans.runtime.graincall")
-        .AddAspNetCoreInstrumentation()
+    telemetry.AddSource("Microsoft.Orleans.Application")
         .AddJaegerExporter(exporter =>
         {
             exporter.AgentHost = builder.Configuration["Jaeger:AgentHost"];
@@ -148,7 +143,7 @@ app.UseWebSockets();
 
 
 
-app.Run();
+await app.RunAsync();
 
 LoggerConfiguration ConfigureBaseLogging()
 {

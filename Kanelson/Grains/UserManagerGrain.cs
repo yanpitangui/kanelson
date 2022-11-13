@@ -1,8 +1,8 @@
 ﻿using System.Collections.Immutable;
 using Orleans;
 using Orleans.Runtime;
-using Shared.Grains;
-using Shared.Models;
+using Kanelson.Contracts.Grains;
+using Kanelson.Contracts.Models;
 
 namespace Kanelson.Grains;
 
@@ -37,8 +37,9 @@ public class UserManagerGrain : Grain, IUserManagerGrain
     }
 }
 
-[Serializable]
+[GenerateSerializer]
 public record UsersState
 {
+    [Id(0)]
     public HashSet<UserInfo> Users { get; set; } = new();
 }

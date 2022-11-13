@@ -3,7 +3,7 @@ using Kanelson.Extensions;
 using Kanelson.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using Shared.Models;
+using Kanelson.Contracts.Models;
 
 namespace Kanelson.Hubs;
 

@@ -1,8 +1,8 @@
 ﻿using System.Collections.Immutable;
 using System.Security.Claims;
 using Orleans;
-using Shared.Grains;
-using Shared.Models;
+using Kanelson.Contracts.Grains;
+using Kanelson.Contracts.Models;
 
 namespace Kanelson.Services;
 

@@ -1,7 +1,6 @@
-﻿using Orleans;
-using Shared.Models;
+﻿using Kanelson.Contracts.Models;
 
-namespace Shared.Grains.Questions;
+namespace Kanelson.Contracts.Grains.Questions;
 
 public interface IQuestionGrain : IGrainWithStringKey
 {

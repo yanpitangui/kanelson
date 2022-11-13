@@ -1,8 +1,8 @@
 ﻿using System.Collections.Immutable;
 using FluentValidation.Results;
 using Orleans;
-using Shared.Grains.Questions;
-using Shared.Models;
+using Kanelson.Contracts.Grains.Questions;
+using Kanelson.Contracts.Models;
 
 namespace Kanelson.Services;
 

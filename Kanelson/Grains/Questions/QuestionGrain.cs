@@ -1,8 +1,8 @@
 ﻿using System.Collections.Immutable;
 using Orleans;
 using Orleans.Runtime;
-using Shared.Grains.Questions;
-using Shared.Models;
+using Kanelson.Contracts.Grains.Questions;
+using Kanelson.Contracts.Models;
 
 namespace Kanelson.Grains.Questions;
 
@@ -65,8 +65,9 @@ public class QuestionGrain : Grain, IQuestionGrain
     }
 }
 
-[Serializable]
+[GenerateSerializer]
 public record QuestionState
 {
+    [Id(0)]
     public Dictionary<Guid, Question> Questions { get; set; } = new();
 }

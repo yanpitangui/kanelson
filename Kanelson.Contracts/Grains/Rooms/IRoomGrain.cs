@@ -1,7 +1,6 @@
-﻿using Orleans;
-using Shared.Models;
+﻿using Kanelson.Contracts.Models;
 
-namespace Shared.Grains.Rooms;
+namespace Kanelson.Contracts.Grains.Rooms;
 
 public interface IRoomGrain : IGrainWithStringKey
 {

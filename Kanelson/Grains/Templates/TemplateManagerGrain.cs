@@ -1,7 +1,7 @@
 ﻿using System.Collections.Immutable;
 using Orleans;
 using Orleans.Runtime;
-using Shared.Grains.Templates;
+using Kanelson.Contracts.Grains.Templates;
 
 namespace Kanelson.Grains.Templates;
 
@@ -37,9 +37,10 @@ public class TemplateManagerGrain : Grain, ITemplateManagerGrain
         Task.FromResult(ImmutableArray.CreateRange(_state.State.Items));
 }
 
-[Serializable]
+[GenerateSerializer]
 public class TemplateManagerState
 {
+    [Id(0)]
     public HashSet<Guid> Items { get; set; } = new();
 
 }

@@ -1,6 +1,4 @@
-﻿using Orleans;
-
-namespace Shared.Grains.Rooms;
+﻿namespace Kanelson.Contracts.Grains.Rooms;
 
 public interface IRoomManagerGrain : IGrainWithIntegerKey
 {

@@ -1,7 +1,6 @@
-﻿using Orleans;
-using Shared.Models;
+﻿using Kanelson.Contracts.Models;
 
-namespace Shared.Grains.Templates;
+namespace Kanelson.Contracts.Grains.Templates;
 
 public interface ITemplateGrain : IGrainWithGuidKey
 {

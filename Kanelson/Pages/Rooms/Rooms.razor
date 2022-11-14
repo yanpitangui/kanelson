@@ -70,7 +70,7 @@ else
     {
         await _service.Delete(id);
         _rooms = await _service.GetAll();
-        StateHasChanged();
+        InvokeAsync(StateHasChanged);
     }
     
 }

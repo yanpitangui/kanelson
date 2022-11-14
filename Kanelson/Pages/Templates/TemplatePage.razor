@@ -98,7 +98,7 @@
                     .Select(x => x.Order).First();
             }
             _items.AddRange(items.OrderBy(x => x.Order));
-            StateHasChanged();
+            InvokeAsync(StateHasChanged);
         }
     }
     

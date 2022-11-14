@@ -147,7 +147,7 @@
             else
             {
                 _question = await _service.GetQuestion(Id!.Value);
-                StateHasChanged();
+                InvokeAsync(StateHasChanged);
             }
         }
     }

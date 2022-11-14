@@ -64,13 +64,13 @@
         hubConnection.On<HashSet<UserInfo>>("CurrentUsersUpdated", (users) =>
         {
             _connectedUsers = users.ToImmutableArray();
-            StateHasChanged();
+            InvokeAsync(StateHasChanged);
         });
         
         hubConnection.On<TemplateQuestion>("NextQuestion", (question) =>
         {
             _currentQuestion = question;
-            StateHasChanged();
+            InvokeAsync(StateHasChanged);
         });
 
         await hubConnection.StartAsync();

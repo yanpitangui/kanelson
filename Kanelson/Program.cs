@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using MudBlazor.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
@@ -108,6 +109,15 @@ builder.Services.AddOpenTelemetryTracing(telemetry =>
         {
             exporter.AgentHost = builder.Configuration["Jaeger:AgentHost"];
             exporter.AgentPort = Convert.ToInt32(builder.Configuration["Jaeger:AgentPort"]);
+            exporter.MaxPayloadSizeInBytes = 4096;
+            exporter.ExportProcessorType = ExportProcessorType.Batch;
+            exporter.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>
+            {
+                MaxQueueSize = 2048,
+                ScheduledDelayMilliseconds = 5000,
+                ExporterTimeoutMilliseconds = 30000,
+                MaxExportBatchSize = 512,
+            };
         });
 });
 

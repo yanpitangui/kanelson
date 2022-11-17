@@ -82,12 +82,6 @@ builder.Host.UseOrleans(siloBuilder =>
         .AddMongoDBGrainStorage("kanelson-storage", options =>
         {
             options.DatabaseName = "Kanelson";
-            options.ConfigureJsonSerializerSettings = settings =>
-            {
-                settings.NullValueHandling = NullValueHandling.Include;
-                settings.ObjectCreationHandling = ObjectCreationHandling.Replace;
-                settings.DefaultValueHandling = DefaultValueHandling.Populate;
-            };
         });
 });
 

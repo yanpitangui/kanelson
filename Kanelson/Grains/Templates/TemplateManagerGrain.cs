@@ -5,7 +5,7 @@ using Kanelson.Contracts.Grains.Templates;
 
 namespace Kanelson.Grains.Templates;
 
-public class TemplateManagerGrain : Grain, ITemplateManagerGrain
+public class TemplateManagerGrain : ITemplateManagerGrain
 {
     private readonly IPersistentState<TemplateManagerState> _state;
 

@@ -5,7 +5,7 @@ using Kanelson.Contracts.Grains.Rooms;
 
 namespace Kanelson.Grains.Rooms;
 
-public class RoomManagerGrain : Grain, IRoomManagerGrain
+public class RoomManagerGrain : IRoomManagerGrain
 {
     private readonly IPersistentState<RoomManagerState> _state;
 

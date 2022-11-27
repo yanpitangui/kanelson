@@ -41,7 +41,7 @@ public class TemplateGrain : Grain, ITemplateGrain
     public async Task Delete()
     {
         await _state.ClearStateAsync();
-        this.DeactivateOnIdle();
+        DeactivateOnIdle();
     }
 }
 

@@ -6,7 +6,7 @@ using Kanelson.Contracts.Models;
 
 namespace Kanelson.Grains.Questions;
 
-public class QuestionGrain : Grain, IQuestionGrain
+public class QuestionGrain : IQuestionGrain
 {
     private readonly IPersistentState<QuestionState> _questions;
 

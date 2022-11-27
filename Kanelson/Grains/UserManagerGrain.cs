@@ -1,12 +1,11 @@
 ﻿using System.Collections.Immutable;
-using Orleans;
 using Orleans.Runtime;
 using Kanelson.Contracts.Grains;
 using Kanelson.Contracts.Models;
 
 namespace Kanelson.Grains;
 
-public class UserManagerGrain : Grain, IUserManagerGrain
+public class UserManagerGrain : IUserManagerGrain
 {
     private readonly IPersistentState<UsersState> _state;
 

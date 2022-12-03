@@ -3,8 +3,9 @@
 @using System.Collections.Immutable
 @using Kanelson.Services
 @inject NavigationManager Navigation
-@inject IHttpContextAccessor httpAccessor
-@inject IRoomService roomService
+@inject IHttpContextAccessor HttpAccessor
+@inject IRoomService RoomService
+@inject IStringLocalizer<Shared> Loc
 <h3>Admin</h3>
 <MudList>
     
@@ -41,16 +42,16 @@
 @* Dar um jeito de esconder o botão depois do início da partida *@
 <MudButton @onclick="@(() => Start())" Color="Color.Primary" 
            Variant="Variant.Filled"
-           StartIcon="@Icons.Filled.Start">Iniciar</MudButton>
+           StartIcon="@Icons.Filled.Start">@Loc["StartButton"]</MudButton>
 
 @* Dar um jeito de esconder o botão enquanto o round esteja rodando *@
 <MudButton @onclick="@(() => NextQuestion())" Color="Color.Primary" 
            Variant="Variant.Filled"
-           StartIcon="@Icons.Filled.SkipNext">Próxima pergunta</MudButton>
+           StartIcon="@Icons.Filled.SkipNext">@Loc["NextQuestionButton"]</MudButton>
     
 
 @code {
-    private HubConnection? hubConnection;
+    private HubConnection? _hubConnection;
     private IEnumerable<UserInfo> _connectedUsers = ImmutableArray<UserInfo>.Empty;
     TemplateQuestion? _currentQuestion;
 
@@ -59,22 +60,22 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        hubConnection = httpAccessor.GetConnection(Navigation);
+        _hubConnection = HttpAccessor.GetConnection(Navigation);
 
-        hubConnection.On<HashSet<UserInfo>>("CurrentUsersUpdated", (users) =>
+        _hubConnection.On<HashSet<UserInfo>>("CurrentUsersUpdated", (users) =>
         {
             _connectedUsers = users.ToImmutableArray();
             InvokeAsync(StateHasChanged);
         });
         
-        hubConnection.On<TemplateQuestion>("NextQuestion", (question) =>
+        _hubConnection.On<TemplateQuestion>("NextQuestion", (question) =>
         {
             _currentQuestion = question;
             InvokeAsync(StateHasChanged);
         });
 
-        await hubConnection.StartAsync();
-        _connectedUsers = await roomService.GetCurrentUsers(RoomId);
+        await _hubConnection.StartAsync();
+        _connectedUsers = await RoomService.GetCurrentUsers(RoomId);
         await InvokeAsync(StateHasChanged);
 
         await base.OnParametersSetAsync();
@@ -82,12 +83,12 @@
 
     protected async Task Start()
     {
-        await hubConnection.SendAsync("Start", RoomId);
+        await _hubConnection.SendAsync("Start", RoomId);
     }
 
     protected async Task NextQuestion()
     {
-        await roomService.NextQuestion(RoomId);
+        await RoomService.NextQuestion(RoomId);
     }
 
 }

@@ -8,7 +8,7 @@
 @using Microsoft.AspNetCore.SignalR
 @inject IDialogService DialogService
 @inject NavigationManager Navigation
-@inject IHttpContextAccessor httpAccessor
+@inject IHttpContextAccessor HttpAccessor
 @implements IAsyncDisposable
 <h3>Player</h3>
 
@@ -49,20 +49,20 @@
     TemplateQuestion? _currentQuestion;
     [Parameter]
     public string RoomId { get; set; } = null!;
-    private HubConnection? hubConnection;
+    private HubConnection? _hubConnection;
     private ImmutableArray<UserInfo> _connectedUsers = ImmutableArray<UserInfo>.Empty;
     
 
     protected override async Task OnParametersSetAsync()
     {
-        hubConnection = httpAccessor.GetConnection(Navigation);
-        hubConnection.On<HashSet<UserInfo>>("CurrentUsersUpdated", (users) =>
+        _hubConnection = HttpAccessor.GetConnection(Navigation);
+        _hubConnection.On<HashSet<UserInfo>>("CurrentUsersUpdated", (users) =>
         {
             _connectedUsers = users.ToImmutableArray();
             InvokeAsync(StateHasChanged);
         });
 
-        hubConnection.On<ImmutableArray<UserRanking>>("RoundFinished", (ranking) =>
+        _hubConnection.On<ImmutableArray<UserRanking>>("RoundFinished", (ranking) =>
         {
             var parameters = new DialogParameters { ["Ranking"]=ranking };
 
@@ -72,25 +72,25 @@
             InvokeAsync(StateHasChanged);
         });
 
-        hubConnection.On<TemplateQuestion>("NextQuestion", (question) =>
+        _hubConnection.On<TemplateQuestion>("NextQuestion", (question) =>
         {
             _currentQuestion = question;
             InvokeAsync(StateHasChanged);
         });
         
-        await hubConnection.StartAsync();
+        await _hubConnection.StartAsync();
 
-        await hubConnection.SendAsync("JoinRoom", RoomId);
+        await _hubConnection.SendAsync("JoinRoom", RoomId);
     }
 
     public async Task Answer(Guid answerId)
     {
-        await hubConnection!.SendAsync("Answer", RoomId,  answerId);
+        await _hubConnection!.SendAsync("Answer", RoomId,  answerId);
     }
 
     public async ValueTask DisposeAsync()
     {
-        if (hubConnection is IAsyncDisposable disposable)
+        if (_hubConnection is IAsyncDisposable disposable)
         {
             await disposable.DisposeAsync();
         }

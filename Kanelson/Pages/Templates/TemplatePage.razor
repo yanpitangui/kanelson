@@ -4,10 +4,11 @@
 @using global::Kanelson.Contracts.Models
 @using System.Collections.Immutable
 @using MudBlazor.Utilities
-@inject ITemplateService _service
+@inject ITemplateService Service
 @inject NavigationManager Navigation
-@inject ISnackbar snackBar
-@inject IQuestionService _questionService;
+@inject ISnackbar SnackBar
+@inject IQuestionService QuestionService;
+@inject IStringLocalizer<Shared> Loc
 
 <MudCard Elevation="25">
     <MudCardHeader>
@@ -18,24 +19,24 @@
     <MudGrid>
         <MudItem xs="12" sm="7">
             <MudPaper Class="pa-4">
-                <MudForm @ref="@form" @bind-IsValid="@valid" Model="@_template"
+                <MudForm @ref="@_form" @bind-IsValid="@_valid" Model="@_template"
                          ValidationDelay="0">
                     <MudCardContent>
                         <MudTextField @bind-Value="_template.Name"
                                       For="@(() => _template.Name)"
                                       Immediate="true"
-                                      Label="Nome"/>
+                                      Label="@Loc["Name"]"/>
                         <MudDropContainer Items="_items"  T="TemplateQuestionDrop"
                                           ItemsSelector="@((item,dropzone) => item.Selector == dropzone)"
                                           ItemDropped="ItemUpdated" Class="d-flex flex-wrap flex-grow-1">
                             <ChildContent>
                                 <MudDropZone T="TemplateQuestionDrop" Identifier="1" item Class="rounded border-1 mud-border-lines-default pa-6 ma-8 flex-grow-1">
-                                    <MudText Typo="Typo.h6" Class="mb-4">Perguntas disponíveis</MudText>
+                                    <MudText Typo="Typo.h6" Class="mb-4">@Loc["AvailableQuestions"]</MudText>
                                  </MudDropZone>
                                 <MudDropZone T="TemplateQuestionDrop" Identifier="2"
                                              AllowReorder="true"
                                              Class="rounded border-1 mud-border-lines-default pa-6 ma-8 flex-grow-1">
-                                    <MudText Typo="Typo.h6" Class="mb-4">Perguntas atribuidas</MudText>
+                                    <MudText Typo="Typo.h6" Class="mb-4">@Loc["AssignedQuestions"]</MudText>
                                 </MudDropZone>
                             </ChildContent>
                             <ItemRenderer>
@@ -44,9 +45,9 @@
                         </MudDropContainer>
                     </MudCardContent>
                     <MudCardActions>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Savetemplate"
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveTemplate"
                                    Class="ml-auto">
-                            Salvar
+                            @Loc["Save"]
                         </MudButton>
                     </MudCardActions>
                 </MudForm>
@@ -61,10 +62,10 @@
     [Parameter]
     public Guid? Id { get; set; }
     
-    MudForm form;
+    MudForm _form;
     
     private Template _template = new();
-    bool valid;
+    bool _valid;
 
     private List<TemplateQuestionDrop> _items = new();
 
@@ -80,10 +81,10 @@
             }
             else
             {
-                _template = await _service.GetTemplate(Id!.Value);
+                _template = await Service.GetTemplate(Id!.Value);
 
             }
-            var items = (await _questionService.GetQuestionsSummary())
+            var items = (await QuestionService.GetQuestionsSummary())
                 .Select(x => new TemplateQuestionDrop
                 {
                     Id = x.Id,
@@ -98,7 +99,7 @@
                     .Select(x => x.Order).First();
             }
             _items.AddRange(items.OrderBy(x => x.Order));
-            InvokeAsync(StateHasChanged);
+            await InvokeAsync(StateHasChanged);
         }
     }
     
@@ -119,13 +120,13 @@
 
     }
     
-    private async Task Savetemplate()
+    private async Task SaveTemplate()
     {
-        await form.Validate();
+        await _form.Validate();
 
-        if (form.IsValid)
+        if (_form.IsValid)
         {
-            var availableQuestions = await _questionService.GetQuestions(_items
+            var availableQuestions = await QuestionService.GetQuestions(_items
                 .Where(x => x.Selector == "2").Select(x => x.Id).ToHashSet());
 
             _template.Questions = availableQuestions
@@ -144,9 +145,9 @@
                 )
                 .OrderBy(x => x.Order)
                 .ToImmutableArray();
-            await _service.UpsertTemplate(_template!);
-            snackBar.Add("Partida salva com sucesso.", Severity.Success);
-            Navigation.NavigateTo("templates", forceLoad:true);
+            await Service.UpsertTemplate(_template!);
+            SnackBar.Add(Loc["TemplateSavedSuccess"], Severity.Success);
+            Navigation.NavigateTo("templates");
         }
     }
 

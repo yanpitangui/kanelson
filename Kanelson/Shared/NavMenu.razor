@@ -1,11 +1,14 @@
-﻿<MudNavMenu>
-    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Página inicial</MudNavLink>
+﻿@using Localization
+@inject IStringLocalizer<Shared> Loc
+
+<MudNavMenu>
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">@Loc["InitialPage"]</MudNavLink>
     <AuthorizeView>
         <Authorized>
-            <MudNavLink Href="questions" Match="NavLinkMatch.Prefix" Icon="@Icons.Filled.QuestionMark">Perguntas</MudNavLink>
-            <MudNavLink Href="templates" Match="NavLinkMatch.Prefix" Icon="@Icons.Custom.Uncategorized.FolderOpen">Templates</MudNavLink>
-            <MudNavLink Href="rooms" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PlayArrow">Salas</MudNavLink>
+            <MudNavLink Href="questions" Match="NavLinkMatch.Prefix" Icon="@Icons.Filled.QuestionMark">@Loc["Questions"]</MudNavLink>
+            <MudNavLink Href="templates" Match="NavLinkMatch.Prefix" Icon="@Icons.Custom.Uncategorized.FolderOpen">@Loc["Templates"]</MudNavLink>
+            <MudNavLink Href="rooms" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PlayArrow">@Loc["Rooms"]</MudNavLink>
         </Authorized>
-            </AuthorizeView>
+    </AuthorizeView>
 
 </MudNavMenu>

@@ -66,6 +66,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddMudServices();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddLocalization();
 builder.Services.AddResponseCompression(opts =>
 {
     opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
@@ -145,7 +146,13 @@ app.UseAuthorization();
 app.UseWebSockets();
 
 
+var supportedCultures = new[] { "en-US", "pt-BR" };
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture(supportedCultures[1])
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures);
 
+app.UseRequestLocalization(localizationOptions);
 
 await app.RunAsync();
 

@@ -1,0 +1,44 @@
+@inherits MudComponentBase
+@using  System.Globalization
+@inject NavigationManager Navigation
+
+
+<MudSelect Margin="Margin.Dense" T="CultureInfo" Variant="Variant.Text" @bind-Value="@Culture">
+    @foreach (var culture in supportedCultures)
+    {
+        <MudSelectItem Value="@culture">@culture.DisplayName</MudSelectItem>
+    }
+</MudSelect>
+
+@code
+{
+    private CultureInfo[] supportedCultures = new[]
+    {
+        new CultureInfo("en-US"),
+        new CultureInfo("pt-BR"),
+    };
+
+    protected override void OnInitialized()
+    {
+        Culture = CultureInfo.CurrentCulture;
+    }
+
+    private CultureInfo Culture
+    {
+        get => CultureInfo.CurrentCulture;
+        set
+        {
+            if (!Equals(CultureInfo.CurrentCulture, value))
+            {
+                var uri = new Uri(Navigation.Uri)
+                    .GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+                var cultureEscaped = Uri.EscapeDataString(value.Name);
+                var uriEscaped = Uri.EscapeDataString(uri);
+
+                Navigation.NavigateTo(
+                    $"Culture/Set?culture={cultureEscaped}&redirectUri={uriEscaped}",
+                    forceLoad: true);
+            }
+        }
+    }
+}

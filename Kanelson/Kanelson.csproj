@@ -35,5 +35,31 @@
     <ItemGroup>
       <_ContentIncludedByDefault Remove="Pages\Shared\SignIn.cshtml" />
     </ItemGroup>
+    
+    <ItemGroup>
+      <EmbeddedResource Update="Localization\Shared.pt-BR.resx">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>Shared.pt-BR.Designer.cs</LastGenOutput>
+        <DependentUpon>Shared.cs</DependentUpon>
+      </EmbeddedResource>
+      <EmbeddedResource Update="Localization\Shared.en-US.resx">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>Shared.en-US.Designer.cs</LastGenOutput>
+        <DependentUpon>Shared.cs</DependentUpon>
+      </EmbeddedResource>
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Compile Update="Localization\Shared.pt-BR.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Shared.pt-BR.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Localization\Shared.en-US.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Shared.en-US.resx</DependentUpon>
+      </Compile>
+    </ItemGroup>
 
 </Project>

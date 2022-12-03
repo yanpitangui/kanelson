@@ -1,6 +1,7 @@
 ﻿@using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Rendering
 @inject NavigationManager NavigationManager
+@inject IStringLocalizer<Shared> Loc
 
 <AuthorizeView>
     <Authorized>
@@ -21,7 +22,7 @@
             <input type="hidden" name="Provider" value="GitHub"/>
             <input type="hidden" name="RedirectUri" value="@NavigationManager.Uri"/>
             <MudFab ButtonType="ButtonType.Submit"
-                    StartIcon="@Icons.Custom.Brands.GitHub" Label="Login with Github" />
+                    StartIcon="@Icons.Custom.Brands.GitHub" Label="@Loc["LoginButton"]" />
         </form>
     </NotAuthorized>
 </AuthorizeView>

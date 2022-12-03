@@ -5,6 +5,8 @@
 @inject IQuestionService _service
 @inject NavigationManager Navigation
 @inject ISnackbar snackBar
+@inject IStringLocalizer<Shared> Loc
+
 
 <MudCard Elevation="25">
     <MudCardHeader>
@@ -21,12 +23,12 @@
                         <MudTextField @bind-Value="_question.Name"
                                       For="@(() => _question.Name)"
                                       Immediate="true"
-                                      Label="Nome"/>
+                                      Label="@Loc["Name"]"/>
 
                         <MudSelect Immediate="@true"
                                    T="int" Required="true" For="@(() => _question.TimeLimit)"
-                                   Placeholder="Selecione" @bind-Value="_question.TimeLimit"
-                                   Label="Tempo para responder"
+                                   Placeholder="@Loc["Select"]" @bind-Value="_question.TimeLimit"
+                                   Label="@Loc["TimeToAnswer"]"
                                    Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
                             @foreach (var tempo in _tempos)
                             {
@@ -36,15 +38,15 @@
                         <MudSelect Immediate="@true" T="QuestionType"  For="@(() => _question.Type)"
                                    ValueExpression="@(()=>_question.Type)" Value="_question.Type" 
                                    ValueChanged="@((QuestionType value) => SelectedValueChange(value))"
-                                   Required="true" Placeholder="Selecione" Label="Tipo"
+                                   Required="true" Placeholder="@Loc["Select"]" Label="@Loc["Type"]"
                                    Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
                             @foreach (QuestionType item in Enum.GetValues<QuestionType>())
                             {
-                                <MudSelectItem Value="@item">@item.GetDescription()</MudSelectItem>
+                                <MudSelectItem Value="@item">@Loc[$"QuestionType_{item.ToString()}"]</MudSelectItem>
                             }
                         </MudSelect>
                         <MudSelect Immediate="@true" T="int" For="@(() => _question.Points)" Required="true" 
-                                   Placeholder="Selecione" @bind-Value="_question.Points" Label="Pontos"
+                                   Placeholder="@Loc["Select"]" @bind-Value="_question.Points" Label="@Loc["Points"]"
                                    Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
                             <MudSelectItem Value="0">0 pts</MudSelectItem>
                             <MudSelectItem Value="1000">1000 pts</MudSelectItem>
@@ -54,26 +56,26 @@
                     <MudCardContent Class="pa-0">
                         <MudTable Items="@_question.Answers"  Comparer="_comparer" Hover="true" Breakpoint="Breakpoint.None" Dense="@true" Elevation="0">
                     		    <HeaderContent>
-                                    <MudTh>Respostas</MudTh>
+                                    <MudTh>@Loc["Answers"]</MudTh>
                                     <MudTh><MudFab @onclick="AddAnswer" Disabled="_question.Type == QuestionType.TrueFalse"
                                            Color="Color.Secondary" Icon="@Icons.Material.Filled.Add" 
                                            Size="Size.Small" IconSize="Size.Small" /></MudTh>
                     		    </HeaderContent>
                             <RowTemplate>
-                                    <MudTd DataLabel="Descrição">
-                                        <MudTextField Label="Descrição da resposta" Immediate="@true" 
+                                    <MudTd DataLabel="AnswerDescription">
+                                        <MudTextField Label="@Loc["AnswerDescription"]" Immediate="@true" 
                                                       Disabled="_question.Type == QuestionType.TrueFalse"
                                                       @bind-Value="@context.Description"
                                                       For="@(() => context.Description)"/>
 
                                     </MudTd>
-                                    <MudTd DataLabel="Correto">
+                                    <MudTd DataLabel="Correct">
                                         <MudCheckBox @bind-Checked="@context.Correct" @bind-Value="@context.Correct"
                                                      For="@(() => context.Correct)"
-                                                     Label="Correto" Color="Color.Primary"></MudCheckBox>
+                                                     Label="@Loc["Correct"]" Color="Color.Primary"></MudCheckBox>
 
                                     </MudTd>
-                                    <MudTd DataLabel="Excluir">
+                                    <MudTd DataLabel="Delete">
                                         <MudFab @onclick="@(() => DeleteAnswer(@context))"
                                                 Disabled="_question.Type == QuestionType.TrueFalse"
                                                 Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete"
@@ -86,7 +88,7 @@
                     <MudCardActions>
                         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveQuestion"
                                    Class="ml-auto">
-                            Salvar
+                            @Loc["Save"]
                         </MudButton>
                     </MudCardActions>
                 </MudForm>
@@ -121,20 +123,25 @@
         if (value == QuestionType.TrueFalse)
         {
             _question.Answers.Clear();
-            _question.Answers.Add(new Answer
-            {
-                Description = "Verdadeiro",
-                Correct = true
-            });
-            
-            _question.Answers.Add(new Answer
-            {
-                Description = "Falso",
-                Correct = false
-            });
+            ReseedAnswers();
         }
     }
-    
+
+    private void ReseedAnswers()
+    {
+        _question.Answers.Add(new Answer
+        {
+            Description = Loc["True"],
+            Correct = true
+        });
+
+        _question.Answers.Add(new Answer
+        {
+            Description = Loc["False"],
+            Correct = false
+        });
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
@@ -143,11 +150,13 @@
             if (Id is null)
             {
                 _question = new Question();
+                ReseedAnswers();
+                await InvokeAsync(StateHasChanged);
             }
             else
             {
                 _question = await _service.GetQuestion(Id!.Value);
-                InvokeAsync(StateHasChanged);
+                await InvokeAsync(StateHasChanged);
             }
         }
     }
@@ -159,8 +168,8 @@
         if (form.IsValid)
         {
             await _service.SaveQuestion(_question!);
-            snackBar.Add("Pergunta salva com sucesso.", Severity.Success);
-            Navigation.NavigateTo("questions", forceLoad:true);
+            snackBar.Add(Loc["QuestionSavedSuccess"], Severity.Success);
+            Navigation.NavigateTo("questions");
         }
     }
 

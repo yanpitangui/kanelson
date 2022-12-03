@@ -2,6 +2,16 @@
 @using Microsoft.AspNetCore.Components.Web
 @namespace Kanelson.Pages
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@using System.Globalization
+@using Microsoft.AspNetCore.Localization
+@{
+    this.HttpContext.Response.Cookies.Append(
+         CookieRequestCultureProvider.DefaultCookieName,
+         CookieRequestCultureProvider.MakeCookieValue(
+             new RequestCulture(
+                 CultureInfo.CurrentCulture,
+                 CultureInfo.CurrentUICulture)));
+}
 
 <!DOCTYPE html>
 <html lang="en">

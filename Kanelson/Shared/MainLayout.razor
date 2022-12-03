@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@inject IStringLocalizer<Shared> Loc
 <MudThemeProvider IsDarkMode="@true" />
 <MudSnackbarProvider/>
 <MudDialogProvider/>
@@ -20,15 +21,21 @@
         <MudMainContent>
             <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-16">
                 <AuthorizeView>
-                     <Authorized> 
-                         @Body
-                     </Authorized> 
-                     <NotAuthorized> 
-                         <MudText>É necessário fazer login para utilizar o sistema.</MudText>
-                     </NotAuthorized>
-                 </AuthorizeView> 
+                    <Authorized> 
+                        @Body
+                    </Authorized> 
+                    <NotAuthorized> 
+                        <MudText>@Loc["LoginRequired"]</MudText>
+                    </NotAuthorized>
+                </AuthorizeView> 
             </MudContainer>
         </MudMainContent>
+        <MudContainer Class="bottom-row">
+         <ToolBarContent>
+            <MudText Typo="Typo.body1">Copyright © @DateTime.Today.Year Kanelson.</MudText>
+            <CultureSelector Class="ml-auto"/>
+         </ToolBarContent>
+        </MudContainer>
     </CascadingAuthenticationState>
 </MudLayout>
 

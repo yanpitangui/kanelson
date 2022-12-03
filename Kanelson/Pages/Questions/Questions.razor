@@ -1,31 +1,33 @@
 ﻿@page "/questions"
 @using Kanelson.Services
 @using global::Kanelson.Contracts.Models
-@inject IQuestionService _service
+@inject IQuestionService Service
 @inject NavigationManager Navigation
+@inject IStringLocalizer<Shared> Loc
+
 
 @if (_questions is null)
 {
-    <h2>Carregando...</h2>
+    <h2>@Loc["Loading"]...</h2>
 }
 else
 {
     <MudCard>
         <MudTable Elevation="25" Items="_questions" >
          <ToolBarContent>
-             <MudText Typo="Typo.h6">Perguntas</MudText>
+             <MudText Typo="Typo.h6">@Loc["Questions"]</MudText>
              <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>EditQuestion(null))"
                         Class="ml-auto">
-                 Criar pergunta
+                 @Loc["CreateQuestionButton"]
              </MudButton>
          </ToolBarContent>
         <HeaderContent>
-            <MudTh>Nome</MudTh>
-            <MudTh>Editar/Excluir</MudTh>
+            <MudTh>@Loc["Name"]</MudTh>
+            <MudTh>@Loc["Edit/Delete"]</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="Nome">@context.Name</MudTd>
-            <MudTd DataLabel="">
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Edit/Delete">
                 <MudFab @onclick="@(()=>EditQuestion(@context.Id))" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small" />
                 <MudFab @onclick="@(()=>DeleteQuestion(@context.Id))" Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small" />
             </MudTd>
@@ -43,14 +45,14 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _questions = await _service.GetQuestionsSummary();
+        _questions = await Service.GetQuestionsSummary();
         await base.OnInitializedAsync();
     }
 
     private async Task DeleteQuestion(Guid id)
     {
-        await _service.DeleteQuestion(id);
-        _questions = await _service.GetQuestionsSummary();
+        await Service.DeleteQuestion(id);
+        _questions = await Service.GetQuestionsSummary();
 
     }
 

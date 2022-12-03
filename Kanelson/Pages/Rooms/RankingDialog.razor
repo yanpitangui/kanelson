@@ -1,16 +1,18 @@
 ﻿@using System.Collections.Immutable
 @using Kanelson.Grains.Rooms
+@inject IStringLocalizer<Shared> Loc
+
 <MudDialog>
     <DialogContent>
         <MudTable Items="Ranking" Hover="true" Breakpoint="Breakpoint.Sm">
             <HeaderContent>
-                <MudTh>Nr</MudTh>
-                <MudTh>Nome</MudTh>
-                <MudTh>Pontos</MudTh>
+                <MudTh>Pos.</MudTh>
+                <MudTh>@Loc["Name"]</MudTh>
+                <MudTh>@Loc["Points"]</MudTh>
                 <MudTh>Tempo médio (segs.)</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd DataLabel="Nr">@context.Rank</MudTd>
+                <MudTd DataLabel="Pos.">@context.Rank</MudTd>
                 <MudTd DataLabel="Name">
                     <div class="d-inline-flex">
                         <div class="d-inline"><Avatar GithubId="@context.Id"/></div>
@@ -23,8 +25,8 @@
         </MudTable>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+        <MudButton OnClick="Cancel">@Loc["Cancel"]</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">@Loc["Ok"]</MudButton>
     </DialogActions>
 </MudDialog>
 

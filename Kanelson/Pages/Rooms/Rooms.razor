@@ -2,27 +2,29 @@
 @using Kanelson.Services
 @using global::Kanelson.Contracts.Models
 @using System.Collections.Immutable
-@inject IRoomService _service
-@inject IUserService _userService
+@inject IRoomService Service
+@inject IUserService UserService
 @inject NavigationManager Navigation
+@inject IStringLocalizer<Shared> Loc
+
 
 @if (_rooms is null)
 {
-    <h2>Carregando...</h2>
+    <h2>@Loc["Loading"]...</h2>
 }
 else
 {
     <MudCard>
         <MudTable Elevation="25" Items="_rooms" T="RoomSummary" >
          <ToolBarContent>
-             <MudText Typo="Typo.h6">Salas</MudText>
+             <MudText Typo="Typo.h6">@Loc["Rooms"]</MudText>
          </ToolBarContent>
             <HeaderContent>
-                <MudTh>Entrar</MudTh>
-                <MudTh>Id</MudTh>
-                <MudTh>Nome</MudTh>
-                <MudTh>Host</MudTh>
-                <MudTh>Ações</MudTh>
+                <MudTh>@Loc["Join"]</MudTh>
+                <MudTh>@Loc["Id"]</MudTh>
+                <MudTh>@Loc["Name"]</MudTh>
+                <MudTh>@Loc["Host"]</MudTh>
+                <MudTh>@Loc["Actions"]</MudTh>
 
             </HeaderContent>
             <RowTemplate>
@@ -33,13 +35,13 @@ else
                         Size="Size.Small" IconSize="Size.Small"/>
                 </MudTd>
                 <MudTd DataLabel="Id">@context.Id</MudTd>
-                <MudTd DataLabel="Nome">@context.Name</MudTd>
+                <MudTd DataLabel="Name">@context.Name</MudTd>
                 <MudTd DataLabel="Host">
                     <Avatar GithubId="@context.Owner.Id"/>
                 </MudTd>
                 <MudTd>
                     <MudFab @onclick="@(() => DeleteRoom(@context.Id))" Color="Color.Secondary"
-                            Disabled="@(_userService.CurrentUser != context.Owner.Id)"
+                            Disabled="@(UserService.CurrentUser != context.Owner.Id)"
                             Icon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small"/>
                 </MudTd>
 
@@ -57,7 +59,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _rooms = await _service.GetAll();
+        _rooms = await Service.GetAll();
         await base.OnInitializedAsync();
     }
 
@@ -68,9 +70,9 @@ else
 
     private async Task DeleteRoom(string id)
     {
-        await _service.Delete(id);
-        _rooms = await _service.GetAll();
-        InvokeAsync(StateHasChanged);
+        await Service.Delete(id);
+        _rooms = await Service.GetAll();
+        await InvokeAsync(StateHasChanged);
     }
     
 }

@@ -1,13 +1,15 @@
 ﻿@page "/room/{Id}"
 @using global::Kanelson.Contracts.Models
 @using Kanelson.Services
-@inject IRoomService _roomService
-@inject IUserService _userService
-<h2>Sala: @Id</h2>
+@inject IRoomService RoomService
+@inject IUserService UserService
+@inject IStringLocalizer<Shared> Loc
+
+<h2>@Loc["Room"]: @Id</h2>
 
 @if (_summary is not null)
 {
-    @if (_summary.Owner.Id == _userService.CurrentUser)
+    @if (_summary.Owner.Id == UserService.CurrentUser)
     {
         <Admin RoomId="@Id"></Admin>
     }
@@ -18,7 +20,7 @@
 }
 else
 {
-    <div>Carregando...</div>
+    <div>@Loc["Loading"]...</div>
 }
 
 @code {
@@ -30,7 +32,7 @@ else
     
     protected override async Task OnInitializedAsync()
     {
-        _summary = await _roomService.Get(Id);
+        _summary = await RoomService.Get(Id);
         await base.OnInitializedAsync();
     }
 

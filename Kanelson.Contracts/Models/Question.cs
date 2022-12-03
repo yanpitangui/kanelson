@@ -30,19 +30,7 @@ public record Question
     public int Points { get; set; } = 1000;
     
     [Id(4)]
-    public List<Answer> Answers { get; init; } = new()
-    {
-        new Answer
-        {
-            Correct = true,
-            Description = "Verdadeiro"
-        },
-        new Answer
-        {
-            Correct = false,
-            Description = "Falso"
-        }
-    };
+    public List<Answer> Answers { get; init; } = new();
     
     [Id(5)]
     public QuestionType Type { get; set; }
@@ -71,17 +59,4 @@ public enum QuestionType
 {
     TrueFalse,
     Quiz
-}
-
-public static class QuestionTypeExtensions
-{
-    public static string GetDescription(this QuestionType type)
-    {
-        return type switch
-        {
-            QuestionType.Quiz => "Quiz",
-            QuestionType.TrueFalse => "Verdadeiro ou falso",
-            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
-        };
-    }
 }

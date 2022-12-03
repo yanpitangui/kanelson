@@ -2,37 +2,40 @@
 @using Kanelson.Services
 @using global::Kanelson.Contracts.Models
 @using System.Collections.Immutable
-@inject ITemplateService _service
-@inject IRoomService _roomService
+@inject ITemplateService Service
+@inject IRoomService RoomService
+@inject ISnackbar SnackBar
 @inject NavigationManager Navigation
+@inject IStringLocalizer<Shared> Loc
+
 
 @if (_templates is null)
 {
-    <h2>Carregando...</h2>
+    <h2>@Loc["Loading"]...</h2>
 }
 else
 {
     <MudCard>
         <MudTable Elevation="25" Items="_templates" T="TemplateSummary" >
          <ToolBarContent>
-             <MudText Typo="Typo.h6">Templates</MudText>
+             <MudText Typo="Typo.h6">@Loc["Templates"]</MudText>
              <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>EditTemplate(null))"
                         Class="ml-auto">
-                 Criar template
+                 @Loc["CreateTemplateButton"]
              </MudButton>
          </ToolBarContent>
         <HeaderContent>
-            <MudTh>Nome</MudTh>
-            <MudTh>Editar/Excluir</MudTh>
-            <MudTh>Criar sala</MudTh>
+            <MudTh>@Loc["Name"]</MudTh>
+            <MudTh>@Loc["Edit/Delete"]</MudTh>
+            <MudTh>@Loc["CreateRoom"]</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Nome">@context.Name</MudTd>
-            <MudTd DataLabel="Editar/excluir">
+            <MudTd DataLabel="Edit/Delete">
                 <MudFab @onclick="@(()=>EditTemplate(@context.Id))" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small" />
                 <MudFab @onclick="@(()=>DeleteTemplate(@context.Id))" Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small" />
             </MudTd>
-            <MudTd DataLabel="Criar sala">
+            <MudTd DataLabel="CreateRoom">
                 <MudFab @onclick="@(()=>CreateRoom(@context.Id, @context.Name))" Color="Color.Primary" Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" IconSize="Size.Small" />
             </MudTd>
         </RowTemplate>
@@ -49,14 +52,14 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _templates = await _service.GetTemplates();
+        _templates = await Service.GetTemplates();
         await base.OnInitializedAsync();
     }
 
     private async Task DeleteTemplate(Guid id)
     {
-        await _service.DeleteTemplate(id);
-        _templates = await _service.GetTemplates();
+        await Service.DeleteTemplate(id);
+        _templates = await Service.GetTemplates();
 
     }
 
@@ -67,8 +70,10 @@ else
 
     private async Task CreateRoom(Guid id, string name)
     {
-        await _roomService.CreateRoom(id, name);
-        Navigation.NavigateTo($"rooms", forceLoad:true);
+        // TODO: Add validation
+        await RoomService.CreateRoom(id, name);
+        SnackBar.Add(Loc["RoomCreatedSuccess"], Severity.Success);
+        Navigation.NavigateTo($"rooms");
     }
 
 }

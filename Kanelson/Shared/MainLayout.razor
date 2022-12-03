@@ -23,6 +23,13 @@
                 <AuthorizeView>
                     <Authorized> 
                         @Body
+                        <MudDivider Style="margin-top: 15px"/>
+                        <MudContainer Style="margin-top: 15px">
+                            <div class="d-flex flex-grow-1 gap-4">
+                                <MudText Class="flex-1 d-flex" Typo="Typo.body1">Copyright © @DateTime.Today.Year Kanelson.</MudText>
+                                <CultureSelector Class="flex-1 d-flex"/>
+                            </div>
+                        </MudContainer>
                     </Authorized> 
                     <NotAuthorized> 
                         <MudText>@Loc["LoginRequired"]</MudText>
@@ -30,12 +37,7 @@
                 </AuthorizeView> 
             </MudContainer>
         </MudMainContent>
-        <MudContainer Class="bottom-row">
-         <ToolBarContent>
-            <MudText Typo="Typo.body1">Copyright © @DateTime.Today.Year Kanelson.</MudText>
-            <CultureSelector Class="ml-auto"/>
-         </ToolBarContent>
-        </MudContainer>
+
     </CascadingAuthenticationState>
 </MudLayout>
 

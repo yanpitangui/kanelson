@@ -75,6 +75,7 @@
 
         await hubConnection.StartAsync();
         _connectedUsers = await roomService.GetCurrentUsers(RoomId);
+        await InvokeAsync(StateHasChanged);
 
         await base.OnParametersSetAsync();
     }

@@ -8,6 +8,8 @@ public enum RoomStatus
 {
     Created,
     Started,
+    DisplayingQuestion,
+    AwaitingForNextQuestion,
     Finished,
     Abandoned
 }

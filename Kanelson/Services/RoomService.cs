@@ -107,10 +107,10 @@ public class RoomService : IRoomService
         return await grain.NextQuestion();
     }
 
-    public async Task<bool> Start(string roomId)
+    public async Task Start(string roomId)
     {
         var grain = _client.GetGrain<IRoomGrain>(roomId);
-        return await grain.Start();
+        await grain.Start();
     }
 
     public async Task<string> GetOwner(string roomId)
@@ -157,7 +157,7 @@ public interface IRoomService
     Task<HashSet<UserInfo>> GetCurrentUsers(string roomId);
     Task<TemplateQuestion> GetCurrentQuestion(string roomId);
     Task<bool> NextQuestion(string roomId);
-    Task<bool> Start(string roomId);
+    Task Start(string roomId);
     Task<string> GetOwner(string roomId);
     Task Delete(string roomId);
     Task Answer(string userId, string roomId, Guid answerId);

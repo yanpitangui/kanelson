@@ -20,6 +20,8 @@ public class RoomGrain : Grain, IRoomGrain
 
     private TemplateQuestion CurrentQuestion => _state.State.Template.Questions[_state.State.CurrentQuestionIdx];
 
+    private RoomStatus CurrentStatus => _state.State.StateMachine.State;
+
 
     public RoomGrain([PersistentState("rooms", "kanelson-storage")]
         IPersistentState<RoomState> users, IUserService userService,
@@ -44,7 +46,7 @@ public class RoomGrain : Grain, IRoomGrain
         var owner = await _userService
             .GetUserInfo(_state.State.OwnerId);
 
-        return new RoomSummary(this.GetPrimaryKeyString(), _state.State.Name, owner, _state.State.Status);
+        return new RoomSummary(this.GetPrimaryKeyString(), _state.State.Name, owner, CurrentStatus);
     }
 
     public async Task UpdateCurrentUsers(HashSet<UserInfo> users)
@@ -55,6 +57,7 @@ public class RoomGrain : Grain, IRoomGrain
         if (!equal)
         {
             await _hubContext.Clients.Group(this.GetPrimaryKeyString()).SendAsync("CurrentUsersUpdated", users);
+            await _hubContext.Clients.User(await this.GetOwner()).SendAsync("CurrentUsersUpdated", users);
         }
     }
 
@@ -81,22 +84,23 @@ public class RoomGrain : Grain, IRoomGrain
 
     private void SetTimeHandler()
     {
+        // Evitar que fique em loop infinito caso seja chamado mais de uma vez
+        _timerHandler?.Dispose();
         _currentQuestionStartTime = DateTime.Now;
         _timerHandler = RegisterTimer(WaitForAnswersOrTimeOut, _currentQuestionStartTime, TimeSpan.FromSeconds(5),
             TimeSpan.FromSeconds(1));
     }
 
-    public async Task<bool> Start()
+    public async Task Start()
     {
-        //if (_state.State.Status != RoomStatus.Created) return Task.FromResult(false);
         SetStartedState();
         await SendNextQuestion();
         SetTimeHandler();
-        return true;
     }
 
     private async Task SendNextQuestion()
     {
+        await _state.State.StateMachine.FireAsync(RoomTrigger.DisplayQuestion);
         await _hubContext.Clients.Group(this.GetPrimaryKeyString())
             .SendAsync("NextQuestion", CurrentQuestion);
     }
@@ -104,7 +108,7 @@ public class RoomGrain : Grain, IRoomGrain
 
     private void SetStartedState()
     {
-        _state.State.Status = RoomStatus.Started;
+        _state.State.StateMachine.Fire(RoomTrigger.Start);
         _state.State.Answers.Clear();
         _state.State.CurrentQuestionIdx = 0;
         foreach (var question in _state.State.Template.Questions)
@@ -126,6 +130,8 @@ public class RoomGrain : Grain, IRoomGrain
         var time = Convert.ToDateTime(initialTime);
         var currentQuestion = CurrentQuestion;
         var everyoneAnswered = CheckEveryoneAnswered();
+        
+        // Finaliza o round e espera a próxima pergunta (se tiver)
         if (DateTime.Now - time >= TimeSpan.FromSeconds(currentQuestion.TimeLimit) || everyoneAnswered)
         {
             _timerHandler?.Dispose();
@@ -135,6 +141,7 @@ public class RoomGrain : Grain, IRoomGrain
                 .Group(this.GetPrimaryKeyString())
                 .SendAsync("RoundFinished", ranking);
 
+            await _state.State.StateMachine.FireAsync(RoomTrigger.WaitForNextQuestion);
             await _state.WriteStateAsync();
         }
     }
@@ -206,51 +213,4 @@ public class RoomGrain : Grain, IRoomGrain
         question.TryAdd(userId, answerInfo);
         return Task.CompletedTask;
     }
-}
-
-[GenerateSerializer]
-public record RoomState
-{
-    [Id(0)]
-    public string OwnerId { get; set; } = null!;
-    
-    [Id(1)]
-    public string Name { get; set; } = null!;
-
-    [Id(2)]
-    public ConcurrentDictionary<Guid, ConcurrentDictionary<string, RoomAnswer>> Answers { get; init; } = new();
-
-    [Id(3)]
-    public Template Template { get; set; } = null!;
-    
-    [Id(3)]
-    public RoomStatus Status { get; set; }
-
-    [Id(4)]
-    public HashSet<UserInfo> CurrentUsers { get; set; } = new();
-    
-    [Id(5)]
-    public int CurrentQuestionIdx { get; set; }
-    
-    [Id(6)]
-    public int MaxQuestionIdx { get; set; }
-}
-
-public record RoomAnswer
-{
-    public Guid AnswerId { get; init; }
-
-    public TimeSpan TimeToAnswer { get; init; } = new();
-    
-    public decimal Points { get; init; }
-    public bool Correct { get; set; }
-}
-
-public record UserRanking : UserInfo
-{
-    public decimal Points { get; set; }
-    
-    public decimal AverageTime { get; set; }
-    
-    public int Rank { get; set; }
 }

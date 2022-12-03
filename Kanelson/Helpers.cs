@@ -23,6 +23,7 @@ public static class Helpers
             {
                 options.Cookies = container;
             })
+            .WithAutomaticReconnect()
             .Build();
     }
 }

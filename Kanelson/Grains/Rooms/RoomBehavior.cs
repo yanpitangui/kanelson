@@ -5,9 +5,9 @@ namespace Kanelson.Grains.Rooms;
 
 public static class RoomBehavior
 {
-    public static RoomStateMachine GetDefaultStateMachine()
+    public static RoomStateMachine GetStateMachine(RoomStatus status)
     {
-        var stateMachine = new RoomStateMachine();
+        var stateMachine = new RoomStateMachine(status);
         stateMachine.Configure(RoomStatus.Created)
             .Permit(RoomTrigger.Start, RoomStatus.Started);
 
@@ -17,17 +17,10 @@ public static class RoomBehavior
 
         stateMachine.Configure(RoomStatus.DisplayingQuestion)
             .SubstateOf(RoomStatus.Started)
-#if DEBUG
-            .Permit(RoomTrigger.Start, RoomStatus.Started)
-#endif
             .Permit(RoomTrigger.WaitForNextQuestion, RoomStatus.AwaitingForNextQuestion);
 
         stateMachine.Configure(RoomStatus.AwaitingForNextQuestion)
             .SubstateOf(RoomStatus.Started)
-            
-#if DEBUG
-            .Permit(RoomTrigger.Start, RoomStatus.Started)
-#endif
             .Permit(RoomTrigger.DisplayQuestion, RoomStatus.DisplayingQuestion)
             .Permit(RoomTrigger.Finish, RoomStatus.Finished)
             .Permit(RoomTrigger.Abandon, RoomStatus.Abandoned);
@@ -36,10 +29,9 @@ public static class RoomBehavior
     }
 }
 
-[GenerateSerializer]
 public class RoomStateMachine : StateMachine<RoomStatus, RoomTrigger>
 {
-    public RoomStateMachine() : base(RoomStatus.Created)
+    public RoomStateMachine(RoomStatus status) : base(status)
     {
         
     }

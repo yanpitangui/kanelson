@@ -18,16 +18,16 @@ public record RoomState
     [Id(3)]
     public Template Template { get; set; } = null!;
     
-    [Id(3)]
-    public RoomStateMachine StateMachine { get; set; } = RoomBehavior.GetDefaultStateMachine();
-
     [Id(4)]
+    public RoomStatus CurrentState { get; set; } = RoomStatus.Created;
+
+    [Id(5)]
     public HashSet<UserInfo> CurrentUsers { get; set; } = new();
     
-    [Id(5)]
+    [Id(6)]
     public int CurrentQuestionIdx { get; set; }
     
-    [Id(6)]
+    [Id(7)]
     public int MaxQuestionIdx { get; set; }
 }
 

@@ -15,4 +15,5 @@ public interface IRoomGrain : IGrainWithStringKey
     Task<string> GetOwner();
     Task Delete();
     Task Answer(string userId, string roomId, Guid answerId);
+    Task<RoomStatus> GetCurrentState();
 }

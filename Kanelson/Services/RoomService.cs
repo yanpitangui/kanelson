@@ -1,6 +1,5 @@
 ﻿using System.Buffers;
 using System.Collections.Immutable;
-using Orleans;
 using Kanelson.Contracts.Grains.Rooms;
 using Kanelson.Contracts.Grains.Templates;
 using Kanelson.Contracts.Models;
@@ -40,6 +39,12 @@ public class RoomService : IRoomService
         await room.SetBase(roomName, _userService.CurrentUser, template);
         await roomManager.Register(roomId);
         return roomId;
+    }
+
+    public async Task<RoomStatus> GetCurrentState(string roomId)
+    {
+        var grain = _client.GetGrain<IRoomGrain>(roomId);
+        return await grain.GetCurrentState();
     }
 
     public async Task<ImmutableArray<RoomSummary>> GetAll()
@@ -161,4 +166,5 @@ public interface IRoomService
     Task<string> GetOwner(string roomId);
     Task Delete(string roomId);
     Task Answer(string userId, string roomId, Guid answerId);
+    Task<RoomStatus> GetCurrentState(string roomId);
 }

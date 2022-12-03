@@ -3,7 +3,6 @@ using System.Collections.Immutable;
 using Kanelson.Hubs;
 using Kanelson.Services;
 using Microsoft.AspNetCore.SignalR;
-using Orleans;
 using Orleans.Runtime;
 using Kanelson.Contracts.Grains.Rooms;
 using Kanelson.Contracts.Models;
@@ -17,12 +16,10 @@ public class RoomGrain : Grain, IRoomGrain
     private readonly IHubContext<RoomHub> _hubContext;
     private IDisposable? _timerHandler;
     private DateTime _currentQuestionStartTime;
+    private RoomStateMachine _roomStateMachine = null!;
 
     private TemplateQuestion CurrentQuestion => _state.State.Template.Questions[_state.State.CurrentQuestionIdx];
-
-    private RoomStatus CurrentStatus => _state.State.StateMachine.State;
-
-
+    
     public RoomGrain([PersistentState("rooms", "kanelson-storage")]
         IPersistentState<RoomState> users, IUserService userService,
         IHubContext<RoomHub> hubContext)
@@ -31,6 +28,29 @@ public class RoomGrain : Grain, IRoomGrain
         _userService = userService;
         _hubContext = hubContext;
     }
+
+    private void SetupStateTriggers()
+    {
+        _roomStateMachine = RoomBehavior.GetStateMachine(_state.State.CurrentState);
+
+        _roomStateMachine.OnTransitionCompletedAsync(async (transition) =>
+        {
+            _state.State.CurrentState = transition.Destination;
+            if (transition.Destination is not RoomStatus.DisplayingQuestion)
+            {
+                await _state.WriteStateAsync();
+            }
+            await _hubContext.Clients
+                .User(await this.GetOwner()).SendAsync("RoomStateChanged", _state.State.CurrentState);
+        });
+    }
+
+    public override Task OnActivateAsync(CancellationToken cancellationToken)
+    {
+        SetupStateTriggers();
+        return base.OnActivateAsync(cancellationToken);
+    }
+
     public async Task SetBase(string roomName, string owner, Template template)
     {
         _state.State.Name = roomName;
@@ -46,7 +66,7 @@ public class RoomGrain : Grain, IRoomGrain
         var owner = await _userService
             .GetUserInfo(_state.State.OwnerId);
 
-        return new RoomSummary(this.GetPrimaryKeyString(), _state.State.Name, owner, CurrentStatus);
+        return new RoomSummary(this.GetPrimaryKeyString(), _state.State.Name, owner, _state.State.CurrentState);
     }
 
     public async Task UpdateCurrentUsers(HashSet<UserInfo> users)
@@ -71,6 +91,11 @@ public class RoomGrain : Grain, IRoomGrain
         return Task.FromResult(CurrentQuestion);
     }
 
+    public Task<RoomStatus> GetCurrentState()
+    {
+        return Task.FromResult(_state.State.CurrentState);
+    }
+
 
     public async Task<bool> NextQuestion()
     {
@@ -93,22 +118,22 @@ public class RoomGrain : Grain, IRoomGrain
 
     public async Task Start()
     {
-        SetStartedState();
+        await SetStartedState();
         await SendNextQuestion();
         SetTimeHandler();
     }
 
     private async Task SendNextQuestion()
     {
-        await _state.State.StateMachine.FireAsync(RoomTrigger.DisplayQuestion);
+        await _roomStateMachine.FireAsync(RoomTrigger.DisplayQuestion);
         await _hubContext.Clients.Group(this.GetPrimaryKeyString())
             .SendAsync("NextQuestion", CurrentQuestion);
     }
 
 
-    private void SetStartedState()
+    private async Task SetStartedState()
     {
-        _state.State.StateMachine.Fire(RoomTrigger.Start);
+        await _roomStateMachine.FireAsync(RoomTrigger.Start);
         _state.State.Answers.Clear();
         _state.State.CurrentQuestionIdx = 0;
         foreach (var question in _state.State.Template.Questions)
@@ -141,8 +166,7 @@ public class RoomGrain : Grain, IRoomGrain
                 .Group(this.GetPrimaryKeyString())
                 .SendAsync("RoundFinished", ranking);
 
-            await _state.State.StateMachine.FireAsync(RoomTrigger.WaitForNextQuestion);
-            await _state.WriteStateAsync();
+            await _roomStateMachine.FireAsync(RoomTrigger.WaitForNextQuestion);
         }
     }
 

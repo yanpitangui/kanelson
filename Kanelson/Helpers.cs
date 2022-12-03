@@ -9,7 +9,7 @@ public static class Helpers
     public static HubConnection GetConnection(this IHttpContextAccessor httpContextAccessor,
         NavigationManager navigation)
     {
-        httpContextAccessor.HttpContext.Request.Cookies.TryGetValue(".AspNetCore.Cookies", out var value);
+        httpContextAccessor.HttpContext!.Request.Cookies.TryGetValue(".AspNetCore.Cookies", out var value);
         var container = new CookieContainer();
         container.Add(new Cookie
         {

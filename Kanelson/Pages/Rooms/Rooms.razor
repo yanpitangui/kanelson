@@ -30,7 +30,6 @@ else
             <RowTemplate>
                 <MudTd>
                    <MudFab @onclick="@(() => JoinRoom(context.Id))"
-                        Disabled="@(context.Status is not (RoomStatus.Created or RoomStatus.Started))"
                         Color="Color.Secondary" Icon="@Icons.Material.Filled.Outbound"
                         Size="Size.Small" IconSize="Size.Small"/>
                 </MudTd>

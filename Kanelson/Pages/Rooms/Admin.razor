@@ -1,6 +1,7 @@
 ﻿@using Microsoft.AspNetCore.SignalR.Client
 @using global::Kanelson.Contracts.Models
 @using System.Collections.Immutable
+@using Kanelson.Grains.Rooms
 @using Kanelson.Services
 @inject NavigationManager Navigation
 @inject IHttpContextAccessor HttpAccessor
@@ -39,21 +40,32 @@
     </MudCard>
 }
 
-@* Dar um jeito de esconder o botão depois do início da partida *@
-<MudButton @onclick="@(() => Start())" Color="Color.Primary" 
-           Variant="Variant.Filled"
-           StartIcon="@Icons.Filled.Start">@Loc["StartButton"]</MudButton>
-
-@* Dar um jeito de esconder o botão enquanto o round esteja rodando *@
-<MudButton @onclick="@(() => NextQuestion())" Color="Color.Primary" 
-           Variant="Variant.Filled"
-           StartIcon="@Icons.Filled.SkipNext">@Loc["NextQuestionButton"]</MudButton>
+@if (_roomStateMachine != null)
+{
+    @if (_roomStateMachine.PermittedTriggers.Contains(RoomTrigger.Start))
+    {
+        <MudButton @onclick="@(() => Start())" Color="Color.Primary" 
+                   Variant="Variant.Filled"
+                   StartIcon="@Icons.Filled.Start">@Loc["StartButton"]</MudButton>
+    }
     
 
+    @if (_roomStateMachine.PermittedTriggers.Contains(RoomTrigger.DisplayQuestion))
+    {
+        <MudButton @onclick="@(() => NextQuestion())" Color="Color.Primary" 
+                   Variant="Variant.Filled"
+                   StartIcon="@Icons.Filled.SkipNext">@Loc["NextQuestionButton"]</MudButton>
+    }
+}
+
+
+
+
 @code {
-    private HubConnection? _hubConnection;
+    private HubConnection _hubConnection = null!;
     private IEnumerable<UserInfo> _connectedUsers = ImmutableArray<UserInfo>.Empty;
     TemplateQuestion? _currentQuestion;
+    private RoomStateMachine _roomStateMachine;
 
     [Parameter]
     public string RoomId { get; set; } = null!;
@@ -61,6 +73,12 @@
     protected override async Task OnParametersSetAsync()
     {
         _hubConnection = HttpAccessor.GetConnection(Navigation);
+
+        _hubConnection.On<RoomStatus>("RoomStateChanged", (state) =>
+        {
+            _roomStateMachine = RoomBehavior.GetStateMachine(state);
+            InvokeAsync(StateHasChanged);
+        });
 
         _hubConnection.On<HashSet<UserInfo>>("CurrentUsersUpdated", (users) =>
         {
@@ -73,6 +91,9 @@
             _currentQuestion = question;
             InvokeAsync(StateHasChanged);
         });
+
+        var currentState = await RoomService.GetCurrentState(RoomId);
+        _roomStateMachine = RoomBehavior.GetStateMachine(currentState);
 
         await _hubConnection.StartAsync();
         _connectedUsers = await RoomService.GetCurrentUsers(RoomId);

@@ -2,6 +2,7 @@
 @using global::Kanelson.Contracts.Models
 @using System.Collections.Immutable
 @using System.Net
+@using System.Timers
 @using Kanelson.Grains.Rooms
 @using Kanelson.Hubs
 @using Kanelson.Services
@@ -22,8 +23,13 @@
     }
 </MudList>
 
-@if (_currentQuestion is not null)
+@if (_currentQuestion is not null && _playerStatus != PlayerStatus.Answered)
 {
+    @if (_timerHandle.Enabled)
+    {
+        <MudProgressCircular Size="Size.Large" Color="Color.Warning" Value="@_current" Max="@_max" />
+    }
+
     <MudCard>
         <MudCardHeader>
             @_currentQuestion.Name
@@ -42,8 +48,6 @@
     </MudCard>
 }
 
-<MudProgressCircular Color="Color.Default" Indeterminate="true" />
-
 @code {
 
     TemplateQuestion? _currentQuestion;
@@ -51,7 +55,13 @@
     public string RoomId { get; set; } = null!;
     private HubConnection? _hubConnection;
     private ImmutableArray<UserInfo> _connectedUsers = ImmutableArray<UserInfo>.Empty;
+    private PlayerStatus _playerStatus = PlayerStatus.Answering;
+    private Timer _timerHandle = new Timer(TimeSpan.FromSeconds(1));
     
+    bool _disposed;
+    
+    private int _current = 0;
+    private int _max = 0;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -64,6 +74,7 @@
 
         _hubConnection.On<ImmutableArray<UserRanking>>("RoundFinished", (ranking) =>
         {
+            _timerHandle.Stop();
             var parameters = new DialogParameters { ["Ranking"]=ranking };
 
             InvokeAsync(() => DialogService.Show<RankingDialog>("Ranking", parameters));
@@ -75,6 +86,12 @@
         _hubConnection.On<TemplateQuestion>("NextQuestion", (question) =>
         {
             _currentQuestion = question;
+            _current = 0;
+            _max = _currentQuestion.TimeLimit;
+            _timerHandle.Elapsed += TimeElapsed;
+            _timerHandle.Start();
+            
+            _playerStatus = PlayerStatus.Answering;
             InvokeAsync(StateHasChanged);
         });
         
@@ -82,10 +99,20 @@
 
         await _hubConnection.SendAsync("JoinRoom", RoomId);
     }
+    
+    
+    private async void TimeElapsed(object? sender, ElapsedEventArgs e)
+    {
+        _current++;
+        await InvokeAsync(StateHasChanged);
+    } 
 
     public async Task Answer(Guid answerId)
     {
+        _timerHandle.Stop();
+        _playerStatus = PlayerStatus.Answered;
         await _hubConnection!.SendAsync("Answer", RoomId,  answerId);
+        await InvokeAsync(StateHasChanged);
     }
 
     public async ValueTask DisposeAsync()
@@ -94,6 +121,15 @@
         {
             await disposable.DisposeAsync();
         }
+        _disposed = true;
+        _timerHandle.Dispose();
+    }
+    
+    
+    private enum PlayerStatus
+    {
+        Answering,
+        Answered
     }
 
 }

@@ -13,7 +13,7 @@
     <ItemGroup>
       <PackageReference Include="AspNet.Security.OAuth.GitHub" Version="7.0.0" />
       <PackageReference Include="FluentValidation" Version="11.4.0" />
-      <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.0" />
+      <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.1" />
       <PackageReference Include="Microsoft.Orleans.Server" Version="7.0.0" />
       <PackageReference Include="MudBlazor" Version="6.1.5" />
       <PackageReference Include="OpenTelemetry.Exporter.Jaeger" Version="1.4.0-beta.3" />

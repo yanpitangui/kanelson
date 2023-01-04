@@ -86,12 +86,12 @@ builder.Host.UseOrleans(siloBuilder =>
         });
 });
 
-builder.Services.AddOpenTelemetryMetrics(metrics =>
+builder.Services
+    .AddOpenTelemetry()
+    .WithMetrics(metrics =>
 {
     metrics.AddMeter("Microsoft.Orleans");
-});
-
-builder.Services.AddOpenTelemetryTracing(telemetry =>
+}).WithTracing(telemetry =>
 {
     telemetry
         .AddSource(OpenTelemetryExtensions.ServiceName)
@@ -114,7 +114,7 @@ builder.Services.AddOpenTelemetryTracing(telemetry =>
                 MaxExportBatchSize = 512,
             };
         });
-});
+}).StartWithHost();
 
 
 var app = builder.Build();

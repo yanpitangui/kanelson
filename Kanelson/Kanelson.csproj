@@ -25,7 +25,7 @@
       <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
       <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
       <PackageReference Include="shortid" Version="4.0.0" />
-      <PackageReference Include="Stateless" Version="5.12.0" />
+      <PackageReference Include="Stateless" Version="5.13.0" />
     </ItemGroup>
     
     <ItemGroup>

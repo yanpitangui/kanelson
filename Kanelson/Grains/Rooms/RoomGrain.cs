@@ -56,7 +56,7 @@ public class RoomGrain : Grain, IRoomGrain
         _state.State.Name = roomName;
         _state.State.OwnerId = owner;
         _state.State.Template = template;
-        _state.State.MaxQuestionIdx = Math.Clamp(template.Questions.Length - 1, 0, int.MaxValue);
+        _state.State.MaxQuestionIdx = Math.Clamp(template.Questions.Count - 1, 0, int.MaxValue);
         _state.State.CurrentQuestionIdx = 0;
         await _state.WriteStateAsync();
     }
@@ -166,7 +166,15 @@ public class RoomGrain : Grain, IRoomGrain
                 .Group(this.GetPrimaryKeyString())
                 .SendAsync("RoundFinished", ranking);
 
-            await _roomStateMachine.FireAsync(RoomTrigger.WaitForNextQuestion);
+            if (_state.State.CurrentQuestionIdx >= _state.State.MaxQuestionIdx)
+            {
+                await _roomStateMachine.FireAsync(RoomTrigger.Finish);
+
+            }
+            else
+            {
+                await _roomStateMachine.FireAsync(RoomTrigger.WaitForNextQuestion);
+            }
         }
     }
 

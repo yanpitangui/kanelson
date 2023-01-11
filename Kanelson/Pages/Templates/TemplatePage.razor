@@ -144,7 +144,7 @@
                     }
                 )
                 .OrderBy(x => x.Order)
-                .ToImmutableArray();
+                .ToList();
             await Service.UpsertTemplate(_template!);
             SnackBar.Add(Loc["TemplateSavedSuccess"], Severity.Success);
             Navigation.NavigateTo("templates");

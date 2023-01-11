@@ -30,22 +30,8 @@
         <MudProgressCircular Size="Size.Large" Color="Color.Warning" Value="@_current" Max="@_max" />
     }
 
-    <MudCard>
-        <MudCardHeader>
-            @_currentQuestion.Name
-        </MudCardHeader>
-        <MudCardContent>
-            <MudList>
-                @foreach (var answer in _currentQuestion.Answers)
-                {
-                    <MudListItem>
-                        <MudButton OnClick="@(() => Answer(answer.Id))"> @answer.Description</MudButton>
-                    </MudListItem>
-                    <MudDivider />
-                }
-            </MudList>
-        </MudCardContent>
-    </MudCard>
+    
+    <QuestionComponent AnswerClickCallback="@Answer" Question="@_currentQuestion"/>
 }
 
 @code {

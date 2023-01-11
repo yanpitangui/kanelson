@@ -1,0 +1,29 @@
+@using Kanelson.Contracts.Models
+
+<MudPaper>
+    <MudContainer>
+        @for(int i = 0; i< Question.Answers.Count; i ++)
+        {
+            var color = AnswerColor.GetColor(i);
+            var answer = Question.Answers[i];
+            <AnswerComponent Answer="answer" OnClickCallback="AnswerClickCallback" AnswerColor="color"/>
+        }
+        
+    </MudContainer>
+</MudPaper>
+
+
+
+@code {
+    [Parameter]
+    public Question Question { get; set; } = null!;
+    
+
+    [Parameter]
+    public EventCallback<Guid> AnswerClickCallback { get; set; }
+
+}
+
+
+
+

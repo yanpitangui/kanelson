@@ -20,41 +20,28 @@
 
 
 
-@if (_currentQuestion is not null)
-{
-    <MudCard>
-        <MudCardHeader>
-            @_currentQuestion.Name
-        </MudCardHeader>
-        <MudCardContent>
-            <MudList>
-                @foreach (var answer in _currentQuestion.Answers)
-                {
-                    <MudListItem>
-                       @answer.Description
-                    </MudListItem>
-                    <MudDivider />
-                }
-            </MudList>
-        </MudCardContent>
-    </MudCard>
-}
-
 @if (_roomStateMachine != null)
 {
+    
+    @if (_currentQuestion is not null && !_roomStateMachine.IsInState(RoomStatus.Created))
+    {
+        <QuestionComponent Question="_currentQuestion"/>
+    }
+
+    
     @if (_roomStateMachine.PermittedTriggers.Contains(RoomTrigger.Start))
     {
-        <MudButton @onclick="@(() => Start())" Color="Color.Primary" 
+        <MudButton @onclick="Start" Color="Color.Primary" 
                    Variant="Variant.Filled"
-                   StartIcon="@Icons.Filled.Start">@Loc["StartButton"]</MudButton>
+                   StartIcon="@Icons.Material.Filled.Start">@Loc["StartButton"]</MudButton>
     }
     
 
-    @if (_roomStateMachine.PermittedTriggers.Contains(RoomTrigger.DisplayQuestion))
+    @if (_roomStateMachine.PermittedTriggers.Contains(RoomTrigger.DisplayQuestion) && !_roomStateMachine.IsInState(RoomStatus.Finished))
     {
-        <MudButton @onclick="@(() => NextQuestion())" Color="Color.Primary" 
+        <MudButton @onclick="NextQuestion" Color="Color.Primary" 
                    Variant="Variant.Filled"
-                   StartIcon="@Icons.Filled.SkipNext">@Loc["NextQuestionButton"]</MudButton>
+                   StartIcon="@Icons.Material.Filled.SkipNext">@Loc["NextQuestionButton"]</MudButton>
     }
 }
 
@@ -65,8 +52,9 @@
     private HubConnection _hubConnection = null!;
     private IEnumerable<UserInfo> _connectedUsers = ImmutableArray<UserInfo>.Empty;
     TemplateQuestion? _currentQuestion;
-    private RoomStateMachine _roomStateMachine;
+    private RoomStateMachine _roomStateMachine = null!;
 
+    
     [Parameter]
     public string RoomId { get; set; } = null!;
 
@@ -86,10 +74,11 @@
             InvokeAsync(StateHasChanged);
         });
         
-        _hubConnection.On<TemplateQuestion>("NextQuestion", (question) =>
+        _hubConnection.On<TemplateQuestion>("NextQuestion", async (question) =>
         {
             _currentQuestion = question;
-            InvokeAsync(StateHasChanged);
+            await InvokeAsync(StateHasChanged);
+
         });
 
         var currentState = await RoomService.GetCurrentState(RoomId);
@@ -97,6 +86,9 @@
 
         await _hubConnection.StartAsync();
         _connectedUsers = await RoomService.GetCurrentUsers(RoomId);
+
+        _currentQuestion = await RoomService.GetCurrentQuestion(RoomId);
+
         await InvokeAsync(StateHasChanged);
 
         await base.OnParametersSetAsync();

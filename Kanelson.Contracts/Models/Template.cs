@@ -11,7 +11,7 @@ public record Template
     public string Name { get; set; } = null!;
     
     [Id(2)]
-    public ImmutableArray<TemplateQuestion> Questions { get; set; } = ImmutableArray<TemplateQuestion>.Empty;
+    public List<TemplateQuestion> Questions { get; set; } = new();
 }
 
 [GenerateSerializer]

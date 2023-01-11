@@ -1,0 +1,36 @@
+@using Color = Kanelson.Shared.AnswerColor
+@using Kanelson.Contracts.Models
+
+
+<MudPaper Class="e-paper" @onclick="@OnClick">
+    @Answer.Description
+</MudPaper>
+
+
+<style>
+    .e-paper  {
+        background-color: @AnswerColor.Code;
+    }
+
+</style>
+
+
+
+@code {
+
+    [Parameter]
+    public Color AnswerColor { get; set; } = null!;
+
+    [Parameter]
+    public Answer Answer { get; set; } = null!;
+    
+    [Parameter]
+    public EventCallback<Guid> OnClickCallback {get; set;}
+
+
+    private async Task OnClick()
+    {
+        await OnClickCallback.InvokeAsync(Answer.Id);
+    }
+    
+}

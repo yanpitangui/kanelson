@@ -7,6 +7,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Pipeline", "Pipeline", "{0D1F9F23-FDD1-4648-A9CD-1845B607CC0E}"
 	ProjectSection(SolutionItems) = preProject
 		.github\workflows\main_kanelson.yml = .github\workflows\main_kanelson.yml
+		.github\dependabot.yml = .github\dependabot.yml
 	EndProjectSection
 EndProject
 Global

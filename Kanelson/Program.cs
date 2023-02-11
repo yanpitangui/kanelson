@@ -52,8 +52,8 @@ builder.Services.AddAuthentication(o =>
         {
             var user = context.Principal;
             var userService = context.HttpContext.RequestServices.GetRequiredService<IUserService>();
-            await userService.Upsert(user.FindFirstValue(ClaimTypes.NameIdentifier), 
-                user.FindFirstValue(ClaimTypes.Name));
+            await userService.Upsert(user!.FindFirstValue(ClaimTypes.NameIdentifier)!, 
+                user!.FindFirstValue(ClaimTypes.Name)!);
         };
     });
 
@@ -88,33 +88,34 @@ builder.Host.UseOrleans(siloBuilder =>
 
 builder.Services
     .AddOpenTelemetry()
+    .ConfigureResource(rb => rb.AddService(serviceName: OpenTelemetryExtensions.ServiceName))
     .WithMetrics(metrics =>
-{
-    metrics.AddMeter("Microsoft.Orleans");
-}).WithTracing(telemetry =>
-{
-    telemetry
-        .AddSource(OpenTelemetryExtensions.ServiceName)
-        .SetResourceBuilder(
-            ResourceBuilder.CreateDefault()
-                .AddService(serviceName: OpenTelemetryExtensions.ServiceName,
-                    serviceVersion: OpenTelemetryExtensions.ServiceVersion));
-    telemetry.AddSource("Microsoft.Orleans.Application")
-        .AddJaegerExporter(exporter =>
-        {
-            exporter.AgentHost = builder.Configuration["Jaeger:AgentHost"];
-            exporter.AgentPort = Convert.ToInt32(builder.Configuration["Jaeger:AgentPort"]);
-            exporter.MaxPayloadSizeInBytes = 4096;
-            exporter.ExportProcessorType = ExportProcessorType.Batch;
-            exporter.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>
+    {
+        metrics.AddMeter("Microsoft.Orleans");
+    }).WithTracing(telemetry =>
+    {
+        telemetry
+            .AddSource(OpenTelemetryExtensions.ServiceName)
+            .SetResourceBuilder(
+                ResourceBuilder.CreateDefault()
+                    .AddService(serviceName: OpenTelemetryExtensions.ServiceName,
+                        serviceVersion: OpenTelemetryExtensions.ServiceVersion));
+        telemetry.AddSource("Microsoft.Orleans.Application")
+            .AddJaegerExporter(exporter =>
             {
-                MaxQueueSize = 2048,
-                ScheduledDelayMilliseconds = 5000,
-                ExporterTimeoutMilliseconds = 30000,
-                MaxExportBatchSize = 512,
-            };
-        });
-}).StartWithHost();
+                exporter.AgentHost = builder.Configuration["Jaeger:AgentHost"];
+                exporter.AgentPort = Convert.ToInt32(builder.Configuration["Jaeger:AgentPort"]);
+                exporter.MaxPayloadSizeInBytes = 4096;
+                exporter.ExportProcessorType = ExportProcessorType.Batch;
+                exporter.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>
+                {
+                    MaxQueueSize = 2048,
+                    ScheduledDelayMilliseconds = 5000,
+                    ExporterTimeoutMilliseconds = 30000,
+                    MaxExportBatchSize = 512,
+                };
+            });
+    });
 
 
 var app = builder.Build();

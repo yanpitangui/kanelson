@@ -6,8 +6,5 @@ namespace Kanelson.Extensions;
 public static class HubCallerContextExtensions
 {
     public static string GetUserId(this HubCallerContext context) =>
-        context.User.FindFirstValue(ClaimTypes.NameIdentifier);
-    
-    public static string GetUserName(this HubCallerContext context) =>
-        context.User.FindFirstValue(ClaimTypes.Name);
+        context.User!.FindFirstValue(ClaimTypes.NameIdentifier)!;
 }

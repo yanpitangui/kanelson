@@ -12,7 +12,7 @@
 
     <ItemGroup>
       <PackageReference Include="AspNet.Security.OAuth.GitHub" Version="7.0.0" />
-      <PackageReference Include="FluentValidation" Version="11.4.0" />
+      <PackageReference Include="FluentValidation" Version="11.5.0" />
       <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.2" />
       <PackageReference Include="Microsoft.Orleans.Server" Version="7.1.0" />
       <PackageReference Include="MudBlazor" Version="6.1.8" />

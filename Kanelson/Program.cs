@@ -10,7 +10,6 @@ using Newtonsoft.Json.Linq;
 using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using Orleans.Providers.MongoDB.Configuration;
 using Serilog;
 using Serilog.Events;
 using Serilog.Exceptions;
@@ -41,6 +40,8 @@ builder.Services.AddAuthentication(o =>
     {
         o.LoginPath = "/signin";
         o.LogoutPath = "/signout";
+        o.Cookie.SameSite = SameSiteMode.Strict;
+        o.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     })
     .AddGitHub(o =>
     {

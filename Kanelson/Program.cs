@@ -6,11 +6,11 @@ using Kanelson.Tracing;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.ResponseCompression;
 using MudBlazor.Services;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Orleans.Providers.MongoDB.Configuration;
 using Serilog;
 using Serilog.Events;
 using Serilog.Exceptions;
@@ -28,6 +28,9 @@ var logger = ConfigureBaseLogging()
 
 // Register Serilog
 builder.Logging.AddSerilog(logger);
+
+builder.Services.AddHealthChecks()
+    .AddMongoDb(builder.Configuration.GetConnectionString("MongoDb")!);
 
 // Add services to the container.
 builder.Services.AddAuthentication(o =>
@@ -74,15 +77,25 @@ builder.Services.AddResponseCompression(opts =>
 });
 
 
+var dbName = "Kanelson";
 builder.Host.UseOrleans(siloBuilder =>
 {
     siloBuilder
         .AddActivityPropagation();
-    siloBuilder.UseLocalhostClustering()
+    siloBuilder
         .UseMongoDBClient(builder.Configuration.GetConnectionString("MongoDb"))
+        .UseMongoDBClustering(opt =>
+        {
+            opt.DatabaseName = dbName;
+            opt.Strategy = MongoDBMembershipStrategy.Multiple;
+        })
+        .UseMongoDBReminders(opt =>
+        {
+            opt.DatabaseName = dbName;
+        })
         .AddMongoDBGrainStorage("kanelson-storage", options =>
         {
-            options.DatabaseName = "Kanelson";
+            options.DatabaseName = dbName;
         });
 });
 
@@ -152,7 +165,7 @@ app.MapFallbackToPage("/_Host");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseWebSockets();
-
+app.MapHealthChecks("/healthz");
 
 var supportedCultures = new[] { "en-US", "pt-BR" };
 var localizationOptions = new RequestLocalizationOptions()

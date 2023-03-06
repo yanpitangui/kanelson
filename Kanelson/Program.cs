@@ -155,6 +155,7 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
+app.UseCookiePolicy();
 app.UseRouting();
 
 

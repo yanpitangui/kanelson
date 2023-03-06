@@ -86,6 +86,9 @@ builder.Host.UseOrleans(siloBuilder =>
         });
 });
 
+var jaegerConfig = builder.Configuration.GetSection("Jaeger");
+
+
 builder.Services
     .AddOpenTelemetry()
     .ConfigureResource(rb => rb.AddService(serviceName: OpenTelemetryExtensions.ServiceName))
@@ -100,21 +103,25 @@ builder.Services
                 ResourceBuilder.CreateDefault()
                     .AddService(serviceName: OpenTelemetryExtensions.ServiceName,
                         serviceVersion: OpenTelemetryExtensions.ServiceVersion));
-        telemetry.AddSource("Microsoft.Orleans.Application")
-            .AddJaegerExporter(exporter =>
+        telemetry.AddSource("Microsoft.Orleans.Application");
+        
+        if (jaegerConfig!= null && !string.IsNullOrWhiteSpace(jaegerConfig.GetValue<string>("AgentHost")))
+        {
+            telemetry.AddJaegerExporter(o =>
             {
-                exporter.AgentHost = builder.Configuration["Jaeger:AgentHost"];
-                exporter.AgentPort = Convert.ToInt32(builder.Configuration["Jaeger:AgentPort"]);
-                exporter.MaxPayloadSizeInBytes = 4096;
-                exporter.ExportProcessorType = ExportProcessorType.Batch;
-                exporter.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>
+                o.AgentHost = jaegerConfig["AgentHost"];
+                o.AgentPort = Convert.ToInt32(jaegerConfig["AgentPort"]);
+                o.MaxPayloadSizeInBytes = 4096;
+                o.ExportProcessorType = ExportProcessorType.Batch;
+                o.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>
                 {
                     MaxQueueSize = 2048,
                     ScheduledDelayMilliseconds = 5000,
                     ExporterTimeoutMilliseconds = 30000,
                     MaxExportBatchSize = 512,
                 };
-            });
+            });   
+        }
     });
 
 

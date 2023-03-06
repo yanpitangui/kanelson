@@ -84,11 +84,7 @@ builder.Host.UseOrleans(siloBuilder =>
         .AddActivityPropagation();
     siloBuilder
         .UseMongoDBClient(builder.Configuration.GetConnectionString("MongoDb"))
-        .UseMongoDBClustering(opt =>
-        {
-            opt.DatabaseName = dbName;
-            opt.Strategy = MongoDBMembershipStrategy.Multiple;
-        })
+        .UseLocalhostClustering()
         .UseMongoDBReminders(opt =>
         {
             opt.DatabaseName = dbName;

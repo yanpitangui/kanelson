@@ -31,6 +31,13 @@ builder.Logging.AddSerilog(logger);
 builder.Services.AddHealthChecks()
     .AddMongoDb(builder.Configuration.GetConnectionString("MongoDb")!);
 
+
+builder.Services.Configure<CookiePolicyOptions>(options =>
+{
+    options.Secure = CookieSecurePolicy.Always;
+    options.MinimumSameSitePolicy = SameSiteMode.Lax;
+});
+
 // Add services to the container.
 builder.Services.AddAuthentication(o =>
     {
@@ -47,9 +54,6 @@ builder.Services.AddAuthentication(o =>
         o.ClientSecret = builder.Configuration.GetRequiredSection("GithubAuth")["ClientSecret"]!;
         o.CallbackPath = "/signin-github";
         o.Scope.Add("read:user");
-        o.CorrelationCookie.SameSite = SameSiteMode.Lax;
-        o.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-
         // Atualiza as informações do usuário quando ele faz login com sucesso.
         o.Events.OnCreatingTicket = async (context) =>
         {

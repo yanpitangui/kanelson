@@ -40,8 +40,6 @@ builder.Services.AddAuthentication(o =>
     {
         o.LoginPath = "/signin";
         o.LogoutPath = "/signout";
-        o.Cookie.SameSite = SameSiteMode.Strict;
-        o.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     })
     .AddGitHub(o =>
     {
@@ -49,8 +47,9 @@ builder.Services.AddAuthentication(o =>
         o.ClientSecret = builder.Configuration.GetRequiredSection("GithubAuth")["ClientSecret"]!;
         o.CallbackPath = "/signin-github";
         o.Scope.Add("read:user");
+        o.CorrelationCookie.SameSite = SameSiteMode.Lax;
+        o.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 
-        
         // Atualiza as informações do usuário quando ele faz login com sucesso.
         o.Events.OnCreatingTicket = async (context) =>
         {

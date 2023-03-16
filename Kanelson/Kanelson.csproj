@@ -14,7 +14,7 @@
       <PackageReference Include="AspNet.Security.OAuth.GitHub" Version="7.0.0" />
       <PackageReference Include="AspNetCore.HealthChecks.MongoDb" Version="6.0.2" />
       <PackageReference Include="FluentValidation" Version="11.5.1" />
-      <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.3" />
+      <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.4" />
       <PackageReference Include="Microsoft.Orleans.Server" Version="7.1.0" />
       <PackageReference Include="MudBlazor" Version="6.1.9" />
       <PackageReference Include="OpenTelemetry.Exporter.Jaeger" Version="1.4.0" />

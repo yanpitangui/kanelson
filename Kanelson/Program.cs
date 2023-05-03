@@ -6,14 +6,9 @@ using Kanelson.Tracing;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.ResponseCompression;
 using MudBlazor.Services;
-using Newtonsoft.Json.Linq;
-using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
-using Serilog.Events;
-using Serilog.Exceptions;
-using Serilog.Sinks.SystemConsole.Themes;
 
 
 Activity.DefaultIdFormat = ActivityIdFormat.W3C;
@@ -22,7 +17,8 @@ var builder = WebApplication.CreateBuilder(args);
 // remove default logging providers
 builder.Logging.ClearProviders();
 // Serilog configuration        
-var logger = ConfigureBaseLogging()
+var logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger();
 
 // Register Serilog
@@ -85,10 +81,14 @@ var dbName = "Kanelson";
 builder.Host.UseOrleans(siloBuilder =>
 {
     siloBuilder
-        .AddActivityPropagation();
-    siloBuilder
+        .AddActivityPropagation()
         .UseMongoDBClient(builder.Configuration.GetConnectionString("MongoDb"))
         .UseLocalhostClustering()
+        .UseDashboard(x =>
+        {
+            x.HostSelf = true;
+            x.CounterUpdateIntervalMs = 10000;
+        })
         .UseMongoDBReminders(opt =>
         {
             opt.DatabaseName = dbName;
@@ -99,7 +99,8 @@ builder.Host.UseOrleans(siloBuilder =>
         });
 });
 
-var jaegerConfig = builder.Configuration.GetSection("Jaeger");
+var tracingOptions = builder.Configuration.GetSection("Tracing")
+    .Get<TracingOptions>()!;
 
 
 builder.Services
@@ -115,25 +116,17 @@ builder.Services
             .SetResourceBuilder(
                 ResourceBuilder.CreateDefault()
                     .AddService(serviceName: OpenTelemetryExtensions.ServiceName,
-                        serviceVersion: OpenTelemetryExtensions.ServiceVersion));
-        telemetry.AddSource("Microsoft.Orleans.Application");
-        
-        if (jaegerConfig!= null && !string.IsNullOrWhiteSpace(jaegerConfig.GetValue<string>("AgentHost")))
+                        serviceVersion: OpenTelemetryExtensions.ServiceVersion))
+            .AddAspNetCoreInstrumentation()
+            .AddSource("Microsoft.Orleans.Application")
+            .AddSource("Microsoft.Orleans.Runtime");
+
+        if (tracingOptions.Enabled)
         {
-            telemetry.AddJaegerExporter(o =>
+            telemetry.AddOtlpExporter(o =>
             {
-                o.AgentHost = jaegerConfig["AgentHost"];
-                o.AgentPort = Convert.ToInt32(jaegerConfig["AgentPort"]);
-                o.MaxPayloadSizeInBytes = 4096;
-                o.ExportProcessorType = ExportProcessorType.Batch;
-                o.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>
-                {
-                    MaxQueueSize = 2048,
-                    ScheduledDelayMilliseconds = 5000,
-                    ExporterTimeoutMilliseconds = 30000,
-                    MaxExportBatchSize = 512,
-                };
-            });   
+                o.Endpoint = new Uri(tracingOptions.Uri);
+            });
         }
     });
 
@@ -158,6 +151,7 @@ app.UseStaticFiles();
 app.UseCookiePolicy();
 app.UseRouting();
 
+app.Map("/dashboard", x => x.UseOrleansDashboard());
 
 app.MapControllers();
 app.MapHub<RoomHub>("/roomHub");
@@ -177,22 +171,3 @@ var localizationOptions = new RequestLocalizationOptions()
 app.UseRequestLocalization(localizationOptions);
 
 await app.RunAsync();
-
-LoggerConfiguration ConfigureBaseLogging()
-{
-    var loggerConfiguration = new LoggerConfiguration();
-    if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Testing") return loggerConfiguration.MinimumLevel.Fatal();
-    loggerConfiguration
-        .MinimumLevel.Information()
-        .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
-        .MinimumLevel.Override("Orleans", LogEventLevel.Warning)
-        .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
-        .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Infrastructure", LogEventLevel.Warning)
-        .Destructure.AsScalar<JObject>()
-        .Destructure.AsScalar<JArray>()
-        .WriteTo.Async(a => a.Console(outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level}] {Message}{NewLine}{Exception}", theme: AnsiConsoleTheme.Code))
-        .Enrich.WithExceptionDetails()
-        .Enrich.FromLogContext();
-
-    return loggerConfiguration;
-}

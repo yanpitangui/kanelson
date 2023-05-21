@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Collections.Immutable;
+using Akka.Hosting;
 using Orleans;
 using Kanelson.Contracts.Grains.Templates;
 using Kanelson.Contracts.Models;
@@ -8,13 +9,13 @@ namespace Kanelson.Services;
 
 public class TemplateService : ITemplateService
 {
-    private readonly IGrainFactory _client;
+    private readonly ActorRegistry _actorRegistry;
     private readonly IUserService _userService;
 
 
-    public TemplateService(IGrainFactory client, IUserService userService)
+    public TemplateService(ActorRegistry actorRegistry, IUserService userService)
     {
-        _client = client;
+        _actorRegistry = actorRegistry;
         _userService = userService;
     }
 

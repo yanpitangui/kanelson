@@ -1,51 +1,54 @@
 ﻿using System.Collections.Immutable;
+using Akka.Actor;
+using Akka.Hosting;
 using FluentValidation.Results;
-using Orleans;
-using Kanelson.Contracts.Grains.Questions;
 using Kanelson.Contracts.Models;
+using Kanelson.Grains.Questions;
 
 namespace Kanelson.Services;
 
 public class QuestionService : IQuestionService
 {
-    private readonly IGrainFactory _grainFactory;
+    private readonly ActorRegistry _actorRegistry;
     private readonly IUserService _userService;
 
-    public QuestionService(IGrainFactory grainFactory, IUserService userService)
+    public QuestionService(IUserService userService, ActorRegistry actorRegistry)
     {
-        _grainFactory = grainFactory;
         _userService = userService;
+        _actorRegistry = actorRegistry;
     }
 
-    public async Task<ValidationResult> SaveQuestion(Question question)
+    public Task<ValidationResult> SaveQuestion(Question question)
     {
-        var grain = _grainFactory.GetGrain<IQuestionGrain>(_userService.CurrentUser);
-        await grain.SaveQuestion(question);
-        return new ValidationResult();
+        var actor = _actorRegistry.Get<UserQuestionsActor>();
+        actor.Tell(new UpserQuestion(question));
+        return Task.FromResult(new ValidationResult());
     }
 
-    public async Task<bool> DeleteQuestion(Guid id)
+    public Task DeleteQuestion(Guid id)
     {
-        var grain = _grainFactory.GetGrain<IQuestionGrain>(_userService.CurrentUser);
-        return await grain.DeleteQuestion(id);
+        var actor = _actorRegistry.Get<UserQuestionsActor>();
+        actor.Tell(new DeleteQuestion(id));
+        return Task.CompletedTask;
     }
 
     public async Task<Question?> GetQuestion(Guid id)
     {
-        var grain = _grainFactory.GetGrain<IQuestionGrain>(_userService.CurrentUser);
-        return await grain.GetQuestion(id);
+        var actor = _actorRegistry.Get<UserQuestionsActor>();
+        var result = await actor.Ask<ImmutableArray<Question>>(new GetQuestions(id));
+        return result.FirstOrDefault();
     }
 
     public async Task<ImmutableArray<QuestionSummary>> GetQuestionsSummary()
     {
-        var grain = _grainFactory.GetGrain<IQuestionGrain>(_userService.CurrentUser);
-        return await grain.GetQuestionsSummary();
+        var actor = _actorRegistry.Get<UserQuestionsActor>();
+        return await actor.Ask<ImmutableArray<QuestionSummary>>(new GetQuestionsSummary());
     }
 
-    public async Task<ImmutableArray<Question>> GetQuestions(HashSet<Guid>? ids = null)
+    public async Task<ImmutableArray<Question>> GetQuestions(HashSet<Guid> ids)
     {
-        var grain = _grainFactory.GetGrain<IQuestionGrain>(_userService.CurrentUser);
-        return await grain.GetQuestions(ids);
+        var actor = _actorRegistry.Get<UserQuestionsActor>();
+        return await actor.Ask<ImmutableArray<Question>>(new GetQuestions(ids.ToArray()));
     }
 }
 
@@ -55,7 +58,7 @@ public interface IQuestionService
     public Task<ValidationResult> SaveQuestion(Question question);
     public Task<ImmutableArray<QuestionSummary>> GetQuestionsSummary();
 
-    Task<bool> DeleteQuestion(Guid id);
+    Task DeleteQuestion(Guid id);
     Task<Question?> GetQuestion(Guid id);
-    Task<ImmutableArray<Question>> GetQuestions(HashSet<Guid>? ids = null);
+    Task<ImmutableArray<Question>> GetQuestions(HashSet<Guid> ids);
 }

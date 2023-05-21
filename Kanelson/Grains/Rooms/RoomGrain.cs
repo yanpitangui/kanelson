@@ -3,8 +3,6 @@ using System.Collections.Immutable;
 using Kanelson.Hubs;
 using Kanelson.Services;
 using Microsoft.AspNetCore.SignalR;
-using Orleans.Runtime;
-using Kanelson.Contracts.Grains.Rooms;
 using Kanelson.Contracts.Models;
 
 namespace Kanelson.Grains.Rooms;

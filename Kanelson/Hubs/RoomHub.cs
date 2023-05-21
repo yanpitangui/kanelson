@@ -101,9 +101,7 @@ public class RoomHub : Hub
     }
 }
 
-[GenerateSerializer]
 public record HubUser : UserInfo
 {
-    [Id(2)]
     public HashSet<string> Connections { get; set; } = new();
 }

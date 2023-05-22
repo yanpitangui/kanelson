@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using Akka.Actor;
+using Akka.Hosting;
 using FluentValidation.Results;
 using Kanelson.Contracts.Models;
 using Kanelson.Grains.Questions;
@@ -8,46 +9,50 @@ namespace Kanelson.Services;
 
 public class QuestionService : IQuestionService
 {
-    private readonly ActorSystem _actorSystem;
+    private readonly ActorRegistry _actorRegistry;
     private readonly IUserService _userService;
 
-    public QuestionService(IUserService userService, ActorSystem actorSystem)
+    public QuestionService(IUserService userService, ActorRegistry actorRegistry)
     {
         _userService = userService;
-        _actorSystem = actorSystem;
+        _actorRegistry = actorRegistry;
     }
 
-    public Task<ValidationResult> SaveQuestion(Question question)
+    public async Task<ValidationResult> SaveQuestion(Question question)
     {
-        var actor = _actorSystem.ActorOf(UserQuestionsActor.Props(_userService.CurrentUser));
-        actor.Tell(new UpserQuestion(question));
-        return Task.FromResult(new ValidationResult());
+        var index = await _actorRegistry.GetAsync<QuestionIndexActor>();
+        var userQuestionsActor = await index.Ask<IActorRef>(new GetRef(_userService.CurrentUser));
+        userQuestionsActor.Tell(new UpsertQuestion(question));
+        return new ValidationResult();
     }
 
-    public Task DeleteQuestion(Guid id)
+    public async Task DeleteQuestion(Guid id)
     {
-        var actor = _actorSystem.ActorOf(UserQuestionsActor.Props(_userService.CurrentUser));
-        actor.Tell(new DeleteQuestion(id));
-        return Task.CompletedTask;
+        var index = await _actorRegistry.GetAsync<QuestionIndexActor>();
+        var userQuestionsActor = await index.Ask<IActorRef>(new GetRef(_userService.CurrentUser));
+        userQuestionsActor.Tell(new DeleteQuestion(id));
     }
 
     public async Task<Question?> GetQuestion(Guid id)
     {
-        var actor = _actorSystem.ActorOf(UserQuestionsActor.Props(_userService.CurrentUser));
-        var result = await actor.Ask<ImmutableArray<Question>>(new GetQuestions(id));
+        var index = await _actorRegistry.GetAsync<QuestionIndexActor>();
+        var userQuestionsActor = await index.Ask<IActorRef>(new GetRef(_userService.CurrentUser));
+        var result = await userQuestionsActor.Ask<ImmutableArray<Question>>(new GetQuestions(id));
         return result.FirstOrDefault();
     }
 
     public async Task<ImmutableArray<QuestionSummary>> GetQuestionsSummary()
     {
-        var actor = _actorSystem.ActorOf(UserQuestionsActor.Props(_userService.CurrentUser));
-        return await actor.Ask<ImmutableArray<QuestionSummary>>(new GetQuestionsSummary());
+        var index = await _actorRegistry.GetAsync<QuestionIndexActor>();
+        var userQuestionsActor = await index.Ask<IActorRef>(new GetRef(_userService.CurrentUser));
+        return await userQuestionsActor.Ask<ImmutableArray<QuestionSummary>>(new GetQuestionsSummary());
     }
 
     public async Task<ImmutableArray<Question>> GetQuestions(HashSet<Guid> ids)
     {
-        var actor = _actorSystem.ActorOf(UserQuestionsActor.Props(_userService.CurrentUser));
-        return await actor.Ask<ImmutableArray<Question>>(new GetQuestions(ids.ToArray()));
+        var index = await _actorRegistry.GetAsync<QuestionIndexActor>();
+        var userQuestionsActor = await index.Ask<IActorRef>(new GetRef(_userService.CurrentUser));
+        return await userQuestionsActor.Ask<ImmutableArray<Question>>(new GetQuestions(ids.ToArray()));
     }
 }
 

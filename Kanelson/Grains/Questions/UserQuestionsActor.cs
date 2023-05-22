@@ -15,7 +15,7 @@ public class UserQuestionsActor : ReceiveActor
         //PersistenceId = userId;
         _state = new UserQuestionsState();
 
-        Receive<UpserQuestion>(o =>
+        Receive<UpsertQuestion>(o =>
         {
             _state.Questions[o.Question.Id] = o.Question;
         });
@@ -49,7 +49,7 @@ public class UserQuestionsActor : ReceiveActor
 }
 
 
-public record UpserQuestion(Question Question);
+public record UpsertQuestion(Question Question);
 
 public record DeleteQuestion(Guid Id);
 

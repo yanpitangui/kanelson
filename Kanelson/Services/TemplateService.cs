@@ -1,36 +1,41 @@
 ﻿using System.Buffers;
 using System.Collections.Immutable;
-using Akka.Hosting;
-using Orleans;
-using Kanelson.Contracts.Grains.Templates;
+using Akka.Actor;
 using Kanelson.Contracts.Models;
+using Kanelson.Grains.Templates;
 
 namespace Kanelson.Services;
 
 public class TemplateService : ITemplateService
 {
-    private readonly ActorRegistry _actorRegistry;
+    private readonly ActorSystem _actorSystem;
     private readonly IUserService _userService;
 
 
-    public TemplateService(ActorRegistry actorRegistry, IUserService userService)
+    public TemplateService(ActorSystem actorSystem, IUserService userService)
     {
-        _actorRegistry = actorRegistry;
+        _actorSystem = actorSystem;
         _userService = userService;
     }
 
     public async Task UpsertTemplate(Template template)
     {
-        var manager = _client.GetGrain<ITemplateManagerGrain>(_userService.CurrentUser);
-        var templateGrain = _client.GetGrain<ITemplateGrain>(template.Id);
-        await templateGrain.SetBase(template, _userService.CurrentUser);
-        await manager.RegisterAsync(templateGrain.GetPrimaryKey());
+
+        var manager = _actorSystem.ActorOf(TemplateManagerActor.Props(_userService.CurrentUser));
+        var exists = await manager.Ask<bool>(new Exists(template.Id));
+        if (!exists)
+        {
+            manager.Tell(new Register(template.Id));
+        }
+        var actor = await manager.Ask<IActorRef>(new GetRef(template.Id));
+        actor.Tell(new Upsert(template, _userService.CurrentUser));
     }
 
     public async Task<ImmutableArray<TemplateSummary>> GetTemplates()
     {
-        var manager = _client.GetGrain<ITemplateManagerGrain>(_userService.CurrentUser);
-        var keys = await manager.GetAllAsync();
+        var manager = _actorSystem.ActorOf(TemplateManagerActor.Props(_userService.CurrentUser));
+        
+        var keys = await manager.Ask<ImmutableArray<Guid>>(new GetAll());
         // fan out to get the individual items from the cluster in parallel
         var tasks = ArrayPool<Task<TemplateSummary>>.Shared.Rent(keys.Length);
         try
@@ -38,7 +43,7 @@ public class TemplateService : ITemplateService
             // issue all individual requests at the same time
             for (var i = 0; i < keys.Length; ++i)
             {
-                tasks[i] = _client.GetGrain<ITemplateGrain>(keys[i]).GetSummary();
+                tasks[i] = _actorSystem.ActorOf(TemplateActor.Props(keys[i])).Ask<TemplateSummary>(new GetSummary());
             }
 
             // build the result as requests complete
@@ -59,28 +64,26 @@ public class TemplateService : ITemplateService
 
     public async Task<Template> GetTemplate(Guid id)
     {
-        var manager = _client.GetGrain<ITemplateManagerGrain>(_userService.CurrentUser);
-        var templates = await manager.GetAllAsync();
-        if (!templates.Contains(id))
+        var manager = _actorSystem.ActorOf(TemplateManagerActor.Props(_userService.CurrentUser));
+        var exists = await manager.Ask<bool>(new Exists(id));
+        if (!exists)
         {
             throw new KeyNotFoundException();
         }
 
-        return await _client.GetGrain<ITemplateGrain>(id).Get();
+        var actorRef = await manager.Ask<IActorRef>(new GetRef(id));
+        return await actorRef.Ask<Template>(new GetTemplate());
     }
 
     public async Task DeleteTemplate(Guid id)
     {
-        var manager = _client.GetGrain<ITemplateManagerGrain>(_userService.CurrentUser);
-        if (!await manager.KeyExists(id))
+        var manager = _actorSystem.ActorOf(TemplateManagerActor.Props(_userService.CurrentUser));
+        var exists = await manager.Ask<bool>(new Exists(id));
+        if (!exists)
         {
             throw new KeyNotFoundException();
         }
-
-        var grain = _client.GetGrain<ITemplateGrain>(id);
-        await grain.Delete();
-        await manager.UnregisterAsync(id);
-
+        manager.Tell(new Unregister(id));
     }
 }
 

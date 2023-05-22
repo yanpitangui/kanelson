@@ -10,7 +10,7 @@ public class UserIndexActor : ReceiveActor
     //public override string PersistenceId { get; }
     
     private UserIndexState _state;
-    public UserIndexActor()
+    public UserIndexActor(string persistenceId)
     {
         _state = new UserIndexState();
 

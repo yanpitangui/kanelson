@@ -1,6 +1,5 @@
 using System.Collections.Immutable;
 using Akka.Actor;
-using Akka.Persistence;
 using Kanelson.Contracts.Models;
 
 namespace Kanelson.Grains.Questions;
@@ -11,7 +10,7 @@ public class UserQuestionsActor : ReceiveActor
     private UserQuestionsState _state;
     //public override string PersistenceId { get; }
 
-    public UserQuestionsActor()//string userId)
+    public UserQuestionsActor(string userId)
     {
         //PersistenceId = userId;
         _state = new UserQuestionsState();
@@ -41,6 +40,11 @@ public class UserQuestionsActor : ReceiveActor
             Sender.Tell(_state.Questions.Values.Where(x => o.Ids.Contains(x.Id)).ToImmutableArray());
         });
         
+    }
+
+    public static Props Props(string userId)
+    {
+        return Akka.Actor.Props.Create(() => new UserQuestionsActor(userId));
     }
 }
 

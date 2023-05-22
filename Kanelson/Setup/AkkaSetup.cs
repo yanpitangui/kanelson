@@ -1,6 +1,8 @@
+using Akka.Actor;
 using Akka.Cluster.Hosting;
 using Akka.Hosting;
 using Akka.Remote.Hosting;
+using Kanelson.Grains;
 using Petabridge.Cmd.Cluster;
 using Petabridge.Cmd.Cluster.Sharding;
 using Petabridge.Cmd.Host;
@@ -32,6 +34,11 @@ public static class AkkaSetup
                     {
                         cmd.RegisterCommandPalette(ClusterShardingCommands.Instance);
                         cmd.RegisterCommandPalette(ClusterCommands.Instance);
+                    }).WithActors((system, registry) =>
+                    {
+                        var userIndexActor = system.ActorOf(Props.Create(() => new UserIndexActor("user-index")), 
+                            "user-index");
+                        registry.Register<UserIndexActor>(userIndexActor);
                     });
             });
         });

@@ -1,10 +1,7 @@
-﻿using System.Buffers;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using Akka.Hosting;
-using Kanelson.Contracts.Grains.Rooms;
-using Kanelson.Contracts.Grains.Templates;
+
 using Kanelson.Contracts.Models;
-using shortid;
 
 namespace Kanelson.Services;
 
@@ -98,65 +95,69 @@ public class RoomService : IRoomService
 
     public async Task UpdateCurrentUsers(string roomId, HashSet<UserInfo> users)
     {
-        var grain = _client.GetGrain<IRoomGrain>(roomId);
-        await grain.UpdateCurrentUsers(users);
+        // var grain = _client.GetGrain<IRoomGrain>(roomId);
+        // await grain.UpdateCurrentUsers(users);
     }
 
     public async Task<HashSet<UserInfo>> GetCurrentUsers(string roomId)
     {
-        var grain = _client.GetGrain<IRoomGrain>(roomId);
-        return await grain.GetCurrentUsers();
+        // var grain = _client.GetGrain<IRoomGrain>(roomId);
+        // return await grain.GetCurrentUsers();
+        return default;
     }
 
     public async Task<TemplateQuestion> GetCurrentQuestion(string roomId)
     {
-        var grain = _client.GetGrain<IRoomGrain>(roomId);
-        return await grain.GetCurrentQuestion();
+        // var grain = _client.GetGrain<IRoomGrain>(roomId);
+        // return await grain.GetCurrentQuestion();
+        return default;
     }
 
     public async Task<bool> NextQuestion(string roomId)
     {
-        var grain = _client.GetGrain<IRoomGrain>(roomId);
-        return await grain.NextQuestion();
+        // var grain = _client.GetGrain<IRoomGrain>(roomId);
+        // return await grain.NextQuestion();
+        return default;
     }
 
     public async Task Start(string roomId)
     {
-        var grain = _client.GetGrain<IRoomGrain>(roomId);
-        await grain.Start();
+        // var grain = _client.GetGrain<IRoomGrain>(roomId);
+        // await grain.Start();
     }
 
     public async Task<string> GetOwner(string roomId)
     {
-        var grain = _client.GetGrain<IRoomGrain>(roomId);
-        return await grain.GetOwner();
+        // var grain = _client.GetGrain<IRoomGrain>(roomId);
+        // return await grain.GetOwner();
+        return string.Empty;
     }
 
     public async Task Delete(string roomId)
     {
-        var manager = _client.GetGrain<IRoomManagerGrain>(0);
-        if (!await manager.Exists(roomId))
-        {
-            throw new KeyNotFoundException();
-        }
-        var grain = _client.GetGrain<IRoomGrain>(roomId);
-
-        if (_userService.CurrentUser == await grain.GetOwner())
-        {
-            await manager.Unregister(roomId);
-            await grain.Delete();
-        }
+        // var manager = _client.GetGrain<IRoomManagerGrain>(0);
+        // if (!await manager.Exists(roomId))
+        // {
+        //     throw new KeyNotFoundException();
+        // }
+        // var grain = _client.GetGrain<IRoomGrain>(roomId);
+        //
+        // if (_userService.CurrentUser == await grain.GetOwner())
+        // {
+        //     await manager.Unregister(roomId);
+        //     await grain.Delete();
+        // }
     }
 
     public async Task Answer(string userId, string roomId, Guid answerId)
     {
-        var manager = _client.GetGrain<IRoomManagerGrain>(0);
-        if (!await manager.Exists(roomId))
-        {
-            throw new KeyNotFoundException();
-        }
-        var grain = _client.GetGrain<IRoomGrain>(roomId);
-        await grain.Answer(userId, roomId, answerId);
+        // var manager = _client.GetGrain<IRoomManagerGrain>(0);
+        // if (!await manager.Exists(roomId))
+        // {
+        //     throw new KeyNotFoundException();
+        // }
+        // var grain = _client.GetGrain<IRoomGrain>(roomId);
+        // await grain.Answer(userId, roomId, answerId);
     }
 }
 

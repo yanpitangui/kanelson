@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Security.Claims;
+using IdGen.DependencyInjection;
 using Kanelson.Hubs;
 using Kanelson.Services;
 using Kanelson.Setup;
@@ -78,6 +79,8 @@ builder.Services.AddResponseCompression(opts =>
     opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
         new[] { "application/octet-stream" });
 });
+
+builder.Services.AddIdGen(123);
 
 builder.Host.AddAkkaSetup(dbName);
 

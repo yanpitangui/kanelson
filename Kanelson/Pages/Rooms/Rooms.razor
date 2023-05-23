@@ -62,12 +62,12 @@ else
         await base.OnInitializedAsync();
     }
 
-    private void JoinRoom(string id)
+    private void JoinRoom(long id)
     { 
         Navigation.NavigateTo($"/room/{id}");
     }
 
-    private async Task DeleteRoom(string id)
+    private async Task DeleteRoom(long id)
     {
         await Service.Delete(id);
         _rooms = await Service.GetAll();

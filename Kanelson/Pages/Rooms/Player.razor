@@ -38,7 +38,7 @@
 
     TemplateQuestion? _currentQuestion;
     [Parameter]
-    public string RoomId { get; set; } = null!;
+    public long RoomId { get; set; }
     private HubConnection? _hubConnection;
     private ImmutableArray<UserInfo> _connectedUsers = ImmutableArray<UserInfo>.Empty;
     private PlayerStatus _playerStatus = PlayerStatus.Answering;

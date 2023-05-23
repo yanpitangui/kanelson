@@ -19,6 +19,8 @@
       <PackageReference Include="AspNet.Security.OAuth.GitHub" Version="7.0.2" />
       <PackageReference Include="AspNetCore.HealthChecks.MongoDb" Version="6.0.2" />
       <PackageReference Include="FluentValidation" Version="11.5.2" />
+      <PackageReference Include="IdGen" Version="3.0.3" />
+      <PackageReference Include="IdGen.DependencyInjection" Version="3.0.0" />
       <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.5" />
       <PackageReference Include="MudBlazor" Version="6.2.5" />
       <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.5.0-alpha.2" />
@@ -29,7 +31,6 @@
       <PackageReference Include="Serilog.Exceptions" Version="8.4.0" />
       <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
       <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
-      <PackageReference Include="shortid" Version="4.0.0" />
       <PackageReference Include="Stateless" Version="5.13.0" />
     </ItemGroup>
     

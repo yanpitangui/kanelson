@@ -2,5 +2,5 @@ namespace Kanelson.Actors.Rooms;
 
 public class RoomManagerState
 {
-    public HashSet<string> Items { get; set; } = new();
+    public HashSet<long> Items { get; set; } = new();
 }

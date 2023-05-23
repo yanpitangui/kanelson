@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using Kanelson.Contracts.Models;
 
 namespace Kanelson.Actors.Rooms;
@@ -9,7 +8,7 @@ public record RoomState
     
     public string Name { get; set; } = null!;
 
-    public ConcurrentDictionary<Guid, ConcurrentDictionary<string, RoomAnswer>> Answers { get; init; } = new();
+    public Dictionary<Guid, Dictionary<string, RoomAnswer>> Answers { get; init; } = new();
 
     public Template Template { get; set; } = null!;
     

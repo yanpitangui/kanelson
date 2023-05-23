@@ -12,24 +12,19 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval
 
     public override string PersistenceId { get; }
 
-    private readonly RoomState _state;
+    private RoomState _state;
 
     public RoomActor(long roomIdentifier, IHubContext<RoomHub> hubContext, IUserService userService)
     {
         PersistenceId = $"room-{roomIdentifier}";
-
-
+        
         _state = new RoomState();
-
-
-
+        
+        Recover<SetBase>(HandleSetBase);
+        
         Command<SetBase>(o =>
         {
-            _state.OwnerId = o.OwnerId;
-            _state.Template = o.Template;
-            _state.Name = o.RoomName;
-            _state.MaxQuestionIdx = Math.Clamp(_state.Template.Questions.Count - 1, 0, 100);
-            _state.CurrentQuestionIdx = 0;
+            Persist(o, HandleSetBase);
         });
         
         Command<GetCurrentState>(_ =>
@@ -47,15 +42,40 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval
             Sender.Tell(summary);
         });
 
-        CommandAsync<UpdateCurrentUsers>(async o =>
+        Recover<UpdateCurrentUsers>(o =>
+        {
+
+            var equal = o.Users.SetEquals(_state.CurrentUsers);
+            HandleUpdateUsers(o);
+            if (!equal)
+            {
+                Self.Tell(new SendSignalrGroupMessage(roomIdentifier.ToString(), "CurrentUsersUpdated", o.Users));
+                Self.Tell(new SendSignalrUserMessage(_state.OwnerId, "CurrentUsersUpdated", o.Users));
+            }
+        });
+
+        CommandAsync<SendSignalrGroupMessage>(async o =>
+        {
+            await hubContext.Clients.Group(o.GroupId).SendAsync(o.MessageName, o.Data);
+        });
+
+        CommandAsync<SendSignalrUserMessage>(async o =>
+        {
+            await hubContext.Clients.User(o.UserId).SendAsync(o.MessageName, o.Data);
+        });
+
+
+        Command<UpdateCurrentUsers>(o =>
         { 
             var equal = o.Users.SetEquals(_state.CurrentUsers);
-             _state.CurrentUsers = o.Users;
-             if (!equal)
-             {
-                 await hubContext.Clients.Group(roomIdentifier.ToString()).SendAsync("CurrentUsersUpdated", o.Users);
-                 await hubContext.Clients.User(_state.OwnerId).SendAsync("CurrentUsersUpdated", o.Users);
-             }
+
+            Persist(o, HandleUpdateUsers);
+            if (!equal)
+            {
+                Self.Tell(new SendSignalrGroupMessage(roomIdentifier.ToString(), "CurrentUsersUpdated", o.Users));
+                Self.Tell(new SendSignalrUserMessage(_state.OwnerId, "CurrentUsersUpdated", o.Users));
+            }
+
         });
 
         Command<GetCurrentQuestion>(o => { });
@@ -81,10 +101,50 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval
             Context.Stop(Self);
         });
         
+        Recover<SnapshotOffer>(o =>
+        {
+            if (o.Snapshot is RoomState state)
+            {
+                _state = state;
+            }
+        });
+        
+        Command<SaveSnapshotSuccess>(success => {
+            // soft-delete the journal up until the sequence # at
+            // which the snapshot was taken
+            DeleteMessages(success.Metadata.SequenceNr); 
+            DeleteSnapshots(new SnapshotSelectionCriteria(success.Metadata.SequenceNr - 1));
+        });
+
+        Command<DeleteSnapshotsSuccess>(_ => { });
+        Command<DeleteMessagesSuccess>(_ => { });
+        
 
     }
+
+    private record SendSignalrGroupMessage(string GroupId, string MessageName, object Data);
     
-    
+    private record SendSignalrUserMessage(string UserId, string MessageName, object Data);
+
+
+
+    private void HandleUpdateUsers(UpdateCurrentUsers r)
+    {
+        _state.CurrentUsers = r.Users;
+        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+    }
+
+    private void HandleSetBase(SetBase r)
+    {
+        _state.OwnerId = r.OwnerId;
+        _state.Template = r.Template;
+        _state.Name = r.RoomName;
+        _state.MaxQuestionIdx = Math.Clamp(_state.Template.Questions.Count - 1, 0, 100);
+        _state.CurrentQuestionIdx = 0;
+        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+    }
+
+
     public static Props Props(long roomIdentifier, IHubContext<RoomHub> hubContext, IUserService userService)
     {
         return Akka.Actor.Props.Create(() => new RoomActor(roomIdentifier, hubContext, userService));

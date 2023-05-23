@@ -49,33 +49,6 @@
 //         return base.OnActivateAsync(cancellationToken);
 //     }
 //
-//     public async Task UpdateCurrentUsers(HashSet<UserInfo> users)
-//     {
-//         var equal = users.SetEquals(_state.State.CurrentUsers);
-//         _state.State.CurrentUsers = users;
-//         await _state.WriteStateAsync();
-//         if (!equal)
-//         {
-//             await _hubContext.Clients.Group(this.GetPrimaryKeyString()).SendAsync("CurrentUsersUpdated", users);
-//             await _hubContext.Clients.User(await this.GetOwner()).SendAsync("CurrentUsersUpdated", users);
-//         }
-//     }
-//
-//     public Task<HashSet<UserInfo>> GetCurrentUsers()
-//     {
-//         return Task.FromResult(_state.State.CurrentUsers);
-//     }
-//
-//     public Task<TemplateQuestion> GetCurrentQuestion()
-//     {
-//         return Task.FromResult(CurrentQuestion);
-//     }
-//
-//     public Task<RoomStatus> GetCurrentState()
-//     {
-//         return Task.FromResult(_state.State.CurrentState);
-//     }
-//
 //
 //     public async Task<bool> NextQuestion()
 //     {

@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using Akka.Actor;
 
-namespace Kanelson.Grains.Rooms;
+namespace Kanelson.Actors.Rooms;
 
 public class RoomManagerActor : ReceiveActor
 {

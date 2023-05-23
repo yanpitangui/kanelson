@@ -1,6 +1,6 @@
 using Akka.Persistence;
 
-namespace Kanelson.Grains.Rooms;
+namespace Kanelson.Actors.Rooms;
 
 public class RoomActor : ReceivePersistentActor
 {

@@ -2,8 +2,8 @@
 using Akka.Actor;
 using Akka.Hosting;
 using FluentValidation.Results;
+using Kanelson.Actors.Questions;
 using Kanelson.Contracts.Models;
-using Kanelson.Grains.Questions;
 
 namespace Kanelson.Services;
 

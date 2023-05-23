@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using Akka.Actor;
 
-namespace Kanelson.Grains.Templates;
+namespace Kanelson.Actors.Templates;
 
 public class TemplateManagerActor : ReceiveActor
 {

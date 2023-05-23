@@ -1,6 +1,6 @@
 using Kanelson.Contracts.Models;
 
-namespace Kanelson.Grains.Questions;
+namespace Kanelson.Actors.Questions;
 
 public record UserQuestionsState
 {

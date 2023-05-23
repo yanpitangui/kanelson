@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using Akka.Actor;
 using Kanelson.Contracts.Models;
 
-namespace Kanelson.Grains.Questions;
+namespace Kanelson.Actors.Questions;
 
 public class UserQuestionsActor : ReceiveActor
 {

@@ -2,8 +2,8 @@
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using Akka.Actor;
+using Kanelson.Actors.Templates;
 using Kanelson.Contracts.Models;
-using Kanelson.Grains.Templates;
 
 namespace Kanelson.Services;
 

@@ -1,4 +1,4 @@
-namespace Kanelson.Grains.Templates;
+namespace Kanelson.Actors.Templates;
 
 public class TemplateManagerState
 {

@@ -1,6 +1,6 @@
 using Akka.Actor;
 
-namespace Kanelson.Grains.Questions;
+namespace Kanelson.Actors.Questions;
 
 public class QuestionIndexActor : ReceiveActor
 {

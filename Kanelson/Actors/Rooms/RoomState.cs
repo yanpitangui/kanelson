@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Kanelson.Contracts.Models;
 
-namespace Kanelson.Grains.Rooms;
+namespace Kanelson.Actors.Rooms;
 
 public record RoomState
 {

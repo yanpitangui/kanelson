@@ -5,8 +5,8 @@ using Akka.Hosting;
 using Akka.Management;
 using Akka.Management.Cluster.Bootstrap;
 using Akka.Remote.Hosting;
-using Kanelson.Grains;
-using Kanelson.Grains.Questions;
+using Kanelson.Actors;
+using Kanelson.Actors.Questions;
 
 namespace Kanelson.Setup;
 

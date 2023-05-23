@@ -1,7 +1,7 @@
 using Akka.Actor;
 using Kanelson.Contracts.Models;
 
-namespace Kanelson.Grains;
+namespace Kanelson.Actors;
 
 
 

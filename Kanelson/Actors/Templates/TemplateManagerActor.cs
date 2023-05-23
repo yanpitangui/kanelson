@@ -23,8 +23,12 @@ public class TemplateManagerActor : ReceiveActor
         Receive<Unregister>(o =>
         {
             _state.Items.Remove(o.Id);
-            var actor = Context.ActorOf(TemplateActor.Props(o.Id));
-            actor.Tell(PoisonPill.Instance);
+            var exists = _children.TryGetValue(o.Id, out var actorRef);
+            if (!Equals(actorRef, ActorRefs.Nobody) && !exists)
+            {
+                actorRef.Tell(PoisonPill.Instance);
+
+            }
         });
 
         Receive<GetRef>(o =>
@@ -32,7 +36,7 @@ public class TemplateManagerActor : ReceiveActor
             var exists = _children.TryGetValue(o.Id, out var actorRef);
             if (Equals(actorRef, ActorRefs.Nobody) || !exists)
             {
-                actorRef = Context.ActorOf(TemplateActor.Props(o.Id));
+                actorRef = Context.ActorOf(TemplateActor.Props(o.Id), $"template-{o.Id}");
                 _children[o.Id] = actorRef;
             }
 

@@ -7,6 +7,9 @@ using Akka.Management.Cluster.Bootstrap;
 using Akka.Remote.Hosting;
 using Kanelson.Actors;
 using Kanelson.Actors.Questions;
+using Petabridge.Cmd.Cluster;
+using Petabridge.Cmd.Cluster.Sharding;
+using Petabridge.Cmd.Host;
 
 namespace Kanelson.Setup;
 
@@ -41,10 +44,16 @@ public static class AkkaSetup
 
 
                         var userQuestionIndex =
-                            system.ActorOf(Props.Create(() => new QuestionIndexActor("user-question-index")));
+                            system.ActorOf(Props.Create(() => new QuestionIndexActor("user-question-index")), 
+                                "user-question-index");
                         
                         registry.Register<QuestionIndexActor>(userQuestionIndex);
-                    });
+                    })
+                    .AddPetabridgeCmd(cmd =>
+                    {
+                        cmd.RegisterCommandPalette(ClusterShardingCommands.Instance);
+                        cmd.RegisterCommandPalette(ClusterCommands.Instance);
+                    });;
 
                 if (ctx.HostingEnvironment.IsProduction())
                 {

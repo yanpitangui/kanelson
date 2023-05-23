@@ -20,7 +20,7 @@ public class RoomManagerActor : ReceiveActor
         Receive<Register>(o =>
         {
             _state.Items.Add(o.RoomIdentifier);
-            _children.Add(o.RoomIdentifier, Context.ActorOf(RoomActor.Props(o.RoomIdentifier)));
+            _children.Add(o.RoomIdentifier, Context.ActorOf(RoomActor.Props(o.RoomIdentifier), $"room-{o.RoomIdentifier}"));
         });
 
         Receive<Exists>(o => Sender.Tell(_state.Items.Contains(o.RoomIdentifier)));

@@ -94,7 +94,7 @@ public class TemplateService : ITemplateService
         var exists = Managers.TryGetValue(_userService.CurrentUser, out var actorRef);
         if (Equals(actorRef, ActorRefs.Nobody) || !exists)
         {
-            actorRef = _actorSystem.ActorOf(TemplateManagerActor.Props(_userService.CurrentUser));
+            actorRef = _actorSystem.ActorOf(TemplateManagerActor.Props(_userService.CurrentUser), $"template-manager-{_userService.CurrentUser}");
         }
 
         Managers.AddOrUpdate(_userService.CurrentUser, (_) => actorRef!, 

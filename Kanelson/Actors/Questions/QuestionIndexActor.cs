@@ -19,7 +19,7 @@ public class QuestionIndexActor : ReceiveActor
             var exists = _children.TryGetValue(o.UserId, out var actorRef);
             if (Equals(actorRef, ActorRefs.Nobody) || !exists)
             {
-                actorRef = Context.ActorOf(UserQuestionsActor.Props(o.UserId));
+                actorRef = Context.ActorOf(UserQuestionsActor.Props(o.UserId), $"user-questions-{o.UserId}");
                 _children[o.UserId] = actorRef;
             }
 

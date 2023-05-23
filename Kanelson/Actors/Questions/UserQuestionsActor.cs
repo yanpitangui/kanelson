@@ -1,32 +1,35 @@
 using System.Collections.Immutable;
 using Akka.Actor;
+using Akka.Persistence;
 using Kanelson.Contracts.Models;
 
 namespace Kanelson.Actors.Questions;
 
-public class UserQuestionsActor : ReceiveActor
+public class UserQuestionsActor : ReceivePersistentActor
 {
 
     private UserQuestionsState _state;
-    //public override string PersistenceId { get; }
+    public override string PersistenceId { get; }
 
     public UserQuestionsActor(string userId)
     {
-        //PersistenceId = userId;
+        PersistenceId = userId;
         _state = new UserQuestionsState();
 
-        Receive<UpsertQuestion>(o =>
+        Command<UpsertQuestion>(o =>
         {
             _state.Questions[o.Question.Id] = o.Question;
+            SaveSnapshot(_state);
         });
 
 
-        Receive<DeleteQuestion>(o =>
+        Command<DeleteQuestion>(o =>
         {
             _state.Questions.Remove(o.Id);
+            SaveSnapshot(_state);
         });
 
-        Receive<GetQuestionsSummary>(o =>
+        Command<GetQuestionsSummary>(o =>
         {
             Sender.Tell(_state.Questions.Values.Select(x => new QuestionSummary
             {
@@ -35,10 +38,28 @@ public class UserQuestionsActor : ReceiveActor
             }).ToImmutableArray());
         });
 
-        Receive<GetQuestions>(o =>
+        Command<GetQuestions>(o =>
         {
             Sender.Tell(_state.Questions.Values.Where(x => o.Ids.Contains(x.Id)).ToImmutableArray());
         });
+        
+        Recover<SnapshotOffer>(o =>
+        {
+            if (o.Snapshot is UserQuestionsState state)
+            {
+                _state = state;
+            }
+        });
+        
+        Command<SaveSnapshotSuccess>(success => {
+            // soft-delete the journal up until the sequence # at
+            // which the snapshot was taken
+            DeleteMessages(success.Metadata.SequenceNr); 
+            DeleteSnapshots(new SnapshotSelectionCriteria(success.Metadata.SequenceNr - 1));
+        });
+        
+        Command<DeleteSnapshotsSuccess>(_ => { });
+        Command<DeleteMessagesSuccess>(_ => { });
         
     }
 

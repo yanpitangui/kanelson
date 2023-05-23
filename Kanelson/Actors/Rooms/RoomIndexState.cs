@@ -1,6 +1,6 @@
 namespace Kanelson.Actors.Rooms;
 
-public class RoomManagerState
+public class RoomIndexState
 {
     public HashSet<long> Items { get; set; } = new();
 }

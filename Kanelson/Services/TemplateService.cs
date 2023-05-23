@@ -28,16 +28,16 @@ public class TemplateService : ITemplateService
 
     public async Task UpsertTemplate(Template template)
     {
-        var manager = GetOrCreateManagerRef();
-        var actor = await manager.Ask<IActorRef>(new GetRef(template.Id));
+        var index = GetOrCreateManagerRef();
+        var actor = await index.Ask<IActorRef>(new GetRef(template.Id));
         actor.Tell(new Upsert(template, _userService.CurrentUser));
     }
 
     public async Task<ImmutableArray<TemplateSummary>> GetTemplates()
     {
-        var manager = GetOrCreateManagerRef();
+        var index = GetOrCreateManagerRef();
         
-        var keys = await manager.Ask<ImmutableArray<Guid>>(new GetAll());
+        var keys = await index.Ask<ImmutableArray<Guid>>(new GetAll());
         // fan out to get the individual items from the cluster in parallel
         var tasks = ArrayPool<Task<TemplateSummary>>.Shared.Rent(keys.Length);
         try
@@ -45,7 +45,7 @@ public class TemplateService : ITemplateService
             // issue all individual requests at the same time
             for (var i = 0; i < keys.Length; ++i)
             {
-                var actor = await manager.Ask<IActorRef>(new GetRef(keys[i]));
+                var actor = await index.Ask<IActorRef>(new GetRef(keys[i]));
                 tasks[i] = actor.Ask<TemplateSummary>(new GetSummary());
             }
 
@@ -67,26 +67,26 @@ public class TemplateService : ITemplateService
 
     public async Task<Template> GetTemplate(Guid id)
     {
-        var manager = GetOrCreateManagerRef();
-        var exists = await manager.Ask<bool>(new Exists(id));
+        var index = GetOrCreateManagerRef();
+        var exists = await index.Ask<bool>(new Exists(id));
         if (!exists)
         {
             throw new KeyNotFoundException();
         }
 
-        var actorRef = await manager.Ask<IActorRef>(new GetRef(id));
+        var actorRef = await index.Ask<IActorRef>(new GetRef(id));
         return await actorRef.Ask<Template>(new GetTemplate());
     }
 
     public async Task DeleteTemplate(Guid id)
     {
-        var manager = GetOrCreateManagerRef();
-        var exists = await manager.Ask<bool>(new Exists(id));
+        var index = GetOrCreateManagerRef();
+        var exists = await index.Ask<bool>(new Exists(id));
         if (!exists)
         {
             throw new KeyNotFoundException();
         }
-        manager.Tell(new Unregister(id));
+        index.Tell(new Unregister(id));
     }
 
     private IActorRef GetOrCreateManagerRef()
@@ -94,7 +94,7 @@ public class TemplateService : ITemplateService
         var exists = Managers.TryGetValue(_userService.CurrentUser, out var actorRef);
         if (Equals(actorRef, ActorRefs.Nobody) || !exists)
         {
-            actorRef = _actorSystem.ActorOf(TemplateManagerActor.Props(_userService.CurrentUser), $"template-manager-{_userService.CurrentUser}");
+            actorRef = _actorSystem.ActorOf(TemplateManagerActor.Props(_userService.CurrentUser), $"template-index-{_userService.CurrentUser}");
         }
 
         Managers.AddOrUpdate(_userService.CurrentUser, (_) => actorRef!, 

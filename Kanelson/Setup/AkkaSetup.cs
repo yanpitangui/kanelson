@@ -7,6 +7,10 @@ using Akka.Management.Cluster.Bootstrap;
 using Akka.Remote.Hosting;
 using Kanelson.Actors;
 using Kanelson.Actors.Questions;
+using Kanelson.Actors.Rooms;
+using Kanelson.Hubs;
+using Kanelson.Services;
+using Microsoft.AspNetCore.SignalR;
 using Petabridge.Cmd.Cluster;
 using Petabridge.Cmd.Cluster.Sharding;
 using Petabridge.Cmd.Host;
@@ -36,7 +40,7 @@ public static class AkkaSetup
                     .WithClustering(new ClusterOptions()
                     {
                         Roles = new []{ actorSystemName }, SeedNodes = seeds
-                    }).WithActors((system, registry) =>
+                    }).WithActors((system, registry, sp) =>
                     {
                         var userIndexActor = system.ActorOf(Props.Create(() => new UserIndexActor("user-index")), 
                             "user-index");
@@ -48,6 +52,14 @@ public static class AkkaSetup
                                 "user-question-index");
                         
                         registry.Register<QuestionIndexActor>(userQuestionIndex);
+                        
+                        var roomIndex =
+                            system.ActorOf(Props.Create(() => new RoomIndexActor("room-index", 
+                                    sp.GetService<IHubContext<RoomHub>>(),
+                                    sp.GetService<IUserService>())), 
+                                "room-index");
+                        
+                        registry.Register<RoomIndexActor>(roomIndex);
                     })
                     .AddPetabridgeCmd(cmd =>
                     {

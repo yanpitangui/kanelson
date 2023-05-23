@@ -49,24 +49,6 @@
 //         return base.OnActivateAsync(cancellationToken);
 //     }
 //
-//     public async Task SetBase(string roomName, string owner, Template template)
-//     {
-//         _state.State.Name = roomName;
-//         _state.State.OwnerId = owner;
-//         _state.State.Template = template;
-//         _state.State.MaxQuestionIdx = Math.Clamp(template.Questions.Count - 1, 0, int.MaxValue);
-//         _state.State.CurrentQuestionIdx = 0;
-//         await _state.WriteStateAsync();
-//     }
-//
-//     public async Task<RoomSummary> GetSummary()
-//     {
-//         var owner = await _userService
-//             .GetUserInfo(_state.State.OwnerId);
-//
-//         return new RoomSummary(this.GetPrimaryKeyString(), _state.State.Name, owner, _state.State.CurrentState);
-//     }
-//
 //     public async Task UpdateCurrentUsers(HashSet<UserInfo> users)
 //     {
 //         var equal = users.SetEquals(_state.State.CurrentUsers);

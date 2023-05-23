@@ -39,7 +39,7 @@
 //                 await _state.WriteStateAsync();
 //             }
 //             await _hubContext.Clients
-//                 .User(await this.GetOwner()).SendAsync("RoomStateChanged", _state.State.CurrentState);
+//                 .User(await this.GetOwner()).SendAsync(SignalRMessages.RoomStateChanged, _state.State.CurrentState);
 //         });
 //     }
 //
@@ -80,7 +80,7 @@
 //     {
 //         await _roomStateMachine.FireAsync(RoomTrigger.DisplayQuestion);
 //         await _hubContext.Clients.Group(this.GetPrimaryKeyString())
-//             .SendAsync("NextQuestion", CurrentQuestion);
+//             .SendAsync(SignalRMessages.NextQuestion, CurrentQuestion);
 //     }
 //
 //

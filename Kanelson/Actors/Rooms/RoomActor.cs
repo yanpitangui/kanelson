@@ -49,8 +49,8 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval
             HandleUpdateUsers(o);
             if (!equal)
             {
-                Self.Tell(new SendSignalrGroupMessage(roomIdentifier.ToString(), "CurrentUsersUpdated", o.Users));
-                Self.Tell(new SendSignalrUserMessage(_state.OwnerId, "CurrentUsersUpdated", o.Users));
+                Self.Tell(new SendSignalrGroupMessage(roomIdentifier.ToString(), SignalRMessages.CurrentUsersUpdated, o.Users));
+                Self.Tell(new SendSignalrUserMessage(_state.OwnerId, SignalRMessages.CurrentUsersUpdated, o.Users));
             }
         });
 
@@ -72,8 +72,8 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval
             Persist(o, HandleUpdateUsers);
             if (!equal)
             {
-                Self.Tell(new SendSignalrGroupMessage(roomIdentifier.ToString(), "CurrentUsersUpdated", o.Users));
-                Self.Tell(new SendSignalrUserMessage(_state.OwnerId, "CurrentUsersUpdated", o.Users));
+                Self.Tell(new SendSignalrGroupMessage(roomIdentifier.ToString(), SignalRMessages.CurrentUsersUpdated, o.Users));
+                Self.Tell(new SendSignalrUserMessage(_state.OwnerId, SignalRMessages.CurrentUsersUpdated, o.Users));
             }
 
         });
@@ -121,7 +121,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval
         
 
     }
-
+    
     private record SendSignalrGroupMessage(string GroupId, string MessageName, object Data);
     
     private record SendSignalrUserMessage(string UserId, string MessageName, object Data);

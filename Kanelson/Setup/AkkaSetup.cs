@@ -1,6 +1,9 @@
 using Akka.Actor;
 using Akka.Cluster.Hosting;
+using Akka.Discovery.KubernetesApi;
 using Akka.Hosting;
+using Akka.Management;
+using Akka.Management.Cluster.Bootstrap;
 using Akka.Remote.Hosting;
 using Kanelson.Grains;
 using Kanelson.Grains.Questions;
@@ -24,9 +27,9 @@ public static class AkkaSetup
             var seeds = akkaSection.GetValue("ClusterSeeds", new[] { $"akka.tcp://{actorSystemName}@localhost:7918" })!
                 .ToArray();
 
-            services.AddAkka(actorSystemName, (config, provider) =>
+            services.AddAkka(actorSystemName, (akkaBuilder, provider) =>
             {
-                config.WithRemoting(hostName, port)
+                akkaBuilder.WithRemoting(hostName, port)
                     .WithClustering(new ClusterOptions()
                     {
                         Roles = new []{ actorSystemName }, SeedNodes = seeds
@@ -42,6 +45,16 @@ public static class AkkaSetup
                         
                         registry.Register<QuestionIndexActor>(userQuestionIndex);
                     });
+
+                if (ctx.HostingEnvironment.IsProduction())
+                {
+                    akkaBuilder
+                        .WithAkkaManagement()
+                        .WithClusterBootstrap(serviceName: actorSystemName)
+                        .WithKubernetesDiscovery(actorSystemName);
+                }
+                    
+
             });
         });
 

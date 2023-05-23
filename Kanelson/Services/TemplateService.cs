@@ -13,11 +13,11 @@ public class TemplateService : ITemplateService
     private readonly IUserService _userService;
 
 
-    private static readonly ConcurrentDictionary<string, IActorRef> Managers;
+    private static readonly ConcurrentDictionary<string, IActorRef> Indexes;
 
     static TemplateService()
     {
-        Managers = new();
+        Indexes = new();
     }
 
     public TemplateService(ActorSystem actorSystem, IUserService userService)
@@ -28,14 +28,14 @@ public class TemplateService : ITemplateService
 
     public async Task UpsertTemplate(Template template)
     {
-        var index = GetOrCreateManagerRef();
+        var index = GetOrCreateIndexRef();
         var actor = await index.Ask<IActorRef>(new GetRef(template.Id));
         actor.Tell(new Upsert(template, _userService.CurrentUser));
     }
 
     public async Task<ImmutableArray<TemplateSummary>> GetTemplates()
     {
-        var index = GetOrCreateManagerRef();
+        var index = GetOrCreateIndexRef();
         
         var keys = await index.Ask<ImmutableArray<Guid>>(new GetAll());
         // fan out to get the individual items from the cluster in parallel
@@ -67,7 +67,7 @@ public class TemplateService : ITemplateService
 
     public async Task<Template> GetTemplate(Guid id)
     {
-        var index = GetOrCreateManagerRef();
+        var index = GetOrCreateIndexRef();
         var exists = await index.Ask<bool>(new Exists(id));
         if (!exists)
         {
@@ -80,7 +80,7 @@ public class TemplateService : ITemplateService
 
     public async Task DeleteTemplate(Guid id)
     {
-        var index = GetOrCreateManagerRef();
+        var index = GetOrCreateIndexRef();
         var exists = await index.Ask<bool>(new Exists(id));
         if (!exists)
         {
@@ -89,15 +89,15 @@ public class TemplateService : ITemplateService
         index.Tell(new Unregister(id));
     }
 
-    private IActorRef GetOrCreateManagerRef()
+    private IActorRef GetOrCreateIndexRef()
     {
-        var exists = Managers.TryGetValue(_userService.CurrentUser, out var actorRef);
+        var exists = Indexes.TryGetValue(_userService.CurrentUser, out var actorRef);
         if (Equals(actorRef, ActorRefs.Nobody) || !exists)
         {
-            actorRef = _actorSystem.ActorOf(TemplateManagerActor.Props(_userService.CurrentUser), $"template-index-{_userService.CurrentUser}");
+            actorRef = _actorSystem.ActorOf(TemplateIndexActor.Props(_userService.CurrentUser), $"template-index-{_userService.CurrentUser}");
         }
 
-        Managers.AddOrUpdate(_userService.CurrentUser, (_) => actorRef!, 
+        Indexes.AddOrUpdate(_userService.CurrentUser, (_) => actorRef!, 
             (_, _) => actorRef!);
 
         return actorRef!;

@@ -107,18 +107,14 @@ public class RoomService : IRoomService
 
     public async Task Delete(long roomId)
     {
-        // var index = _client.GetGrain<IRoomManagerGrain>(0);
-        // if (!await index.Exists(roomId))
-        // {
-        //     throw new KeyNotFoundException();
-        // }
-        // var grain = _client.GetGrain<IRoomGrain>(roomId);
-        //
-        // if (_userService.CurrentUser == await grain.GetOwner())
-        // {
-        //     await index.Unregister(roomId);
-        //     await grain.Delete();
-        // }
+        var index = _actorRegistry.Get<RoomIndexActor>();
+        var room = await index.Ask<IActorRef>(new GetRef(roomId));
+        var owner = await room.Ask<string>(new GetOwner());
+        if (owner != _userService.CurrentUser)
+        {
+            throw new ApplicationException("You are not the room's owner");
+        }
+        index.Tell(new Unregister(roomId));
     }
 
     public async Task Answer(long roomId, Guid answerId)

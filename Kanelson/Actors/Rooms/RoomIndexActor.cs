@@ -9,11 +9,11 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Kanelson.Actors.Rooms;
 
-public class RoomIndexActor : ReceivePersistentActor
+public class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterval
 {
     public override string PersistenceId { get; }
 
-    private readonly RoomIndexState _state;
+    private RoomIndexState _state;
     private readonly Dictionary<long, IActorRef> _children;
     private readonly IHubContext<RoomHub> _hubContext;
     private readonly IUserService _userService;
@@ -27,28 +27,24 @@ public class RoomIndexActor : ReceivePersistentActor
         _children = new();
 
         _state = new RoomIndexState();
+        
+        Recover<Register>(HandleRegister);
+        
         Command<Register>(o =>
         {
-            _state.Items.Add(o.RoomIdentifier);
-
-            var roomActor = Context.ActorOf(RoomActor.Props(o.RoomIdentifier, _hubContext, _userService), $"room-{o.RoomIdentifier}");
-            
-            roomActor.Tell(o.RoomBase);
-            _children.Add(o.RoomIdentifier, roomActor);
+            Persist(o, HandleRegister);
         });
 
         Command<Exists>(o => Sender.Tell(_state.Items.Contains(o.RoomIdentifier)));
 
         Command<GetAllKeys>(_ => Sender.Tell(_state.Items.ToImmutableArray()));
 
+        
+        Recover<Unregister>(HandleUnregister);
+        
         Command<Unregister>(o =>
         {
-            _state.Items.Remove(o.RoomIdentifier);
-            var exists = _children.TryGetValue(o.RoomIdentifier, out var child);
-            if (exists || !Equals(child, ActorRefs.Nobody))
-            {
-                child.Tell(PoisonPill.Instance);
-            }
+            Persist(o, HandleUnregister);
         });
 
         Command<GetRef>(o =>
@@ -91,7 +87,54 @@ public class RoomIndexActor : ReceivePersistentActor
                 ArrayPool<Task<RoomSummary>>.Shared.Return(tasks);
             }
         });
+        
+        Recover<SnapshotOffer>(o =>
+        {
+            if (o.Snapshot is RoomIndexState state)
+            {
+                _state = state;
+                foreach (var item in _state.Items)
+                {
+                    _children[item] = GetChildRoomActorRef(item);
+                }
+            }
+        });
+        
+        Command<SaveSnapshotSuccess>(success => {
+            // soft-delete the journal up until the sequence # at
+            // which the snapshot was taken
+            DeleteMessages(success.Metadata.SequenceNr); 
+            DeleteSnapshots(new SnapshotSelectionCriteria(success.Metadata.SequenceNr - 1));
+        });
 
+        Command<DeleteSnapshotsSuccess>(_ => { });
+        Command<DeleteMessagesSuccess>(_ => { });
+
+    }
+
+    private void HandleUnregister(Unregister r)
+    {
+        var exists = _children.TryGetValue(r.RoomIdentifier, out var child);
+        if (exists || !Equals(child, ActorRefs.Nobody))
+        {
+            child.Tell(ShutdownCommand.Instance);
+        }
+        _state.Items.Remove(r.RoomIdentifier);
+        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+        
+    }
+
+    private void HandleRegister(Register r)
+    {
+        var roomActor = GetChildRoomActorRef(r.RoomIdentifier);
+        roomActor.Tell(r.RoomBase);
+        _children.Add(r.RoomIdentifier, roomActor);
+        _state.Items.Add(r.RoomIdentifier);
+    }
+
+    private IActorRef GetChildRoomActorRef(long roomIdentifier)
+    {
+        return Context.ActorOf(RoomActor.Props(roomIdentifier, _hubContext, _userService), $"room-{roomIdentifier}");
     }
 }
 

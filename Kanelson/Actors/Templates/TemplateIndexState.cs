@@ -1,6 +1,6 @@
 namespace Kanelson.Actors.Templates;
 
-public class TemplateManagerState
+public class TemplateIndexState
 {
     public HashSet<Guid> Items { get; set; } = new();
 

@@ -26,11 +26,11 @@ public class QuestionService : IQuestionService
         return new ValidationResult();
     }
 
-    public async Task DeleteQuestion(Guid id)
+    public async Task RemoveQuestion(Guid id)
     {
         var index = await _actorRegistry.GetAsync<QuestionIndexActor>();
         var userQuestionsActor = await index.Ask<IActorRef>(new GetRef(_userService.CurrentUser));
-        userQuestionsActor.Tell(new DeleteQuestion(id));
+        userQuestionsActor.Tell(new RemoveQuestion(id));
     }
 
     public async Task<Question?> GetQuestion(Guid id)
@@ -62,7 +62,7 @@ public interface IQuestionService
     public Task<ValidationResult> SaveQuestion(Question question);
     public Task<ImmutableArray<QuestionSummary>> GetQuestionsSummary();
 
-    Task DeleteQuestion(Guid id);
+    Task RemoveQuestion(Guid id);
     Task<Question?> GetQuestion(Guid id);
     Task<ImmutableArray<Question>> GetQuestions(HashSet<Guid> ids);
 }

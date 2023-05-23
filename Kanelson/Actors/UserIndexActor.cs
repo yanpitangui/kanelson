@@ -7,7 +7,7 @@ namespace Kanelson.Actors;
 
 
 
-public class UserIndexActor : ReceivePersistentActor
+public class UserIndexActor : ReceivePersistentActor, IHasSnapshotInterval
 {
    
     private UserIndexState _state;
@@ -15,13 +15,12 @@ public class UserIndexActor : ReceivePersistentActor
     {
         PersistenceId = persistenceId;
         _state = new UserIndexState();
-
-
+        
+        Recover<UpsertUser>(HandleUpsert);
+        
         Command<UpsertUser>(o =>
         {
-            _state.Users.RemoveWhere(x => x.Id == o.Id);
-            _state.Users.Add(new UserInfo(o.Id, o.Name));
-            SaveSnapshot(_state);
+            Persist(o, HandleUpsert);
         });
         Command<GetUserInfos>(o =>
         {
@@ -48,7 +47,14 @@ public class UserIndexActor : ReceivePersistentActor
         Command<DeleteSnapshotsSuccess>(_ => { });
         Command<DeleteMessagesSuccess>(_ => { });
     }
-    
+
+    private void HandleUpsert(UpsertUser user)
+    {
+        _state.Users.RemoveWhere(x => x.Id == user.Id);
+        _state.Users.Add(new UserInfo(user.Id, user.Name));
+        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+    }
+
     public override string PersistenceId { get; }
 }
 

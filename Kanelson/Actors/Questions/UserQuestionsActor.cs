@@ -5,28 +5,31 @@ using Kanelson.Contracts.Models;
 
 namespace Kanelson.Actors.Questions;
 
-public class UserQuestionsActor : ReceivePersistentActor
+public class UserQuestionsActor : ReceivePersistentActor, IHasSnapshotInterval
 {
 
     private UserQuestionsState _state;
     public override string PersistenceId { get; }
-
+    
     public UserQuestionsActor(string userId)
     {
-        PersistenceId = userId;
+        PersistenceId = $"question-index-{userId}";
         _state = new UserQuestionsState();
 
+        
+        Recover<Question>(PersistAdd);
+        
+        Recover<Guid>(PersistRemove);
+        
         Command<UpsertQuestion>(o =>
         {
-            _state.Questions[o.Question.Id] = o.Question;
-            SaveSnapshot(_state);
+            Persist(o.Question, PersistAdd);
         });
 
 
-        Command<DeleteQuestion>(o =>
+        Command<RemoveQuestion>(o =>
         {
-            _state.Questions.Remove(o.Id);
-            SaveSnapshot(_state);
+            Persist(o.Id, PersistRemove);
         });
 
         Command<GetQuestionsSummary>(o =>
@@ -38,10 +41,12 @@ public class UserQuestionsActor : ReceivePersistentActor
             }).ToImmutableArray());
         });
 
+
         Command<GetQuestions>(o =>
         {
             Sender.Tell(_state.Questions.Values.Where(x => o.Ids.Contains(x.Id)).ToImmutableArray());
         });
+        
         
         Recover<SnapshotOffer>(o =>
         {
@@ -63,6 +68,18 @@ public class UserQuestionsActor : ReceivePersistentActor
         
     }
 
+    private void PersistAdd(Question question)
+    {
+        _state.Questions[question.Id] = question;
+        ((IHasSnapshotInterval)this).SaveSnapshotIfPassedInterval(_state);
+    }
+
+    private void PersistRemove(Guid id)
+    {
+        _state.Questions.Remove(id);
+        ((IHasSnapshotInterval)this).SaveSnapshotIfPassedInterval(_state);
+    }
+
     public static Props Props(string userId)
     {
         return Akka.Actor.Props.Create(() => new UserQuestionsActor(userId));
@@ -72,8 +89,8 @@ public class UserQuestionsActor : ReceivePersistentActor
 
 public record UpsertQuestion(Question Question);
 
-public record DeleteQuestion(Guid Id);
+public record RemoveQuestion(Guid Id);
 
 public record GetQuestions(params Guid[] Ids);
 
-public record GetQuestionsSummary();
+public record GetQuestionsSummary;

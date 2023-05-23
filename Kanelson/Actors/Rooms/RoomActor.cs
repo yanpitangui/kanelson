@@ -7,21 +7,23 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Kanelson.Actors.Rooms;
 
-public class RoomActor : ReceiveActor
+public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval
 {
+
+    public override string PersistenceId { get; }
 
     private readonly RoomState _state;
 
     public RoomActor(long roomIdentifier, IHubContext<RoomHub> hubContext, IUserService userService)
     {
-        //PersistenceId = roomIdentifier;
+        PersistenceId = $"room-{roomIdentifier}";
 
 
         _state = new RoomState();
 
 
 
-        Receive<SetBase>(o =>
+        Command<SetBase>(o =>
         {
             _state.OwnerId = o.OwnerId;
             _state.Template = o.Template;
@@ -30,12 +32,12 @@ public class RoomActor : ReceiveActor
             _state.CurrentQuestionIdx = 0;
         });
         
-        Receive<GetCurrentState>(_ =>
+        Command<GetCurrentState>(_ =>
         {
             Sender.Tell(_state.CurrentState);
         });
         
-        ReceiveAsync<GetSummary>(async _ =>
+        CommandAsync<GetSummary>(async _ =>
         {
             var ownerInfo = await userService.GetUserInfo(_state.OwnerId); 
             var summary = new RoomSummary(roomIdentifier,
@@ -45,7 +47,7 @@ public class RoomActor : ReceiveActor
             Sender.Tell(summary);
         });
 
-        ReceiveAsync<UpdateCurrentUsers>(async o =>
+        CommandAsync<UpdateCurrentUsers>(async o =>
         { 
             var equal = o.Users.SetEquals(_state.CurrentUsers);
              _state.CurrentUsers = o.Users;
@@ -56,19 +58,27 @@ public class RoomActor : ReceiveActor
              }
         });
 
-        Receive<GetCurrentQuestion>(o => { });
+        Command<GetCurrentQuestion>(o => { });
 
-        Receive<Start>(o => { });
+        Command<Start>(o => { });
 
-        Receive<NextQuestion>(o => { });
+        Command<NextQuestion>(o => { });
         
-        Receive<GetOwner>(o => { });
+        Command<GetOwner>(o => { });
 
-        Receive<SendUserAnswer>(o => { });
+        Command<SendUserAnswer>(o => { });
 
-        Receive<GetCurrentUsers>(_ =>
+        Command<GetCurrentUsers>(_ =>
         {
             Sender.Tell(_state.CurrentUsers);
+        });
+        
+                
+        Command<ShutdownCommand>(_ =>
+        {
+            DeleteMessages(Int64.MaxValue);
+            DeleteSnapshots(SnapshotSelectionCriteria.Latest);
+            Context.Stop(Self);
         });
         
 
@@ -79,11 +89,8 @@ public class RoomActor : ReceiveActor
     {
         return Akka.Actor.Props.Create(() => new RoomActor(roomIdentifier, hubContext, userService));
     }
-    
-    
-    
-    
-    
+
+
 }
 
 public record SetBase(string RoomName, string OwnerId, Template Template);

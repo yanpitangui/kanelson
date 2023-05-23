@@ -3,7 +3,7 @@ using Akka.Persistence;
 
 namespace Kanelson.Actors.Questions;
 
-public class QuestionIndexActor : ReceivePersistentActor
+public class QuestionIndexActor : ReceivePersistentActor, IHasSnapshotInterval
 {
 
     private readonly Dictionary<string, IActorRef> _children;
@@ -24,13 +24,19 @@ public class QuestionIndexActor : ReceivePersistentActor
             var exists = _children.TryGetValue(o.UserId, out var actorRef);
             if (Equals(actorRef, ActorRefs.Nobody) || !exists)
             {
-                actorRef = Context.ActorOf(UserQuestionsActor.Props(o.UserId), $"user-questions-{o.UserId}");
+                actorRef = GetChildQuestionActor(o.UserId);
                 _children[o.UserId] = actorRef;
             }
-
-            _state.Indexes.Add(o.UserId);
+            
+            Persist(o.UserId, HandleAddUser);
+            
             Sender.Tell(actorRef);
-            SaveSnapshot(_state);
+        });
+
+        Recover<string>(s =>
+        {
+            HandleAddUser(s);
+            _children[s] = GetChildQuestionActor(s);
         });
         
         Recover<SnapshotOffer>(o =>
@@ -38,6 +44,10 @@ public class QuestionIndexActor : ReceivePersistentActor
             if (o.Snapshot is QuestionIndexState state)
             {
                 _state = state;
+                foreach (var item in _state.Index)
+                {
+                    _children[item] = GetChildQuestionActor(item);
+                }
             }
         });
         
@@ -54,6 +64,16 @@ public class QuestionIndexActor : ReceivePersistentActor
 
     }
 
+    private void HandleAddUser(string user)
+    {
+        _state.Index.Add(user);
+        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+    }
+
+    private static IActorRef GetChildQuestionActor(string userId)
+    {
+        return Context.ActorOf(UserQuestionsActor.Props(userId), $"user-questions-{userId}");
+    }
 }
 
 public record GetRef(string UserId);

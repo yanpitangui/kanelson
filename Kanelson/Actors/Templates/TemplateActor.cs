@@ -1,37 +1,72 @@
 using Akka.Actor;
+using Akka.Persistence;
 using Kanelson.Contracts.Models;
 
 namespace Kanelson.Actors.Templates;
 
-public class TemplateActor : ReceiveActor
+public class TemplateActor : ReceivePersistentActor, IHasSnapshotInterval
 {
+
+    public override string PersistenceId { get; }
 
     private TemplateState _state;
     private Guid _id;
     
     public TemplateActor(Guid templateId)
     {
+        PersistenceId = $"template-{templateId}";
         _state = new TemplateState();
         _id = templateId;
-        Receive<Upsert>(o =>
+
+
+        Recover<Upsert>(HandleUpsert);
+        Command<Upsert>(upsert => Persist(upsert, HandleUpsert));
+
+        Command<GetOwner>(_ => Sender.Tell(_state.OwnerId));
+        
+        Command<GetTemplate>(_ => Sender.Tell(_state.Template));
+
+        Command<GetSummary>(_ => Sender.Tell(new TemplateSummary(_id, _state.Template.Name)));
+        
+                
+        Recover<SnapshotOffer>(o =>
         {
-            _state.Template = o.Template;
-            _state.OwnerId = o.OwnerId;
+            if (o.Snapshot is TemplateState state)
+            {
+                _state = state;
+            }
+        });
+        
+        Command<SaveSnapshotSuccess>(success => {
+            // soft-delete the journal up until the sequence # at
+            // which the snapshot was taken
+            DeleteMessages(success.Metadata.SequenceNr); 
+            DeleteSnapshots(new SnapshotSelectionCriteria(success.Metadata.SequenceNr - 1));
         });
 
-        Receive<GetOwner>(_ => Sender.Tell(_state.OwnerId));
+        Command<DeleteSnapshotsSuccess>(_ => { });
+        Command<DeleteMessagesSuccess>(_ => { });
         
-        Receive<GetTemplate>(_ => Sender.Tell(_state.Template));
-
-        
-        // TODO: Retornar o verdadeiro ID do template
-        Receive<GetSummary>(_ => Sender.Tell(new TemplateSummary(_id, _state.Template.Name)));
+        Command<ShutdownCommand>(_ =>
+        {
+            DeleteMessages(Int64.MaxValue);
+            DeleteSnapshots(SnapshotSelectionCriteria.Latest);
+            Context.Stop(Self);
+        });
     }
-    
+
+    private void HandleUpsert(Upsert o)
+    {
+        _state.Template = o.Template;
+        _state.OwnerId = o.OwnerId;
+        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+    }
+
     public static Props Props(Guid templateId)
     {
         return Akka.Actor.Props.Create(() => new TemplateActor(templateId));
     }
+
 }
 
 public record GetSummary;

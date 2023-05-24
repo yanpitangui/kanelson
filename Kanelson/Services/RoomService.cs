@@ -108,8 +108,8 @@ public class RoomService : IRoomService
     public async Task Delete(long roomId)
     {
         var index = _actorRegistry.Get<RoomIndexActor>();
-        var room = await index.Ask<IActorRef>(new GetRef(roomId));
-        var owner = await room.Ask<string>(new GetOwner());
+        var room = await index.Ask<IActorRef>(new GetRef(roomId), TimeSpan.FromSeconds(3));
+        var owner = await room.Ask<string>(new GetOwner(), TimeSpan.FromSeconds(3));
         if (owner != _userService.CurrentUser)
         {
             throw new ApplicationException("You are not the room's owner");

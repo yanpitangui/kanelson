@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Kanelson.Actors.Rooms;
 
-public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval
+public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTimers
 {
 
     public override string PersistenceId { get; }
@@ -118,10 +118,8 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval
 
         Command<DeleteSnapshotsSuccess>(_ => { });
         Command<DeleteMessagesSuccess>(_ => { });
-        
-
     }
-    
+
     private record SendSignalrGroupMessage(string GroupId, string MessageName, object Data);
     
     private record SendSignalrUserMessage(string UserId, string MessageName, object Data);
@@ -151,6 +149,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval
     }
 
 
+    public ITimerScheduler Timers { get; set; } = null!;
 }
 
 public record SetBase(string RoomName, string OwnerId, Template Template);

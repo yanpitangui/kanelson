@@ -28,10 +28,15 @@ public class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterval
 
         _state = new RoomIndexState();
         
-        Recover<Register>(HandleRegister);
+        Recover<Register>(o =>
+        {
+            AddToChildren(o);
+            HandleRegister(o);
+        });
         
         Command<Register>(o =>
         {
+            AddToChildren(o);
             Persist(o, HandleRegister);
         });
 
@@ -69,7 +74,7 @@ public class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterval
                 for (var i = 0; i < keys.Length; ++i)
                 {
                     var room = _children[keys[i]];
-                    tasks[i] = room.Ask<RoomSummary>(new GetSummary());
+                    tasks[i] = room.Ask<RoomSummary>(new GetSummary(), TimeSpan.FromSeconds(3));
                 }
         
                 // build the result as requests complete
@@ -112,6 +117,13 @@ public class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterval
 
     }
 
+    private void AddToChildren(Register o)
+    {
+        var roomActor = GetChildRoomActorRef(o.RoomIdentifier);
+        roomActor.Tell(o.RoomBase);
+        _children.Add(o.RoomIdentifier, roomActor);
+    }
+
     private void HandleUnregister(Unregister r)
     {
         var exists = _children.TryGetValue(r.RoomIdentifier, out var child);
@@ -126,10 +138,8 @@ public class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterval
 
     private void HandleRegister(Register r)
     {
-        var roomActor = GetChildRoomActorRef(r.RoomIdentifier);
-        roomActor.Tell(r.RoomBase);
-        _children.Add(r.RoomIdentifier, roomActor);
         _state.Items.Add(r.RoomIdentifier);
+        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
     }
 
     private IActorRef GetChildRoomActorRef(long roomIdentifier)

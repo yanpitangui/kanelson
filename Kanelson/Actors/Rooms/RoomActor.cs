@@ -144,7 +144,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
         _state.Name = r.RoomName;
         _state.MaxQuestionIdx = Math.Clamp(_state.Template.Questions.Count - 1, 0, 100);
         _state.CurrentQuestionIdx = 0;
-        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+        SaveSnapshot(_state);
     }
 
 

@@ -19,7 +19,15 @@ public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
 
         _children = new();
         
-        Recover<Unregister>(HandleUnregister);
+        Recover<Unregister>(unregister =>
+        {
+            HandleUnregister(unregister);
+            var exists = _children.TryGetValue(unregister.Id, out var actorRef);
+            if (!Equals(actorRef, ActorRefs.Nobody) && !exists)
+            {
+                actorRef.Tell(ShutdownCommand.Instance);
+            }
+        });
 
         Command<Unregister>(o =>
         {
@@ -87,14 +95,14 @@ public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
     {
         if (_state.Items.Add(r))
         {
-            ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+            SaveSnapshot(_state);
         }
     }
 
     private void HandleUnregister(Unregister r)
     {
         _state.Items.Remove(r.Id);
-        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+        SaveSnapshot(_state);
     }
 
     private IActorRef GetChildTemplateActorRef(Guid id)

@@ -59,7 +59,7 @@ public class TemplateActor : ReceivePersistentActor, IHasSnapshotInterval
     {
         _state.Template = o.Template;
         _state.OwnerId = o.OwnerId;
-        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+        SaveSnapshot(_state);
     }
 
     public static Props Props(Guid templateId)

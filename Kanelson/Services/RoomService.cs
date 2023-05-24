@@ -84,11 +84,11 @@ public class RoomService : IRoomService
         return await room.Ask<TemplateQuestion>(new GetCurrentQuestion());
     }
 
-    public async Task<bool> NextQuestion(long roomId)
+    public async Task NextQuestion(long roomId)
     {
-        // var grain = _client.GetGrain<IRoomGrain>(roomId);
-        // return await grain.NextQuestion();
-        return default;
+        var index = _actorRegistry.Get<RoomIndexActor>();
+        var room = await index.Ask<IActorRef>(new GetRef(roomId));
+        room.Tell(new NextQuestion());
     }
 
     public async Task Start(long roomId)
@@ -119,13 +119,9 @@ public class RoomService : IRoomService
 
     public async Task Answer(long roomId, Guid answerId)
     {
-        // var index = _client.GetGrain<IRoomManagerGrain>(0);
-        // if (!await index.Exists(roomId))
-        // {
-        //     throw new KeyNotFoundException();
-        // }
-        // var grain = _client.GetGrain<IRoomGrain>(roomId);
-        // await grain.Answer(userId, roomId, answerId);
+        var index = _actorRegistry.Get<RoomIndexActor>();
+        var room = await index.Ask<IActorRef>(new GetRef(roomId), TimeSpan.FromSeconds(3));
+        room.Tell(new SendUserAnswer(_userService.CurrentUser, answerId));
     }
 }
 
@@ -138,7 +134,7 @@ public interface IRoomService
 
     Task<HashSet<UserInfo>> GetCurrentUsers(long roomId);
     Task<TemplateQuestion> GetCurrentQuestion(long roomId);
-    Task<bool> NextQuestion(long roomId);
+    Task NextQuestion(long roomId);
     Task Start(long roomId);
     Task<string> GetOwner(long roomId);
     Task Delete(long roomId);

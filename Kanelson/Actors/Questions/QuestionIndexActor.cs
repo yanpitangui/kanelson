@@ -36,7 +36,10 @@ public class QuestionIndexActor : ReceivePersistentActor, IHasSnapshotInterval
         Recover<string>(s =>
         {
             HandleAddUser(s);
-            _children[s] = GetChildQuestionActor(s);
+            if (!_children.TryGetValue(s, out var actorRef) || actorRef.Equals(ActorRefs.Nobody))
+            {
+                _children[s] = GetChildQuestionActor(s);
+            }
         });
         
         Recover<SnapshotOffer>(o =>

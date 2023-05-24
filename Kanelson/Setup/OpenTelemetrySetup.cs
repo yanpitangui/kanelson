@@ -11,28 +11,22 @@ public static class OpenTelemetrySetup
         return hostBuilder.ConfigureServices((ctx, services) =>
         {
             var tracingOptions = ctx.Configuration.GetSection("Tracing")
-                .Get<TracingOptions>()!;
+                .Get<TracingOptions>();
 
 
             services
                 .AddOpenTelemetry()
                 .ConfigureResource(rb => rb.AddService(serviceName: OpenTelemetryExtensions.ServiceName))
-                .WithMetrics(metrics =>
-                {
-                    metrics.AddMeter("Microsoft.Orleans");
-                }).WithTracing(telemetry =>
+                .WithTracing(telemetry =>
                 {
                     telemetry
                         .AddSource(OpenTelemetryExtensions.ServiceName)
                         .SetResourceBuilder(
                             ResourceBuilder.CreateDefault()
-                                .AddService(serviceName: OpenTelemetryExtensions.ServiceName,
-                                    serviceVersion: OpenTelemetryExtensions.ServiceVersion))
-                        .AddAspNetCoreInstrumentation()
-                        .AddSource("Microsoft.Orleans.Application")
-                        .AddSource("Microsoft.Orleans.Runtime");
+                                .AddService(serviceName: OpenTelemetryExtensions.ServiceName))
+                        .AddAspNetCoreInstrumentation();
 
-                    if (tracingOptions.Enabled)
+                    if (tracingOptions is { Enabled: true })
                     {
                         telemetry.AddOtlpExporter(o =>
                         {

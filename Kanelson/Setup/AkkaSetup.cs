@@ -23,19 +23,15 @@ public static class AkkaSetup
         hostBuilder.ConfigureServices((ctx, services) =>
         {
             
-            var akkaSection = ctx.Configuration.GetSection("Akka");
+            var akkaConfig = ctx.Configuration.GetSection("Akka").Get<AkkaConfig>()!;
 
             var connString = ctx.Configuration.GetConnectionString("Postgres");
-
-            var hostName = akkaSection.GetValue<string>("ClusterIp", "localhost");
-
-            var port = akkaSection.GetValue("ClusterPort", 7918);
 
 
             services.AddAkka(actorSystemName, (akkaBuilder) =>
             {
                 Debug.Assert(connString != null);
-                akkaBuilder.WithRemoting(hostName, port)
+                akkaBuilder.WithRemoting(akkaConfig.ClusterIp, akkaConfig.ClusterPort)
                     // Add after fixing timeouts
                     // .WithSqlPersistence(connectionString: connString, providerName: ProviderName.PostgreSQL15, autoInitialize: true,
                     //     schemaName: "public")
@@ -61,7 +57,7 @@ public static class AkkaSetup
                         registry.Register<RoomIndexActor>(roomIndex);
                     });
 
-                if (ctx.HostingEnvironment.IsProduction())
+                if (akkaConfig.KubernetesDiscovery)
                 {
                     akkaBuilder
                         .WithAkkaManagement()

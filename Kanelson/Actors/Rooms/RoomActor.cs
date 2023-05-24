@@ -78,13 +78,13 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
 
         });
 
-        Command<GetCurrentQuestion>(o => { });
+        Command<GetCurrentQuestion>(_ => Sender.Tell(_state.Template.Questions[_state.CurrentQuestionIdx]));
 
         Command<Start>(o => { });
 
         Command<NextQuestion>(o => { });
         
-        Command<GetOwner>(o => { });
+        Command<GetOwner>(o => Sender.Tell(_state.OwnerId));
 
         Command<SendUserAnswer>(o => { });
 
@@ -115,7 +115,13 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
             DeleteSnapshots(new SnapshotSelectionCriteria(success.Metadata.SequenceNr - 1));
         });
 
-        Command<DeleteSnapshotsSuccess>(_ => { });
+        Command<DeleteSnapshotsSuccess>(o =>
+        {
+            if (o.Criteria.Equals(SnapshotSelectionCriteria.Latest))
+            {
+                Context.Stop(Self);
+            }
+        });
         Command<DeleteMessagesSuccess>(_ => { });
     }
 

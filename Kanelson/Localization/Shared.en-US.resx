@@ -126,4 +126,7 @@
     <data name="NextQuestionButton" xml:space="preserve">
         <value>Next question</value>
     </data>
+    <data name="AverageTime" xml:space="preserve">
+        <value>Average time (sec)</value>
+    </data>
 </root>

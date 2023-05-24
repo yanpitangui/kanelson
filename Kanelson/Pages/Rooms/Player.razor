@@ -3,7 +3,7 @@
 @using System.Collections.Immutable
 @using System.Net
 @using System.Timers
-@using Kanelson.Grains.Rooms
+@using Kanelson.Actors.Rooms
 @using Kanelson.Hubs
 @using Kanelson.Services
 @using Microsoft.AspNetCore.SignalR
@@ -38,7 +38,7 @@
 
     TemplateQuestion? _currentQuestion;
     [Parameter]
-    public string RoomId { get; set; } = null!;
+    public long RoomId { get; set; }
     private HubConnection? _hubConnection;
     private ImmutableArray<UserInfo> _connectedUsers = ImmutableArray<UserInfo>.Empty;
     private PlayerStatus _playerStatus = PlayerStatus.Answering;
@@ -52,13 +52,13 @@
     protected override async Task OnParametersSetAsync()
     {
         _hubConnection = HttpAccessor.GetConnection(Navigation);
-        _hubConnection.On<HashSet<UserInfo>>("CurrentUsersUpdated", (users) =>
+        _hubConnection.On<HashSet<UserInfo>>(SignalRMessages.CurrentUsersUpdated, (users) =>
         {
             _connectedUsers = users.ToImmutableArray();
             InvokeAsync(StateHasChanged);
         });
 
-        _hubConnection.On<ImmutableArray<UserRanking>>("RoundFinished", (ranking) =>
+        _hubConnection.On<ImmutableArray<UserRanking>>(SignalRMessages.RoundFinished, (ranking) =>
         {
             _timerHandle.Stop();
             var parameters = new DialogParameters { ["Ranking"]=ranking };
@@ -69,7 +69,7 @@
             InvokeAsync(StateHasChanged);
         });
 
-        _hubConnection.On<TemplateQuestion>("NextQuestion", (question) =>
+        _hubConnection.On<TemplateQuestion>(SignalRMessages.NextQuestion, (question) =>
         {
             _currentQuestion = question;
             _current = 0;
@@ -83,7 +83,7 @@
         
         await _hubConnection.StartAsync();
 
-        await _hubConnection.SendAsync("JoinRoom", RoomId);
+        await _hubConnection.SendAsync(SignalRMessages.JoinRoom, RoomId);
     }
     
     
@@ -97,7 +97,7 @@
     {
         _timerHandle.Stop();
         _playerStatus = PlayerStatus.Answered;
-        await _hubConnection!.SendAsync("Answer", RoomId,  answerId);
+        await _hubConnection!.SendAsync(SignalRMessages.Answer, RoomId,  answerId);
         await InvokeAsync(StateHasChanged);
     }
 

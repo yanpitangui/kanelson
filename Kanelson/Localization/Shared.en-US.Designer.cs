@@ -96,6 +96,15 @@ namespace Kanelson.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Average time (sec).
+        /// </summary>
+        internal static string AverageTime {
+            get {
+                return ResourceManager.GetString("AverageTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         internal static string Cancel {

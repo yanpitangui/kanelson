@@ -1,7 +1,7 @@
 using Kanelson.Contracts.Models;
 using Stateless;
 
-namespace Kanelson.Grains.Rooms;
+namespace Kanelson.Actors.Rooms;
 
 public static class RoomBehavior
 {

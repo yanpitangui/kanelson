@@ -1,38 +1,42 @@
 ﻿using System.Collections.Immutable;
 using System.Security.Claims;
-using Orleans;
-using Kanelson.Contracts.Grains;
+using Akka.Actor;
+using Akka.Hosting;
+using Kanelson.Actors;
 using Kanelson.Contracts.Models;
 
 namespace Kanelson.Services;
 
 public class UserService : IUserService
 {
-    private readonly IGrainFactory _grainFactory;
-    public UserService(IHttpContextAccessor httpContextAccessor, IGrainFactory grainFactory)
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ActorRegistry _actorRegistry;
+    
+    public UserService(IHttpContextAccessor httpContextAccessor, ActorRegistry actorRegistry)
     {
-        _grainFactory = grainFactory;
-        CurrentUser = httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        _httpContextAccessor = httpContextAccessor;
+        _actorRegistry = actorRegistry;
     }
 
-    public string CurrentUser { get; }
+    public string CurrentUser => _httpContextAccessor.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
     
-    public async Task Upsert(string id, string name)
+    public void Upsert(string id, string name)
     {
-        var grain = _grainFactory.GetGrain<IUserManagerGrain>(0);
-        await grain.Upsert(id, name);
+        var actor = _actorRegistry.Get<UserIndexActor>();
+        actor.Tell(new UpsertUser(id, name));
     }
 
     public async Task<ImmutableArray<UserInfo>> GetUsersInfo(params string[] ids)
     {
-        var grain = _grainFactory.GetGrain<IUserManagerGrain>(0);
-        return await grain.GetUsersInfo(ids);
+        var actor = _actorRegistry.Get<UserIndexActor>();
+        return await actor.Ask<ImmutableArray<UserInfo>>(new GetUserInfos(ids));
     }
     
     public async Task<UserInfo> GetUserInfo(string id)
     {
-        var grain = _grainFactory.GetGrain<IUserManagerGrain>(0);
-        return await grain.GetUserInfo(id);
+        var actor = _actorRegistry.Get<UserIndexActor>();
+        var result = await actor.Ask<ImmutableArray<UserInfo>>(new GetUserInfos(id));
+        return result.First();
     }
 }
 
@@ -40,7 +44,7 @@ public interface IUserService
 {
     string CurrentUser { get; }
     
-    public Task Upsert(string id, string name);
+    public void Upsert(string id, string name);
 
     public Task<ImmutableArray<UserInfo>> GetUsersInfo(params string[] ids);
     Task<UserInfo> GetUserInfo(string id);

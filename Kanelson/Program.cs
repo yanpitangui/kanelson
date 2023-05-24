@@ -1,13 +1,12 @@
 using System.Diagnostics;
 using System.Security.Claims;
+using IdGen.DependencyInjection;
 using Kanelson.Hubs;
 using Kanelson.Services;
-using Kanelson.Tracing;
+using Kanelson.Setup;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.ResponseCompression;
 using MudBlazor.Services;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
 using Serilog;
 
 
@@ -51,21 +50,26 @@ builder.Services.AddAuthentication(o =>
         o.CallbackPath = "/signin-github";
         o.Scope.Add("read:user");
         // Atualiza as informações do usuário quando ele faz login com sucesso.
-        o.Events.OnCreatingTicket = async (context) =>
+        o.Events.OnCreatingTicket = (context) =>
         {
             var user = context.Principal;
             var userService = context.HttpContext.RequestServices.GetRequiredService<IUserService>();
-            await userService.Upsert(user!.FindFirstValue(ClaimTypes.NameIdentifier)!, 
+            userService.Upsert(user!.FindFirstValue(ClaimTypes.NameIdentifier)!, 
                 user!.FindFirstValue(ClaimTypes.Name)!);
+            
+            return Task.CompletedTask;
         };
     });
+
+
+const string dbName = "Kanelson";
 
 builder.Services.AddOptions();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddScoped<ITemplateService, TemplateService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
-builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddSingleton<IUserService, UserService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddMudServices();
 builder.Services.AddHttpContextAccessor();
@@ -76,60 +80,11 @@ builder.Services.AddResponseCompression(opts =>
         new[] { "application/octet-stream" });
 });
 
+builder.Services.AddIdGen(123);
 
-var dbName = "Kanelson";
-builder.Host.UseOrleans(siloBuilder =>
-{
-    siloBuilder
-        .AddActivityPropagation()
-        .UseMongoDBClient(builder.Configuration.GetConnectionString("MongoDb"))
-        .UseLocalhostClustering()
-        .UseDashboard(x =>
-        {
-            x.HostSelf = true;
-            x.CounterUpdateIntervalMs = 10000;
-        })
-        .UseMongoDBReminders(opt =>
-        {
-            opt.DatabaseName = dbName;
-        })
-        .AddMongoDBGrainStorage("kanelson-storage", options =>
-        {
-            options.DatabaseName = dbName;
-        });
-});
+builder.Host.AddAkkaSetup(dbName);
 
-var tracingOptions = builder.Configuration.GetSection("Tracing")
-    .Get<TracingOptions>()!;
-
-
-builder.Services
-    .AddOpenTelemetry()
-    .ConfigureResource(rb => rb.AddService(serviceName: OpenTelemetryExtensions.ServiceName))
-    .WithMetrics(metrics =>
-    {
-        metrics.AddMeter("Microsoft.Orleans");
-    }).WithTracing(telemetry =>
-    {
-        telemetry
-            .AddSource(OpenTelemetryExtensions.ServiceName)
-            .SetResourceBuilder(
-                ResourceBuilder.CreateDefault()
-                    .AddService(serviceName: OpenTelemetryExtensions.ServiceName,
-                        serviceVersion: OpenTelemetryExtensions.ServiceVersion))
-            .AddAspNetCoreInstrumentation()
-            .AddSource("Microsoft.Orleans.Application")
-            .AddSource("Microsoft.Orleans.Runtime");
-
-        if (tracingOptions.Enabled)
-        {
-            telemetry.AddOtlpExporter(o =>
-            {
-                o.Endpoint = new Uri(tracingOptions.Uri);
-            });
-        }
-    });
-
+builder.Host.AddOpenTelemetrySetup();
 
 var app = builder.Build();
 
@@ -150,8 +105,6 @@ app.UseStaticFiles();
 
 app.UseCookiePolicy();
 app.UseRouting();
-
-app.Map("/dashboard", x => x.UseOrleansDashboard());
 
 app.MapControllers();
 app.MapHub<RoomHub>("/roomHub");

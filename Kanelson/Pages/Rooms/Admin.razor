@@ -1,7 +1,8 @@
 ﻿@using Microsoft.AspNetCore.SignalR.Client
 @using global::Kanelson.Contracts.Models
 @using System.Collections.Immutable
-@using Kanelson.Grains.Rooms
+@using Kanelson.Actors.Rooms
+@using Kanelson.Hubs
 @using Kanelson.Services
 @inject NavigationManager Navigation
 @inject IHttpContextAccessor HttpAccessor
@@ -56,25 +57,25 @@
 
     
     [Parameter]
-    public string RoomId { get; set; } = null!;
+    public long RoomId { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {
         _hubConnection = HttpAccessor.GetConnection(Navigation);
 
-        _hubConnection.On<RoomStatus>("RoomStateChanged", (state) =>
+        _hubConnection.On<RoomStatus>(SignalRMessages.RoomStateChanged, (state) =>
         {
             _roomStateMachine = RoomBehavior.GetStateMachine(state);
             InvokeAsync(StateHasChanged);
         });
 
-        _hubConnection.On<HashSet<UserInfo>>("CurrentUsersUpdated", (users) =>
+        _hubConnection.On<HashSet<UserInfo>>(SignalRMessages.CurrentUsersUpdated, (users) =>
         {
             _connectedUsers = users.ToImmutableArray();
             InvokeAsync(StateHasChanged);
         });
         
-        _hubConnection.On<TemplateQuestion>("NextQuestion", async (question) =>
+        _hubConnection.On<TemplateQuestion>(SignalRMessages.NextQuestion, async (question) =>
         {
             _currentQuestion = question;
             await InvokeAsync(StateHasChanged);
@@ -96,7 +97,7 @@
 
     protected async Task Start()
     {
-        await _hubConnection.SendAsync("Start", RoomId);
+        await _hubConnection.SendAsync(SignalRMessages.Start, RoomId);
     }
 
     protected async Task NextQuestion()

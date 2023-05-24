@@ -1,5 +1,5 @@
 ﻿@using System.Collections.Immutable
-@using Kanelson.Grains.Rooms
+@using Kanelson.Actors.Rooms
 @inject IStringLocalizer<Shared> Loc
 
 <MudDialog>
@@ -9,7 +9,7 @@
                 <MudTh>Pos.</MudTh>
                 <MudTh>@Loc["Name"]</MudTh>
                 <MudTh>@Loc["Points"]</MudTh>
-                <MudTh>Tempo médio (segs.)</MudTh>
+                <MudTh>@Loc["AverageTime"]</MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Pos.">@context.Rank</MudTd>

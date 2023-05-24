@@ -10,7 +10,7 @@ namespace Kanelson.Hubs;
 [Authorize]
 public class RoomHub : Hub
 {
-    private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, HubUser>> RoomUsers = new();
+    private static readonly ConcurrentDictionary<long, ConcurrentDictionary<string, HubUser>> RoomUsers = new();
     private readonly IRoomService _roomService;
     private readonly IUserService _userService;
     
@@ -20,9 +20,9 @@ public class RoomHub : Hub
         _userService = userService;
     }
 
-    public async Task JoinRoom(string roomId)
+    public async Task JoinRoom(long roomId)
     {
-        await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
+        await Groups.AddToGroupAsync(Context.ConnectionId, roomId.ToString());
 
         var userId = Context.GetUserId();
         var connectionId = Context.ConnectionId;
@@ -48,7 +48,7 @@ public class RoomHub : Hub
         await _roomService.UpdateCurrentUsers(roomId, users);
     }
 
-    public async Task Start(string roomId)
+    public async Task Start(long roomId)
     {
         var owner = await _roomService.GetOwner(roomId);
         var userId = Context.GetUserId();
@@ -58,10 +58,9 @@ public class RoomHub : Hub
         }
     }
 
-    public async Task Answer(string roomId, Guid answerId)
+    public async Task Answer(long roomId, Guid answerId)
     {
-        var userId = Context.GetUserId();
-        await _roomService.Answer(userId, roomId, answerId);
+        await _roomService.Answer(roomId, answerId);
     }
     
     public override async Task OnDisconnectedAsync(Exception? exception)
@@ -101,9 +100,7 @@ public class RoomHub : Hub
     }
 }
 
-[GenerateSerializer]
 public record HubUser : UserInfo
 {
-    [Id(2)]
     public HashSet<string> Connections { get; set; } = new();
 }

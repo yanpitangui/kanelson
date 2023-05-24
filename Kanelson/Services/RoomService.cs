@@ -1,170 +1,143 @@
-﻿using System.Buffers;
-using System.Collections.Immutable;
-using Kanelson.Contracts.Grains.Rooms;
-using Kanelson.Contracts.Grains.Templates;
+﻿using System.Collections.Immutable;
+using Akka.Actor;
+using Akka.Hosting;
+using IdGen;
+using Kanelson.Actors.Rooms;
 using Kanelson.Contracts.Models;
-using shortid;
+using GetRef = Kanelson.Actors.Rooms.GetRef;
+using Register = Kanelson.Actors.Rooms.Register;
 
 namespace Kanelson.Services;
 
 public class RoomService : IRoomService
 {
-    private readonly IGrainFactory _client;
+    private readonly ActorRegistry _actorRegistry;
+    private readonly IIdGenerator<long> _idGenerator;
+    private readonly ITemplateService _templateService;
     private readonly IUserService _userService;
 
-    public RoomService(IGrainFactory grainFactory, IUserService userService)
+    public RoomService(IUserService userService,
+        ActorRegistry actorRegistry, 
+        IIdGenerator<long> idGenerator,
+        ITemplateService templateService)
     {
-        _client = grainFactory;
         _userService = userService;
+        _actorRegistry = actorRegistry;
+        _idGenerator = idGenerator;
+        _templateService = templateService;
     }
     
-    public async Task<string> CreateRoom(Guid templateId, string roomName)
+    public async Task<long> CreateRoom(Guid templateId, string roomName)
     {
-        var manager = _client.GetGrain<ITemplateManagerGrain>(_userService.CurrentUser);
-        if (!await manager.KeyExists(templateId))
-        {
-            throw new KeyNotFoundException();
-        }
+        var roomId = _idGenerator.CreateId();
+        var index = _actorRegistry.Get<RoomIndexActor>();
+        var template = await _templateService.GetTemplate(templateId);
 
-        var template = await _client.GetGrain<ITemplateGrain>(templateId).Get();
-        var roomManager = _client.GetGrain<IRoomManagerGrain>(0);
-        var valid = false;
-        var roomId = "";
-        while (!valid)
-        {
-            roomId = ShortId.Generate();
-            valid = !await roomManager.Exists(roomId);
-        }
-        var room = _client.GetGrain<IRoomGrain>(roomId);
-        await room.SetBase(roomName, _userService.CurrentUser, template);
-        await roomManager.Register(roomId);
+        index.Tell(new Register(roomId, new SetBase(roomName, _userService.CurrentUser, template)));
+
         return roomId;
     }
 
-    public async Task<RoomStatus> GetCurrentState(string roomId)
+    public async Task<RoomStatus> GetCurrentState(long roomId)
     {
-        var grain = _client.GetGrain<IRoomGrain>(roomId);
-        return await grain.GetCurrentState();
+        var index = _actorRegistry.Get<RoomIndexActor>();
+        var room = await index.Ask<IActorRef>(new GetRef(roomId));
+
+        return await room.Ask<RoomStatus>(new GetCurrentState());
     }
 
     public async Task<ImmutableArray<RoomSummary>> GetAll()
     {
-        var manager = _client.GetGrain<IRoomManagerGrain>(0);
-        var keys = await manager.GetAll();
-        // fan out to get the individual items from the cluster in parallel
-        var tasks = ArrayPool<Task<RoomSummary>>.Shared.Rent(keys.Length);
-        try
+        
+        var index = _actorRegistry.Get<RoomIndexActor>();
+
+        return await index.Ask<ImmutableArray<RoomSummary>>(new GetAllSummaries());
+    }
+
+    public async Task<RoomSummary> Get(long id)
+    {
+        var index = _actorRegistry.Get<RoomIndexActor>();
+        var room = await index.Ask<IActorRef>(new GetRef(id));
+
+        return await room.Ask<RoomSummary>(new GetSummary());
+    }
+
+    public async Task UpdateCurrentUsers(long roomId, HashSet<UserInfo> users)
+    {
+        var index = _actorRegistry.Get<RoomIndexActor>();
+        var room = await index.Ask<IActorRef>(new GetRef(roomId));
+        room.Tell(new UpdateCurrentUsers(users));
+    }
+
+    public async Task<HashSet<UserInfo>> GetCurrentUsers(long roomId)
+    {
+        var index = _actorRegistry.Get<RoomIndexActor>();
+        var room = await index.Ask<IActorRef>(new GetRef(roomId));
+
+        return await room.Ask<HashSet<UserInfo>>(new GetCurrentUsers());
+    }
+
+    public async Task<TemplateQuestion> GetCurrentQuestion(long roomId)
+    {
+        var index = _actorRegistry.Get<RoomIndexActor>();
+        var room = await index.Ask<IActorRef>(new GetRef(roomId));
+        return await room.Ask<TemplateQuestion>(new GetCurrentQuestion());
+    }
+
+    public async Task NextQuestion(long roomId)
+    {
+        var index = _actorRegistry.Get<RoomIndexActor>();
+        var room = await index.Ask<IActorRef>(new GetRef(roomId));
+        room.Tell(new NextQuestion());
+    }
+
+    public async Task Start(long roomId)
+    {
+        var index = _actorRegistry.Get<RoomIndexActor>();
+        var room = await index.Ask<IActorRef>(new GetRef(roomId));
+        room.Tell(new Start());
+    }
+
+    public async Task<string> GetOwner(long roomId)
+    {
+        var index = _actorRegistry.Get<RoomIndexActor>();
+        var room = await index.Ask<IActorRef>(new GetRef(roomId));
+        return await room.Ask<string>(new GetOwner());
+    }
+
+    public async Task Delete(long roomId)
+    {
+        var index = _actorRegistry.Get<RoomIndexActor>();
+        var room = await index.Ask<IActorRef>(new GetRef(roomId), TimeSpan.FromSeconds(3));
+        var owner = await room.Ask<string>(new GetOwner(), TimeSpan.FromSeconds(3));
+        if (owner != _userService.CurrentUser)
         {
-            // issue all individual requests at the same time
-            for (var i = 0; i < keys.Length; ++i)
-            {
-                tasks[i] = _client.GetGrain<IRoomGrain>(keys[i]).GetSummary();
-            }
-
-            // build the result as requests complete
-            var result = ImmutableArray.CreateBuilder<RoomSummary>(keys.Length);
-            for (var i = 0; i < keys.Length; ++i)
-            {
-                var item = await tasks[i];
-                
-                result.Add(item);
-            }
-            return result.ToImmutableArray();
+            throw new ApplicationException("You are not the room's owner");
         }
-        finally
-        {
-            ArrayPool<Task<RoomSummary>>.Shared.Return(tasks);
-        }
+        index.Tell(new Unregister(roomId));
     }
 
-    public async Task<RoomSummary> Get(string id)
+    public async Task Answer(long roomId, Guid answerId)
     {
-        var manager = _client.GetGrain<IRoomManagerGrain>(0);
-        if (!await manager.Exists(id))
-        {
-            throw new KeyNotFoundException();
-        }
-        var grain = _client.GetGrain<IRoomGrain>(id);
-        return await grain.GetSummary();
-    }
-
-    public async Task UpdateCurrentUsers(string roomId, HashSet<UserInfo> users)
-    {
-        var grain = _client.GetGrain<IRoomGrain>(roomId);
-        await grain.UpdateCurrentUsers(users);
-    }
-
-    public async Task<HashSet<UserInfo>> GetCurrentUsers(string roomId)
-    {
-        var grain = _client.GetGrain<IRoomGrain>(roomId);
-        return await grain.GetCurrentUsers();
-    }
-
-    public async Task<TemplateQuestion> GetCurrentQuestion(string roomId)
-    {
-        var grain = _client.GetGrain<IRoomGrain>(roomId);
-        return await grain.GetCurrentQuestion();
-    }
-
-    public async Task<bool> NextQuestion(string roomId)
-    {
-        var grain = _client.GetGrain<IRoomGrain>(roomId);
-        return await grain.NextQuestion();
-    }
-
-    public async Task Start(string roomId)
-    {
-        var grain = _client.GetGrain<IRoomGrain>(roomId);
-        await grain.Start();
-    }
-
-    public async Task<string> GetOwner(string roomId)
-    {
-        var grain = _client.GetGrain<IRoomGrain>(roomId);
-        return await grain.GetOwner();
-    }
-
-    public async Task Delete(string roomId)
-    {
-        var manager = _client.GetGrain<IRoomManagerGrain>(0);
-        if (!await manager.Exists(roomId))
-        {
-            throw new KeyNotFoundException();
-        }
-        var grain = _client.GetGrain<IRoomGrain>(roomId);
-
-        if (_userService.CurrentUser == await grain.GetOwner())
-        {
-            await manager.Unregister(roomId);
-            await grain.Delete();
-        }
-    }
-
-    public async Task Answer(string userId, string roomId, Guid answerId)
-    {
-        var manager = _client.GetGrain<IRoomManagerGrain>(0);
-        if (!await manager.Exists(roomId))
-        {
-            throw new KeyNotFoundException();
-        }
-        var grain = _client.GetGrain<IRoomGrain>(roomId);
-        await grain.Answer(userId, roomId, answerId);
+        var index = _actorRegistry.Get<RoomIndexActor>();
+        var room = await index.Ask<IActorRef>(new GetRef(roomId), TimeSpan.FromSeconds(3));
+        room.Tell(new SendUserAnswer(_userService.CurrentUser, answerId));
     }
 }
 
 public interface IRoomService
 {
-    Task<string> CreateRoom(Guid templateId, string roomName);
+    Task<long> CreateRoom(Guid templateId, string roomName);
     Task<ImmutableArray<RoomSummary>> GetAll();
-    Task<RoomSummary> Get(string id);
-    Task UpdateCurrentUsers(string roomId, HashSet<UserInfo> users);
+    Task<RoomSummary> Get(long id);
+    Task UpdateCurrentUsers(long roomId, HashSet<UserInfo> users);
 
-    Task<HashSet<UserInfo>> GetCurrentUsers(string roomId);
-    Task<TemplateQuestion> GetCurrentQuestion(string roomId);
-    Task<bool> NextQuestion(string roomId);
-    Task Start(string roomId);
-    Task<string> GetOwner(string roomId);
-    Task Delete(string roomId);
-    Task Answer(string userId, string roomId, Guid answerId);
-    Task<RoomStatus> GetCurrentState(string roomId);
+    Task<HashSet<UserInfo>> GetCurrentUsers(long roomId);
+    Task<TemplateQuestion> GetCurrentQuestion(long roomId);
+    Task NextQuestion(long roomId);
+    Task Start(long roomId);
+    Task<string> GetOwner(long roomId);
+    Task Delete(long roomId);
+    Task Answer(long roomId, Guid answerId);
+    Task<RoomStatus> GetCurrentState(long roomId);
 }

@@ -1,35 +1,43 @@
 ﻿using System.Buffers;
+using System.Collections.Concurrent;
 using System.Collections.Immutable;
-using Orleans;
-using Kanelson.Contracts.Grains.Templates;
+using Akka.Actor;
+using Kanelson.Actors.Templates;
 using Kanelson.Contracts.Models;
 
 namespace Kanelson.Services;
 
 public class TemplateService : ITemplateService
 {
-    private readonly IGrainFactory _client;
+    private readonly ActorSystem _actorSystem;
     private readonly IUserService _userService;
 
 
-    public TemplateService(IGrainFactory client, IUserService userService)
+    private static readonly ConcurrentDictionary<string, IActorRef> Indexes;
+
+    static TemplateService()
     {
-        _client = client;
+        Indexes = new();
+    }
+
+    public TemplateService(ActorSystem actorSystem, IUserService userService)
+    {
+        _actorSystem = actorSystem;
         _userService = userService;
     }
 
     public async Task UpsertTemplate(Template template)
     {
-        var manager = _client.GetGrain<ITemplateManagerGrain>(_userService.CurrentUser);
-        var templateGrain = _client.GetGrain<ITemplateGrain>(template.Id);
-        await templateGrain.SetBase(template, _userService.CurrentUser);
-        await manager.RegisterAsync(templateGrain.GetPrimaryKey());
+        var index = GetOrCreateIndexRef();
+        var actor = await index.Ask<IActorRef>(new GetRef(template.Id));
+        actor.Tell(new Upsert(template, _userService.CurrentUser));
     }
 
     public async Task<ImmutableArray<TemplateSummary>> GetTemplates()
     {
-        var manager = _client.GetGrain<ITemplateManagerGrain>(_userService.CurrentUser);
-        var keys = await manager.GetAllAsync();
+        var index = GetOrCreateIndexRef();
+        
+        var keys = await index.Ask<ImmutableArray<Guid>>(new GetAll());
         // fan out to get the individual items from the cluster in parallel
         var tasks = ArrayPool<Task<TemplateSummary>>.Shared.Rent(keys.Length);
         try
@@ -37,7 +45,8 @@ public class TemplateService : ITemplateService
             // issue all individual requests at the same time
             for (var i = 0; i < keys.Length; ++i)
             {
-                tasks[i] = _client.GetGrain<ITemplateGrain>(keys[i]).GetSummary();
+                var actor = await index.Ask<IActorRef>(new GetRef(keys[i]));
+                tasks[i] = actor.Ask<TemplateSummary>(new GetSummary());
             }
 
             // build the result as requests complete
@@ -58,27 +67,40 @@ public class TemplateService : ITemplateService
 
     public async Task<Template> GetTemplate(Guid id)
     {
-        var manager = _client.GetGrain<ITemplateManagerGrain>(_userService.CurrentUser);
-        var templates = await manager.GetAllAsync();
-        if (!templates.Contains(id))
+        var index = GetOrCreateIndexRef();
+        var exists = await index.Ask<bool>(new Exists(id));
+        if (!exists)
         {
             throw new KeyNotFoundException();
         }
 
-        return await _client.GetGrain<ITemplateGrain>(id).Get();
+        var actorRef = await index.Ask<IActorRef>(new GetRef(id));
+        return await actorRef.Ask<Template>(new GetTemplate());
     }
 
     public async Task DeleteTemplate(Guid id)
     {
-        var manager = _client.GetGrain<ITemplateManagerGrain>(_userService.CurrentUser);
-        if (!await manager.KeyExists(id))
+        var index = GetOrCreateIndexRef();
+        var exists = await index.Ask<bool>(new Exists(id));
+        if (!exists)
         {
             throw new KeyNotFoundException();
         }
+        index.Tell(new Unregister(id));
+    }
 
-        var grain = _client.GetGrain<ITemplateGrain>(id);
-        await grain.Delete();
-        await manager.UnregisterAsync(id);
+    private IActorRef GetOrCreateIndexRef()
+    {
+        var exists = Indexes.TryGetValue(_userService.CurrentUser, out var actorRef);
+        if (Equals(actorRef, ActorRefs.Nobody) || !exists)
+        {
+            actorRef = _actorSystem.ActorOf(TemplateIndexActor.Props(_userService.CurrentUser), $"template-index-{_userService.CurrentUser}");
+        }
+
+        Indexes.AddOrUpdate(_userService.CurrentUser, (_) => actorRef!, 
+            (_, _) => actorRef!);
+
+        return actorRef!;
 
     }
 }

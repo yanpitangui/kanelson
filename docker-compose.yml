@@ -1,6 +1,24 @@
 services:
-  jaeger:
-    image: jaegertracing/all-in-one:latest
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: "kanelson_user"
+      POSTGRES_PASSWORD: "Postgres!"
+      POSTGRES_DB: "kanelsondb"    
+    
     ports:
-      - "6831:6831/udp"
-      - "16686:16686"
+      - "5432:5432"
+  kanelson:
+    image: kanelson
+    build:
+      context: .
+      dockerfile: Dockerfile
+      
+    environment:
+      ConnectionStrings__Postgres: "host=postgres;port=5432;database=kanelsondb;username=kanelson_user;password=Postgres!"
+      ASPNETCORE_ENVIRONMENT: "Development"
+    depends_on: 
+      - postgres
+    ports:
+      - "7918:7918"
+      - "7289:80"

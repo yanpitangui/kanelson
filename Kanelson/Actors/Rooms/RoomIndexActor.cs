@@ -130,6 +130,7 @@ public class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterval
         if (exists || !Equals(child, ActorRefs.Nobody))
         {
             child.Tell(ShutdownCommand.Instance);
+            Context.Stop(child);
         }
         _state.Items.Remove(r.RoomIdentifier);
         ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);

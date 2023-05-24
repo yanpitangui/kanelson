@@ -98,7 +98,6 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
         {
             DeleteMessages(Int64.MaxValue);
             DeleteSnapshots(SnapshotSelectionCriteria.Latest);
-            Context.Stop(Self);
         });
         
         Recover<SnapshotOffer>(o =>

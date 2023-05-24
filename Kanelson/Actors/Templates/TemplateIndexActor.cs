@@ -47,8 +47,11 @@ public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
                 actorRef = GetChildTemplateActorRef(o.Id);
                 _children[o.Id] = actorRef;
             }
-            
-            Persist(o.Id, HandleRegister);
+
+            if (!_state.Items.Contains(o.Id))
+            {
+                Persist(o.Id, HandleRegister);
+            }
             Sender.Tell(actorRef);
         });
 
@@ -82,8 +85,10 @@ public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
 
     private void HandleRegister(Guid r)
     {
-        _state.Items.Add(r);
-        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+        if (_state.Items.Add(r))
+        {
+            ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+        }
     }
 
     private void HandleUnregister(Unregister r)

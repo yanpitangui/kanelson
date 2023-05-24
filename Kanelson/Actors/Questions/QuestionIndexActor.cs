@@ -27,8 +27,11 @@ public class QuestionIndexActor : ReceivePersistentActor, IHasSnapshotInterval
                 actorRef = GetChildQuestionActor(o.UserId);
                 _children[o.UserId] = actorRef;
             }
-            
-            Persist(o.UserId, HandleAddUser);
+
+            if (!_state.Index.Contains(o.UserId))
+            {
+                Persist(o.UserId, HandleAddUser);
+            }
             
             Sender.Tell(actorRef);
         });
@@ -69,8 +72,10 @@ public class QuestionIndexActor : ReceivePersistentActor, IHasSnapshotInterval
 
     private void HandleAddUser(string user)
     {
-        _state.Index.Add(user);
-        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+        if (_state.Index.Add(user))
+        {
+            ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+        }
     }
 
     private static IActorRef GetChildQuestionActor(string userId)

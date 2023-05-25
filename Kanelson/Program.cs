@@ -86,6 +86,8 @@ builder.Host.AddAkkaSetup(dbName);
 
 builder.Host.AddOpenTelemetrySetup();
 
+builder.Host.AddDataProtectionSetup();
+
 var app = builder.Build();
 
 app.UseResponseCompression();

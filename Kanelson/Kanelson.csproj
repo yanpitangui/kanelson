@@ -22,6 +22,7 @@
       <PackageReference Include="FluentValidation" Version="11.5.2" />
       <PackageReference Include="IdGen" Version="3.0.3" />
       <PackageReference Include="IdGen.DependencyInjection" Version="3.0.0" />
+      <PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" Version="7.0.5" />
       <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.5" />
       <PackageReference Include="MudBlazor" Version="6.2.5" />
       <PackageReference Include="Npgsql" Version="7.0.4" />

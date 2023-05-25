@@ -63,7 +63,7 @@
     {
         _hubConnection = HttpAccessor.GetConnection(Navigation);
 
-        _hubConnection.On<RoomStatus>(SignalRMessages.RoomStateChanged, (state) =>
+        _hubConnection.On<RoomStatus>(SignalRMessages.RoomStatusChanged, (state) =>
         {
             _roomStateMachine = RoomBehavior.GetStateMachine(state);
             InvokeAsync(StateHasChanged);

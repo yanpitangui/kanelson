@@ -258,16 +258,15 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
 
          _roomStateMachine.OnTransitionCompleted((transition) =>
          {
-             Persist(_state.CurrentState, o =>
+             Persist(transition.Destination, o =>
              {
                  _state.CurrentState = transition.Destination;
                  if (transition.Destination is not RoomStatus.DisplayingQuestion)
                  {
                      SaveSnapshot(_state);
                  }
+                 Self.Tell(new SendSignalrUserMessage(_state.OwnerId,SignalRMessages.RoomStatusChanged, _state.CurrentState));
              });
-
-             Self.Tell(new SendSignalrUserMessage(_state.OwnerId, SignalRMessages.RoomStateChanged, _state.CurrentState));
          });
      }
      

@@ -18,16 +18,10 @@ public static class RoomBehavior
         stateMachine.Configure(RoomStatus.DisplayingQuestion)
             .SubstateOf(RoomStatus.Started)
             .Permit(RoomTrigger.Finish, RoomStatus.Finished)
-#if DEBUG
-            .Permit(RoomTrigger.Start, RoomStatus.Started)
-#endif
             .Permit(RoomTrigger.WaitForNextQuestion, RoomStatus.AwaitingForNextQuestion);
 
         stateMachine.Configure(RoomStatus.AwaitingForNextQuestion)
             .SubstateOf(RoomStatus.Started)
-#if DEBUG
-            .Permit(RoomTrigger.Start, RoomStatus.Started)
-#endif
             .Permit(RoomTrigger.DisplayQuestion, RoomStatus.DisplayingQuestion)
             .Permit(RoomTrigger.Abandon, RoomStatus.Abandoned);
 

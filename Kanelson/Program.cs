@@ -23,8 +23,7 @@ var logger = new LoggerConfiguration()
 // Register Serilog
 builder.Logging.AddSerilog(logger);
 
-builder.Services.AddHealthChecks()
-    .AddMongoDb(builder.Configuration.GetConnectionString("MongoDb")!);
+builder.Services.AddHealthChecks();
 
 
 builder.Services.Configure<CookiePolicyOptions>(options =>

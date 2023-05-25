@@ -8,7 +8,6 @@
 @inject IHttpContextAccessor HttpAccessor
 @inject IRoomService RoomService
 @inject IStringLocalizer<Shared> Loc
-<h3>Admin</h3>
 <MudList>
     
     @foreach (var user in _connectedUsers)
@@ -24,26 +23,29 @@
 @if (_roomStateMachine != null)
 {
     
-    @if (_currentQuestion is not null && !_roomStateMachine.IsInState(RoomStatus.Created))
+    @if (_currentQuestion is not null && _roomStateMachine.IsInState(RoomStatus.Started))
     {
         <QuestionComponent Question="_currentQuestion"/>
     }
 
     
-    @if (_roomStateMachine.PermittedTriggers.Contains(RoomTrigger.Start))
-    {
-        <MudButton @onclick="Start" Color="Color.Primary" 
-                   Variant="Variant.Filled"
-                   StartIcon="@Icons.Material.Filled.Start">@Loc["StartButton"]</MudButton>
-    }
+    <MudCardActions>
+        @if (_roomStateMachine.PermittedTriggers.Contains(RoomTrigger.Start))
+        {
+            <MudButton @onclick="Start" Color="Color.Primary" 
+                       Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.Start">@Loc["StartButton"]</MudButton>
+        }
+        
     
+        @if (_roomStateMachine.PermittedTriggers.Contains(RoomTrigger.DisplayQuestion) && !_roomStateMachine.IsInState(RoomStatus.Finished))
+        {
+            <MudButton @onclick="NextQuestion" Color="Color.Primary" 
+                       Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.SkipNext">@Loc["NextQuestionButton"]</MudButton>
+        }
+    </MudCardActions>
 
-    @if (_roomStateMachine.PermittedTriggers.Contains(RoomTrigger.DisplayQuestion) && !_roomStateMachine.IsInState(RoomStatus.Finished))
-    {
-        <MudButton @onclick="NextQuestion" Color="Color.Primary" 
-                   Variant="Variant.Filled"
-                   StartIcon="@Icons.Material.Filled.SkipNext">@Loc["NextQuestionButton"]</MudButton>
-    }
 }
 
 

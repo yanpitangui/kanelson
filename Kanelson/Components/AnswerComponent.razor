@@ -31,9 +31,9 @@
     
     RenderFragment Render()
     {
-        var style = $"background: {_answerColor?.Code} !important";
+        var style = $"background: {_answerColor?.Code} !important;";
         return @<MudPaper Style=@style Class="e-paper d-flex align-center justify-center mud-width-full py-8" @onclick="@OnClick">
-                    @Answer.Description
+                    <span class="answer-description">@Answer.Description</span>
                 </MudPaper>;
     }
     

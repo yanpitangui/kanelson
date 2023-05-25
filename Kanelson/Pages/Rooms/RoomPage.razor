@@ -5,23 +5,52 @@
 @inject IUserService UserService
 @inject IStringLocalizer<Shared> Loc
 
-<h2>@Loc["Room"]: @Id</h2>
+<style>
+    
+    .site-url {
+        font-weight: bold;
+    
+     }
+     
+     .room-identifier b {
+        font-weight: bold;
+     }
+      
+      
+     .room-footer {
+        font-size: 1.5vh;
+        color: oldlace;
+        background-color: black;        
+      } 
+    
+    
+    
+</style>
+<MudCard>
+    <MudCardContent>
+        @if (_summary is not null)
+        {
+            @if (_summary.Owner.Id == UserService.CurrentUser)
+            {
+                <Admin RoomId="@Id"></Admin>
+            }
+            else
+            {
+                <Player RoomId="@Id"></Player>
+            }
+        }
+        else
+        {
+            <div>@Loc["Loading"]...</div>
+        }
+    </MudCardContent>
+    <MudDivider/>
+    <MudCardContent Class="room-footer">
+        <span class="room-identifier">@Loc["Room"]: <b>@Id</b></span>
+    </MudCardContent>
+</MudCard>
 
-@if (_summary is not null)
-{
-    @if (_summary.Owner.Id == UserService.CurrentUser)
-    {
-        <Admin RoomId="@Id"></Admin>
-    }
-    else
-    {
-        <Player RoomId="@Id"></Player>
-    }
-}
-else
-{
-    <div>@Loc["Loading"]...</div>
-}
+
 
 @code {
 

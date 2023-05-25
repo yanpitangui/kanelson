@@ -60,6 +60,15 @@ namespace Kanelson.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ações.
+        /// </summary>
+        internal static string Actions {
+            get {
+                return ResourceManager.GetString("Actions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Descrição da resposta.
         /// </summary>
         internal static string AnswerDescription {
@@ -186,7 +195,7 @@ namespace Kanelson.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enter.
+        ///   Looks up a localized string similar to Entrar.
         /// </summary>
         internal static string Join {
             get {

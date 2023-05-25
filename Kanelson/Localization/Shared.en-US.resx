@@ -129,4 +129,7 @@
     <data name="AverageTime" xml:space="preserve">
         <value>Average time (sec)</value>
     </data>
+    <data name="Actions" xml:space="preserve">
+        <value>Actions</value>
+    </data>
 </root>

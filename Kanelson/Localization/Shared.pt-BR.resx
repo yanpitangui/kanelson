@@ -64,7 +64,7 @@
         <value>Pontos</value>
     </data>
     <data name="Join" xml:space="preserve">
-        <value>Enter</value>
+        <value>Entrar</value>
     </data>
     <data name="Edit/Delete" xml:space="preserve">
         <value>Editar/Excluir</value>
@@ -128,5 +128,8 @@
     </data>
     <data name="AverageTime" xml:space="preserve">
         <value>Tempo médio (seg.)</value>
+    </data>
+    <data name="Actions" xml:space="preserve">
+        <value>Ações</value>
     </data>
 </root>

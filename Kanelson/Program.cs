@@ -66,7 +66,12 @@ const string dbName = "Kanelson";
 
 builder.Services.AddOptions();
 builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+builder.Services.AddServerSideBlazor().AddHubOptions(o =>
+{
+    o.ClientTimeoutInterval = TimeSpan.FromSeconds(60);
+    o.HandshakeTimeout = TimeSpan.FromSeconds(30);
+});
+builder.Host.AddSignalRSetup();
 builder.Services.AddScoped<ITemplateService, TemplateService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddSingleton<IUserService, UserService>();

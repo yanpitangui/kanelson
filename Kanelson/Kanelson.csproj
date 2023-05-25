@@ -24,6 +24,7 @@
       <PackageReference Include="IdGen.DependencyInjection" Version="3.0.0" />
       <PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" Version="7.0.5" />
       <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.5" />
+      <PackageReference Include="Microsoft.AspNetCore.SignalR.StackExchangeRedis" Version="7.0.5" />
       <PackageReference Include="MudBlazor" Version="6.2.5" />
       <PackageReference Include="Npgsql" Version="7.0.4" />
       <PackageReference Include="OneOf" Version="3.0.243" />

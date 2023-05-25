@@ -12,7 +12,7 @@
                 <MudTh>@Loc["AverageTime"]</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd DataLabel="Pos.">@context.Rank</MudTd>
+                <MudTd DataLabel="Pos.">@(context.Rank?.ToString() ?? "--")</MudTd>
                 <MudTd DataLabel="Name">
                     <div class="d-inline-flex">
                         <div class="d-inline"><Avatar GithubId="@context.Id"/></div>

@@ -189,28 +189,48 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
     
     private ImmutableArray<UserRanking> GetRanking()
     {
-        var groupedData = _state.Answers.Select(x => x.Value)
-         .SelectMany(x => x)
-         .GroupBy(x => x.Key)
-         .Select(x => new
-         {
-             Id = x.Key,
-             Points = x.Sum(y => y.Value.Points),
-             Average = x.Average(y => (decimal)y.Value.TimeToAnswer.TotalSeconds)
-         })
-         .OrderByDescending(x => x.Points)
-         .ThenBy(x => x.Average)
-         .Select((x, i) => new UserRanking
-         {
-             Id = x.Id,
-             AverageTime = x.Average,
-             Points = x.Points,
-             // talvez trocar isso aqui se tiver muito lerdo
-             Name = _state.CurrentUsers.FirstOrDefault(y => y.Id == x.Id)?.Name!,
-             Rank = i + 1
-         })
-         .ToImmutableArray();
-        return groupedData;
+
+        var answered = _state.Answers.Select(x => x.Value)
+            .SelectMany(x => x)
+            .GroupBy(x => x.Key)
+            .Select(x => new
+            {
+                Id = x.Key,
+                Points = x.Sum(y => y.Value.Points),
+                Average = x.Average(y => (decimal) y.Value.TimeToAnswer.TotalSeconds)
+            })
+            .OrderByDescending(x => x.Points)
+            .ThenBy(x => x.Average)
+            .Select((x, i) => new UserRanking
+            {
+                Id = x.Id,
+                AverageTime = x.Average,
+                Points = x.Points,
+                // talvez trocar isso aqui se tiver muito lerdo
+                Name = _state.CurrentUsers.FirstOrDefault(y => y.Id == x.Id)?.Name!,
+                Rank = i + 1
+            }).ToArray();
+
+
+        var usersWithAnswers = _state.Answers.Select(x => x.Value)
+            .SelectMany(x => x)
+            .Select(x => x.Key)
+            .ToHashSet();
+
+            var unanswered = _state.CurrentUsers
+            .Where(x => !usersWithAnswers.Contains(x.Id))
+            .Select(x => new UserRanking
+        {
+            Id = x.Id,
+            AverageTime = 0,
+            Name = x.Name,
+            Points = 0,
+            Rank = null
+        });
+
+
+        return answered.Concat(unanswered).OrderBy(x => x.Rank == null).ThenBy(x => x.Rank)
+            .ToImmutableArray();
     }
     
     private void SendNextQuestion()

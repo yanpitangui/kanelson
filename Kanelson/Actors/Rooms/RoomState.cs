@@ -38,5 +38,5 @@ public record UserRanking : UserInfo
     
     public decimal AverageTime { get; set; }
     
-    public int Rank { get; set; }
+    public int? Rank { get; set; }
 }

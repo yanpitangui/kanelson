@@ -1,0 +1,143 @@
+@namespace Kanelson.Components
+@inherits MudComponentBase
+<div class="@ClassMapper.Class" style="@Style">
+    @if (Type == ProgressType.Line)
+    {
+        @if (Steps == 0)
+        {
+            <div class="kanelson-progress-outer">
+                <div class="kanelson-progress-inner" style="background-color: @TrailColor">
+                    <div class="kanelson-progress-bg" style="@_bgStyle">
+                    </div>
+                    @if (SuccessPercent != 0)
+                    {
+                        <div class="kanelson-progress-success-bg" style="@_bgSuccessStyle">
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="kanelson-progress-steps-outer">
+                @for (int i = 0; i < Steps; i++)
+                {
+                    int index = i;
+                    if (Percent >= 100 / Steps * (index + 1))
+                    {
+                        <div class="kanelson-progress-steps-item" style="width: @(Size == ProgressSize.Default?"14":"2")px; height: 8px; background-color: @(ToRGB(StrokeColor.AsT0));"></div>
+                    }
+                    else
+                    {
+                        <div class="kanelson-progress-steps-item" style="width: @(Size == ProgressSize.Default?"14":"2")px; height: 8px;"></div>
+                    }
+                }
+                @if (Status == ProgressStatus.Success)
+                {
+                    <span class="kanelson-progress-text">
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+                    </span>
+                }
+                else if (Status == ProgressStatus.Exception)
+                {
+                    <span class="kanelson-progress-text">
+                        <MudIcon Icon="@Icons.Material.Filled.Cancel" />
+                    </span>
+                }
+                else
+                {
+                    <span title="@Format(Percent)" class="kanelson-progress-text">@Format(Percent)</span>
+                }
+            </div>
+        }
+    }
+    else if (Type == ProgressType.Circle)
+    {
+        <div class="@(StrokeColor.IsT1?"kanelson-progress-inner kanelson-progress-circle-gradient": "kanelson-progress-inner")" style="@_bgStyle">
+            <svg xmlns="http://www.w3.org/2000/svg" class="kanelson-progress-circle" viewBox="0 0 100 100">
+                @if (StrokeColor.IsT1)
+                {
+                    <defs>
+                        <linearGradient id="kanelson-progress-gradient" x1="100%" y1="0%" x2="0%" y2="0%">
+                            @foreach (var pair in StrokeColor.AsT1)
+                            {
+                                <stop stop-color="@ToRGB(pair.Value)" offset="@(pair.Key)" />
+                            }
+                        </linearGradient>
+                    </defs>
+                }
+                <path class="kanelson-progress-circle-trail" style="@_circleTrailStyle" fill-opacity="0" stroke-linecap="@StrokeLinecap.Name" stroke-width="@StrokeWidth" d="M 50 50 m 0 -47 a 47 47 0 1 1 0 94 a 47 47 0 1 1 0 -94" />
+                @if (SuccessPercent != 0)
+                {
+                    <path class="kanelson-progress-circle-path" style="@_circleSuccessStyle" opacity="1" fill-opacity="0" stroke="" stroke-linecap="@StrokeLinecap.Name" stroke-width="@StrokeWidth" d="M 50 50 m 0 -47 a 47 47 0 1 1 0 94 a 47 47 0 1 1 0 -94" />
+                }
+                <path class="kanelson-progress-circle-path" style="@_circlePathStyle" opacity="1" fill-opacity="0" stroke="@(StrokeColor.IsT1?$"url(#kanelson-progress-gradient)":StrokeColor.AsT0)" stroke-linecap="@StrokeLinecap.Name" stroke-width="@StrokeWidth" d="M 50 50 m 0 -47 a 47 47 0 1 1 0 94 a 47 47 0 1 1 0 -94" />
+            </svg>
+            @if (Status == ProgressStatus.Success && !_format)
+            {
+                <span class="kanelson-progress-text">
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+                </span>
+            }
+            else if (Status == ProgressStatus.Exception && !_format)
+            {
+                <span class="kanelson-progress-text">
+                        <MudIcon Icon="@Icons.Material.Filled.Cancel" />
+                </span>
+            }
+            else
+            {
+                <span title="@Format(Percent)" class="kanelson-progress-text">@Format(Percent)</span>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="kanelson-progress-inner" style="width: @(Width)px; height: @(Width)px; font-size: 24px;">
+            <svg xmlns="http://www.w3.org/2000/svg" class="kanelson-progress-circle" viewBox="0 0 100 100">
+                <path class="kanelson-progress-circle-trail" style="@_circleTrailStyle" fill-opacity="0" stroke="@TrailColor" stroke-linecap="@StrokeLinecap.Name" stroke-width="@StrokeWidth" d="M 50 50 m 0 47 a 47 47 0 1 1 0 -94 a 47 47 0 1 1 0 94" />
+                @if (SuccessPercent != 0)
+                {
+                    <path class="kanelson-progress-circle-path" style="@_circleSuccessStyle" opacity="1" fill-opacity="0" stroke="" stroke-linecap="@StrokeLinecap.Name" stroke-width="@StrokeWidth" d="M 50 50 m 0 47 a 47 47 0 1 1 0 -94 a 47 47 0 1 1 0 94" />
+                }
+                <path class="kanelson-progress-circle-path" style="@_circlePathStyle" opacity="1" fill-opacity="0" stroke="" stroke-linecap="@StrokeLinecap.Name" stroke-width="@StrokeWidth" d="M 50 50 m 0 47 a 47 47 0 1 1 0 -94 a 47 47 0 1 1 0 94" />
+            </svg>
+            @if (Status == ProgressStatus.Success && !_format)
+            {
+                <span class="kanelson-progress-text">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+                </span>
+            }
+            else if (Status == ProgressStatus.Exception && !_format)
+            {
+                <span class="kanelson-progress-text">
+                    <MudIcon Icon="@Icons.Material.Filled.Cancel" />
+                </span>
+            }
+            else
+            {
+                <span title="@Format(Percent)" class="kanelson-progress-text">@Format(Percent)</span>
+            }
+        </div>
+    }
+
+    @if (ShowInfo && Type == ProgressType.Line && Steps == 0)
+    {
+        if (Status == ProgressStatus.Success)
+        {
+            <span class="kanelson-progress-text">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+            </span>
+        }
+        else if (Status == ProgressStatus.Exception)
+        {
+            <span class="kanelson-progress-text">
+                    <MudIcon Icon="@Icons.Material.Filled.Cancel" />
+            </span>
+        }
+        else
+        {
+            <span title="@Format(Percent)" class="kanelson-progress-text">@Format(Percent)</span>
+        }
+    }
+</div>

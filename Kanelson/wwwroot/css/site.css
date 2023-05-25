@@ -68,4 +68,272 @@ a, .btn-link {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
-    
+
+
+.room-identifier b {
+    font-weight: bold;
+}
+
+
+.room-footer {
+    font-size: 1.5vh;
+    color: oldlace;
+    background-color: black;
+}
+
+.answer-description {
+    font-size: 2.5vh;
+    color: white;
+    font-weight: bolder;
+}
+
+.question-header {
+    font-size: 3vh;
+    color: black;
+    background-color: oldlace;
+    display: flex;
+    flex-direction: column;
+
+}
+
+html {
+    --kanelson-primary-color: #1890ff;
+    --kanelson-primary-color-hover: #40a9ff;
+    --kanelson-primary-color-active: #096dd9;
+    --kanelson-primary-color-outline: rgba(24, 144, 255, 0.2);
+    --kanelson-primary-1: #e6f7ff;
+    --kanelson-primary-2: #bae7ff;
+    --kanelson-primary-3: #91d5ff;
+    --kanelson-primary-4: #69c0ff;
+    --kanelson-primary-5: #40a9ff;
+    --kanelson-primary-6: #1890ff;
+    --kanelson-primary-7: #096dd9;
+    --kanelson-primary-color-deprecated-l-35: #cbe6ff;
+    --kanelson-primary-color-deprecated-l-20: #7ec1ff;
+    --kanelson-primary-color-deprecated-t-20: #46a6ff;
+    --kanelson-primary-color-deprecated-t-50: #8cc8ff;
+    --kanelson-primary-color-deprecated-f-12: rgba(24, 144, 255, 0.12);
+    --kanelson-primary-color-active-deprecated-f-30: rgba(230, 247, 255, 0.3);
+    --kanelson-primary-color-active-deprecated-d-02: #dcf4ff;
+    --kanelson-success-color: #52c41a;
+    --kanelson-success-color-hover: #73d13d;
+    --kanelson-success-color-active: #389e0d;
+    --kanelson-success-color-outline: rgba(82, 196, 26, 0.2);
+    --kanelson-success-color-deprecated-bg: #f6ffed;
+    --kanelson-success-color-deprecated-border: #b7eb8f;
+    --kanelson-error-color: #ff4d4f;
+    --kanelson-error-color-hover: #ff7875;
+    --kanelson-error-color-active: #d9363e;
+    --kanelson-error-color-outline: rgba(255, 77, 79, 0.2);
+    --kanelson-error-color-deprecated-bg: #fff2f0;
+    --kanelson-error-color-deprecated-border: #ffccc7;
+    --kanelson-warning-color: #faad14;
+    --kanelson-warning-color-hover: #ffc53d;
+    --kanelson-warning-color-active: #d48806;
+    --kanelson-warning-color-outline: rgba(250, 173, 20, 0.2);
+    --kanelson-warning-color-deprecated-bg: #fffbe6;
+    --kanelson-warning-color-deprecated-border: #ffe58f;
+    --kanelson-info-color: #1890ff;
+    --kanelson-info-color-deprecated-bg: #e6f7ff;
+    --kanelson-info-color-deprecated-border: #91d5ff;
+}
+
+.kanelson-progress,.kanelson-progress-steps {
+    display: inline-block;
+}
+
+.kanelson-progress {
+    margin: 0;
+    padding: 0;
+    color: rgba(0,0,0,.85)
+}
+
+.kanelson-progress-line {
+    position: relative;
+    width: 100%;
+    font-size: 14px
+}
+
+.kanelson-progress-steps-outer {
+    display: flex;
+    flex-direction: row;
+    align-items: center
+}
+
+.kanelson-progress-steps-item {
+    flex-shrink: 0;
+    min-width: 2px;
+    margin-right: 2px;
+    background: #f3f3f3;
+    transition: all .3s
+}
+
+.kanelson-progress-steps-item-active {
+    background: var(--kanelson-primary-color)
+}
+
+.kanelson-progress-small.kanelson-progress-line,.kanelson-progress-small.kanelson-progress-line .kanelson-progress-text .anticon {
+    font-size: 12px
+}
+
+.kanelson-progress-outer {
+    display: inline-block;
+    width: 100%;
+    margin-right: 0;
+    padding-right: 0
+}
+
+.kanelson-progress-show-info .kanelson-progress-outer {
+    margin-right: calc(-2em - 8px);
+    padding-right: calc(2em + 8px)
+}
+
+.kanelson-progress-inner {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    overflow: hidden;
+    background-color: rgba(0,0,0,.04);
+    border-radius: 100px
+}
+
+.kanelson-progress-circle-trail {
+    stroke: rgba(0,0,0,.04)
+}
+
+.kanelson-progress-circle-path {
+    animation: kanelson-progress-appear .3s
+}
+
+.kanelson-progress-inner:not(.kanelson-progress-circle-gradient) .kanelson-progress-circle-path {
+    stroke: var(--kanelson-primary-color)
+}
+
+.kanelson-progress-bg,.kanelson-progress-success-bg {
+    position: relative;
+    background-color: var(--kanelson-primary-color);
+    border-radius: 100px;
+    transition: all .4s cubic-bezier(.08,.82,.17,1) 0s
+}
+
+.kanelson-progress-success-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: var(--kanelson-success-color)
+}
+
+.kanelson-progress-text {
+    display: inline-block;
+    width: 2em;
+    margin-left: 8px;
+    color: rgba(0,0,0,.85);
+    font-size: 1em;
+    line-height: 1;
+    white-space: nowrap;
+    text-align: left;
+    word-break: normal
+}
+
+.kanelson-progress-text .anticon {
+    font-size: 14px
+}
+
+.kanelson-progress-status-active .kanelson-progress-bg::before {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: #fff;
+    border-radius: 10px;
+    opacity: 0;
+    animation: kanelson-progress-active 2.4s cubic-bezier(.23,1,.32,1) infinite;
+    content: ''
+}
+
+.kanelson-progress-status-exception .kanelson-progress-bg {
+    background-color: var(--kanelson-error-color)
+}
+
+.kanelson-progress-status-exception .kanelson-progress-text {
+    color: var(--kanelson-error-color)
+}
+
+.kanelson-progress-status-exception .kanelson-progress-inner:not(.kanelson-progress-circle-gradient) .kanelson-progress-circle-path {
+    stroke: var(--kanelson-error-color)
+}
+
+.kanelson-progress-status-success .kanelson-progress-bg {
+    background-color: var(--kanelson-success-color)
+}
+
+.kanelson-progress-status-success .kanelson-progress-text {
+    color: var(--kanelson-success-color)
+}
+
+.kanelson-progress-status-success .kanelson-progress-inner:not(.kanelson-progress-circle-gradient) .kanelson-progress-circle-path {
+    stroke: var(--kanelson-success-color)
+}
+
+.kanelson-progress-circle .kanelson-progress-inner {
+    position: relative;
+    line-height: 1;
+    background-color: transparent
+}
+
+.kanelson-progress-circle .kanelson-progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    color: rgba(0,0,0,.85);
+    font-size: 1em;
+    line-height: 1;
+    white-space: normal;
+    text-align: center;
+    transform: translate(-50%,-50%)
+}
+
+.kanelson-progress-circle .kanelson-progress-text .anticon {
+    font-size: 1.16666667em
+}
+
+.kanelson-progress-circle.kanelson-progress-status-exception .kanelson-progress-text {
+    color: var(--kanelson-error-color)
+}
+
+.kanelson-progress-circle.kanelson-progress-status-success .kanelson-progress-text {
+    color: var(--kanelson-success-color)
+}
+.kanelson-progress-rtl {
+    direction: rtl
+}
+
+.kanelson-progress-rtl.kanelson-progress-show-info .kanelson-progress-outer {
+    margin-right: 0;
+    margin-left: calc(-2em - 8px);
+    padding-right: 0;
+    padding-left: calc(2em + 8px)
+}
+
+.kanelson-progress-rtl .kanelson-progress-success-bg {
+    right: 0;
+    left: auto
+}
+
+.kanelson-progress-rtl.kanelson-progress-line .kanelson-progress-text,.kanelson-progress-rtl.kanelson-progress-steps .kanelson-progress-text {
+    margin-right: 8px;
+    margin-left: 0;
+    text-align: right
+}
+
+.kanelson-progress-inner,.kanelson-progress-text,.ant-rate-star-first .anticon,.ant-rate-star-second .anticon {
+    vertical-align: middle
+}
+
+.kanelson-progress,.kanelson-progress-steps {
+    display: inline-block;
+}

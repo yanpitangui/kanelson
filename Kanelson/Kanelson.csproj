@@ -25,6 +25,7 @@
       <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.5" />
       <PackageReference Include="MudBlazor" Version="6.2.5" />
       <PackageReference Include="Npgsql" Version="7.0.4" />
+      <PackageReference Include="OneOf" Version="3.0.243" />
       <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.5.0-alpha.2" />
       <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.5.0-alpha.2" />
       <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.0.0-rc9.14" />

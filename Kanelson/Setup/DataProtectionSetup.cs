@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.DataProtection;
-using StackExchange.Redis;
+﻿using Azure.Identity;
+using Microsoft.AspNetCore.DataProtection;
 
 namespace Kanelson.Setup;
 
@@ -12,15 +12,10 @@ public static class DataProtectionSetup
             var dataProtectionBuilder = services.AddDataProtection()
                 .SetApplicationName("Kanelson")
                 .SetDefaultKeyLifetime(TimeSpan.FromDays(30));
-            
-            var redisConn = ctx.Configuration.GetConnectionString("Redis");
-
-            if (!string.IsNullOrWhiteSpace(redisConn))
+            if (ctx.HostingEnvironment.EnvironmentName is not ("Testing" or "Development"))
             {
-                dataProtectionBuilder.PersistKeysToStackExchangeRedis(ConnectionMultiplexer.Connect(
-                    redisConn
-                ), $"DataProtection-Keys-{ctx.HostingEnvironment.EnvironmentName}");
-
+                dataProtectionBuilder.PersistKeysToAzureBlobStorage(new Uri(ctx.Configuration.GetConnectionString("BlobStorage")!), new DefaultAzureCredential())
+                    .ProtectKeysWithAzureKeyVault(new Uri(ctx.Configuration.GetConnectionString("KeyVault")!), new DefaultAzureCredential());
             }
         });
     }     

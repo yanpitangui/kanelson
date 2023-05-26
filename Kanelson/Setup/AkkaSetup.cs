@@ -1,11 +1,11 @@
-using System.Diagnostics;
 using Akka.Actor;
 using Akka.Cluster.Hosting;
-using Akka.Discovery.KubernetesApi;
 using Akka.Hosting;
-using Akka.Management;
 using Akka.Management.Cluster.Bootstrap;
+using Akka.Persistence.Azure.Hosting;
+using Akka.Persistence.Hosting;
 using Akka.Remote.Hosting;
+using Azure.Identity;
 using Kanelson.Actors;
 using Kanelson.Actors.Questions;
 using Kanelson.Actors.Rooms;
@@ -23,18 +23,9 @@ public static class AkkaSetup
         hostBuilder.ConfigureServices((ctx, services) =>
         {
             
-            var akkaConfig = ctx.Configuration.GetSection("Akka").Get<AkkaConfig>()!;
-
-            var connString = ctx.Configuration.GetConnectionString("Postgres");
-
-
             services.AddAkka(actorSystemName, (akkaBuilder) =>
             {
-                Debug.Assert(connString != null);
-                akkaBuilder.WithRemoting(akkaConfig.ClusterIp, akkaConfig.ClusterPort)
-                    // Add after fixing timeouts
-                    // .WithSqlPersistence(connectionString: connString, providerName: ProviderName.PostgreSQL15, autoInitialize: true,
-                    //     schemaName: "public")
+                akkaBuilder
                     .WithActors((system, registry, sp) =>
                     {
                         var userIndexActor = system.ActorOf(Props.Create(() => new UserIndexActor("user-index")),
@@ -57,14 +48,21 @@ public static class AkkaSetup
                         registry.Register<RoomIndexActor>(roomIndex);
                     });
 
-                if (akkaConfig.KubernetesDiscovery)
+                if (ctx.HostingEnvironment.IsDevelopment())
                 {
-                    akkaBuilder
-                        .WithAkkaManagement()
-                        .WithClusterBootstrap(serviceName: actorSystemName)
-                        .WithKubernetesDiscovery(actorSystemName);
+                    akkaBuilder.WithRemoting("localhost", 7918);
+
                 }
-                    
+                else
+                {
+                    var credentials = new DefaultAzureCredential();
+
+                    akkaBuilder
+                        .WithAzureTableJournal(new Uri(ctx.Configuration.GetConnectionString("TableStorage")!),
+                            defaultAzureCredential: credentials)
+                        .WithAzureBlobsSnapshotStore(new Uri(ctx.Configuration.GetConnectionString("BlobStorage")!),
+                            defaultAzureCredential: credentials);
+                }
 
             });
         });

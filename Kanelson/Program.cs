@@ -23,6 +23,8 @@ var logger = new LoggerConfiguration()
 // Register Serilog
 builder.Logging.AddSerilog(logger);
 
+builder.Host.AddKeyVaultConfigurationSetup();
+
 builder.Services.AddHealthChecks();
 
 
@@ -70,7 +72,6 @@ builder.Services.AddServerSideBlazor().AddHubOptions(o =>
     o.ClientTimeoutInterval = TimeSpan.FromSeconds(60);
     o.HandshakeTimeout = TimeSpan.FromSeconds(30);
 });
-builder.Host.AddSignalRSetup();
 builder.Services.AddScoped<ITemplateService, TemplateService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddSingleton<IUserService, UserService>();

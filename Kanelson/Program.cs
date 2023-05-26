@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Security.Claims;
+using IdGen;
 using IdGen.DependencyInjection;
 using Kanelson.Hubs;
 using Kanelson.Services;
@@ -85,7 +86,13 @@ builder.Services.AddResponseCompression(opts =>
         new[] { "application/octet-stream" });
 });
 
-builder.Services.AddIdGen(123);
+builder.Services.AddIdGen(0, () =>
+{
+    var epoch = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+    var structure = new IdStructure(41, 10, 12);
+    var options = new IdGeneratorOptions(structure, new DefaultTimeSource(epoch));
+    return options;
+});
 
 builder.Host.AddAkkaSetup(dbName);
 

@@ -50,7 +50,10 @@ public static class AkkaSetup
 
                 if (ctx.HostingEnvironment.IsDevelopment())
                 {
-                    akkaBuilder.WithRemoting("localhost", 7918);
+                    akkaBuilder.WithRemoting("localhost", 7918)
+                        .WithAzureTableJournal(ctx.Configuration.GetConnectionString("TableStorage")!)
+                        .WithAzureBlobsSnapshotStore(ctx.Configuration.GetConnectionString("BlobStorage")!);
+                    
 
                 }
                 else

@@ -14,8 +14,8 @@ public static class DataProtectionSetup
                 .SetDefaultKeyLifetime(TimeSpan.FromDays(30));
             if (ctx.HostingEnvironment.EnvironmentName is not ("Testing" or "Development"))
             {
-                dataProtectionBuilder.PersistKeysToAzureBlobStorage(
-                    new Uri(ctx.Configuration.GetConnectionString("BlobStorage")!), new DefaultAzureCredential());
+                dataProtectionBuilder.PersistKeysToAzureBlobStorage(new Uri(ctx.Configuration.GetConnectionString("BlobStorage")!), new DefaultAzureCredential())
+                    .ProtectKeysWithAzureKeyVault(new Uri(ctx.Configuration.GetConnectionString("KeyVault")!), new DefaultAzureCredential());
             }
         });
     }     

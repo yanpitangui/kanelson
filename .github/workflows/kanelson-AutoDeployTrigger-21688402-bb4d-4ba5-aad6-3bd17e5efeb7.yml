@@ -1,0 +1,42 @@
+name: Trigger auto deployment for kanelson
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ main ]
+    paths:
+    - '**'
+    - '.github/workflows/kanelson-AutoDeployTrigger-21688402-bb4d-4ba5-aad6-3bd17e5efeb7.yml'
+
+  # Allow mannually trigger 
+  workflow_dispatch:
+      
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.KANELSON_AZURE_CREDENTIALS }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          appSourcePath: ${{ github.workspace }} 
+          registryUrl: kanelson.azurecr.io
+          registryUsername: ${{ secrets.KANELSON_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.KANELSON_REGISTRY_PASSWORD }}
+          containerAppName: kanelson
+          resourceGroup: kanelson
+          imageToBuild: kanelson.azurecr.io/kanelson:${{ github.sha }}
+          
+
+     
+

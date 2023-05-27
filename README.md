@@ -18,7 +18,8 @@ Dessa forma, suas credenciais não são expostas.
 
 ### Localmente
 
-- Azurite - A aplicação depende de tablestorage e blobstorage para a persistência. Ambos já estão configurados no appsettings. Rodando o azurite, já deve funcionar.
+- Azurite - `npm install -g azurite` Depois, use `npm run azurite`. 
+A aplicação depende de tablestorage e blobstorage para a persistência. Ambos já estão configurados no appsettings para as portas padrões. Rodando o azurite, já deve funcionar.
 
 ### Produção
 A aplicação está configurada para utilizar a plataforma Azure, mais especificamente o AppConfiguration, para obter as connections apropriadas.

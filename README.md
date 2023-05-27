@@ -29,8 +29,18 @@ Acesse a aplicação através do link [https://kanelson.yanpitangui.com](https:/
 
 ## Arquitetura da aplicação
 
-Essa aplicação utiliza [akka.net](https://getakka.net/), um conjunto de bibliotecas que ajuda a fazer aplicação distribuidas e resilientes que vão desde cores do processador até entre redes,
-através da utilização do actor model ([clique para saber mais](https://en.wikipedia.org/wiki/Actor_model#:~:text=The%20actor%20model%20in%20computer%20science%20is%20a,how%20to%20respond%20to%20the%20next%20message%20received)) 
+Essa aplicação utiliza [akka.net](https://getakka.net/), um conjunto de bibliotecas que ajuda a fazer aplicação distribuidas e resilientes entre cores do processador e até redes,
+através da utilização do actor model ([clique para saber mais](https://en.wikipedia.org/wiki/Actor_model#:~:text=The%20actor%20model%20in%20computer%20science%20is%20a,how%20to%20respond%20to%20the%20next%20message%20received)).
+
+Para o frontend, utilizamos Blazor Server Side. Para mais informações, consulte a [documentação oficial](https://learn.microsoft.com/pt-br/aspnet/core/blazor/hosting-models?view=aspnetcore-7.0).
+
+O Akka.Net nos permite utilizar varios provedores para persistência. Já que a aplicação utilizará serviços azures, 
+aproveitei que a solução de storage é barata e por isso utilizamos Azure Storage.
+
+Para os journals, usamos Table Storage. Para os snapshots, Blob Storage.
+
+
+
 
 
 

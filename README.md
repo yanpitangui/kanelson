@@ -18,13 +18,15 @@ Dessa forma, suas credenciais não são expostas.
 
 ### Localmente
 
-- Azurite - `npm install -g azurite` Depois, use `npm run azurite`. 
+- Azurite - `npm install -g azurite` Depois, use `npm run azurite`.
 A aplicação depende de tablestorage e blobstorage para a persistência. Ambos já estão configurados no appsettings para as portas padrões. Rodando o azurite, já deve funcionar.
+
+- Dotnet 7.0 - Baixe a ultima versão do sdk aqui: https://dotnet.microsoft.com/en-us/download/dotnet/7.0.
 
 ### Produção
 A aplicação está configurada para utilizar a plataforma Azure, mais especificamente o AppConfiguration, para obter as connections apropriadas.
 Utiliza managed identity para se autenticar com os serviços do azure, portanto não contém nenhuma connection string com senha.
-
+Atualmente roda de maneira containerizada em um Azure Container App. O dockerfile pode ser encontrado em [Dockerfile](Dockerfile).
 
 Acesse a aplicação através do link [https://kanelson.yanpitangui.com](https://kanelson.yanpitangui.com).
 

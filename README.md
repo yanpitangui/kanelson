@@ -27,6 +27,14 @@ Utiliza managed identity para se autenticar com os serviços do azure, portanto 
 
 Acesse a aplicação através do link [https://kanelson.yanpitangui.com](https://kanelson.yanpitangui.com).
 
+## Arquitetura da aplicação
+
+Essa aplicação utiliza [akka.net](https://getakka.net/), um conjunto de bibliotecas que ajuda a fazer aplicação distribuidas e resilientes que vão desde cores do processador até entre redes,
+através da utilização do actor model ([clique para saber mais](https://en.wikipedia.org/wiki/Actor_model#:~:text=The%20actor%20model%20in%20computer%20science%20is%20a,how%20to%20respond%20to%20the%20next%20message%20received)) 
+
+
+
+
 
 
 

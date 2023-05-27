@@ -1,9 +1,6 @@
 using Akka.Actor;
-using Akka.Cluster.Hosting;
 using Akka.Hosting;
-using Akka.Management.Cluster.Bootstrap;
 using Akka.Persistence.Azure.Hosting;
-using Akka.Persistence.Hosting;
 using Akka.Remote.Hosting;
 using Azure.Identity;
 using Kanelson.Actors;

@@ -10,7 +10,7 @@ public class TemplateActor : ReceivePersistentActor, IHasSnapshotInterval
     public override string PersistenceId { get; }
 
     private TemplateState _state;
-    private Guid _id;
+    private readonly Guid _id;
     
     public TemplateActor(Guid templateId)
     {
@@ -59,7 +59,7 @@ public class TemplateActor : ReceivePersistentActor, IHasSnapshotInterval
     {
         _state.Template = o.Template;
         _state.OwnerId = o.OwnerId;
-        SaveSnapshot(_state);
+        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
     }
 
     public static Props Props(Guid templateId)

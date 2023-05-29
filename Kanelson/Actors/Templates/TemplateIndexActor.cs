@@ -40,10 +40,10 @@ public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
             Persist(o, HandleUnregister);
         });
         
-        Recover<Guid>(o =>
+        Recover<Register>(o =>
         {
             HandleRegister(o);
-            _children[o] = GetChildTemplateActorRef(o);
+            _children[o.Id] = GetChildTemplateActorRef(o.Id);
         });
 
         Command<GetRef>(o =>
@@ -58,7 +58,7 @@ public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
 
             if (!_state.Items.Contains(o.Id))
             {
-                Persist(o.Id, HandleRegister);
+                Persist(new Register(o.Id), HandleRegister);
             }
             Sender.Tell(actorRef);
         });
@@ -91,18 +91,18 @@ public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
         
     }
 
-    private void HandleRegister(Guid r)
+    private void HandleRegister(Register r)
     {
-        if (_state.Items.Add(r))
+        if (_state.Items.Add(r.Id))
         {
-            SaveSnapshot(_state);
+            ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
         }
     }
 
     private void HandleUnregister(Unregister r)
     {
         _state.Items.Remove(r.Id);
-        SaveSnapshot(_state);
+        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
     }
 
     private IActorRef GetChildTemplateActorRef(Guid id)
@@ -115,6 +115,8 @@ public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
     {
         return Akka.Actor.Props.Create(() => new TemplateIndexActor(userId));
     }
+
+    private record Register(Guid Id);
 
 }
 

@@ -2,7 +2,7 @@ namespace Kanelson.Actors;
 
 public interface IHasSnapshotInterval
 {
-    private const int SnapShotInterval = 3;
+    private const int SnapShotInterval = 5;
     public long LastSequenceNr { get; }
 
     public void SaveSnapshot(object snapshot);

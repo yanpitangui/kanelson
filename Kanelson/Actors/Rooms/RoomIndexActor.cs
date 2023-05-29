@@ -132,14 +132,14 @@ public class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterval
             child.Tell(ShutdownCommand.Instance);
         }
         _state.Items.Remove(r.RoomIdentifier);
-        SaveSnapshot(_state);
+        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
         
     }
 
     private void HandleRegister(Register r)
     {
         _state.Items.Add(r.RoomIdentifier);
-        SaveSnapshot(_state);
+        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
     }
 
     private IActorRef GetChildRoomActorRef(long roomIdentifier)

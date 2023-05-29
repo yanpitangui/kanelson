@@ -263,7 +263,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
                  _state.CurrentState = transition.Destination;
                  if (transition.Destination is not RoomStatus.DisplayingQuestion)
                  {
-                     SaveSnapshot(_state);
+                     ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
                  }
                  Self.Tell(new SendSignalrUserMessage(_state.OwnerId,SignalRMessages.RoomStatusChanged, _state.CurrentState));
              });
@@ -309,7 +309,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
         _state.Name = r.RoomName;
         _state.MaxQuestionIdx = Math.Clamp(_state.Template.Questions.Count - 1, 0, 100);
         _state.CurrentQuestionIdx = 0;
-        SaveSnapshot(_state);
+        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
     }
     
     private void SetStartedState()

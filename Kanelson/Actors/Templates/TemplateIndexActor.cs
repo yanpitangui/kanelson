@@ -1,6 +1,8 @@
+using System.Buffers;
 using System.Collections.Immutable;
 using Akka.Actor;
 using Akka.Persistence;
+using Kanelson.Contracts.Models;
 
 namespace Kanelson.Actors.Templates;
 
@@ -62,6 +64,37 @@ public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
             }
             Sender.Tell(actorRef);
         });
+        
+        
+        CommandAsync<GetAllSummaries>(async o =>
+        {
+            var keys = _state.Items.ToArray();
+            // fan out to get the individual items from the cluster in parallel
+            var tasks = ArrayPool<Task<TemplateSummary>>.Shared.Rent(keys.Length);
+            try
+            {
+                // issue all individual requests at the same time
+                for (var i = 0; i < keys.Length; ++i)
+                {
+                    var actor = _children[keys[i]];
+                    tasks[i] = actor.Ask<TemplateSummary>(new GetSummary());
+                }
+
+                // build the result as requests complete
+                var result = ImmutableArray.CreateBuilder<TemplateSummary>(keys.Length);
+                for (var i = 0; i < keys.Length; ++i)
+                {
+                    var item = await tasks[i];
+                
+                    result.Add(item);
+                }
+                Sender.Tell(result.ToImmutableArray());
+            }
+            finally
+            {
+                ArrayPool<Task<TemplateSummary>>.Shared.Return(tasks);
+            }
+        });
 
         Command<Exists>(o => Sender.Tell(_state.Items.Contains(o.Id)));
         
@@ -120,6 +153,8 @@ public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
 
 }
 
+
+public record GetAllSummaries;
 
 public record Exists(Guid Id);
 

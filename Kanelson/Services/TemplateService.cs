@@ -33,36 +33,10 @@ public class TemplateService : ITemplateService
         actor.Tell(new Upsert(template, _userService.CurrentUser));
     }
 
-    public async Task<ImmutableArray<TemplateSummary>> GetTemplates()
+    public Task<ImmutableArray<TemplateSummary>> GetTemplates()
     {
         var index = GetOrCreateIndexRef();
-        
-        var keys = await index.Ask<ImmutableArray<Guid>>(new GetAll());
-        // fan out to get the individual items from the cluster in parallel
-        var tasks = ArrayPool<Task<TemplateSummary>>.Shared.Rent(keys.Length);
-        try
-        {
-            // issue all individual requests at the same time
-            for (var i = 0; i < keys.Length; ++i)
-            {
-                var actor = await index.Ask<IActorRef>(new GetRef(keys[i]));
-                tasks[i] = actor.Ask<TemplateSummary>(new GetSummary());
-            }
-
-            // build the result as requests complete
-            var result = ImmutableArray.CreateBuilder<TemplateSummary>(keys.Length);
-            for (var i = 0; i < keys.Length; ++i)
-            {
-                var item = await tasks[i];
-                
-                result.Add(item);
-            }
-            return result.ToImmutableArray();
-        }
-        finally
-        {
-            ArrayPool<Task<TemplateSummary>>.Shared.Return(tasks);
-        }
+        return index.Ask<ImmutableArray<TemplateSummary>>(new GetAllSummaries());
     }
 
     public async Task<Template> GetTemplate(Guid id)

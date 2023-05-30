@@ -153,6 +153,11 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
             Sender.Tell(_state.CurrentUsers);
         });
         
+        Command<UserConnected>(o =>
+        {
+            Self.Tell(new SendSignalrUserMessage(o.UserId, SignalRMessages.CurrentUsersUpdated, _state.CurrentUsers));
+        });
+        
                 
         Command<ShutdownCommand>(_ =>
         {

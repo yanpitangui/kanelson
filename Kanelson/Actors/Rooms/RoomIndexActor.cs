@@ -17,6 +17,8 @@ public class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterval
     private readonly Dictionary<long, IActorRef> _children;
     private readonly IHubContext<RoomHub> _hubContext;
     private readonly IUserService _userService;
+    private readonly Dictionary<long, Dictionary<string, HubUser>> _roomUsers = new();
+
 
     public RoomIndexActor(string persistenceId, IHubContext<RoomHub> hubContext, IUserService userService)
     {
@@ -61,6 +63,72 @@ public class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterval
             }
             Sender.Tell(actorRef);
             
+        });
+
+        CommandAsync<UserConnected>(async o =>
+        {
+            
+            if(!_roomUsers.TryGetValue(o.RoomId, out var roomConnections))
+            {
+                roomConnections = _roomUsers[o.RoomId] = new Dictionary<string, HubUser>();
+            }
+
+            var userAdded = false;
+
+            if(!roomConnections.TryGetValue(o.UserId, out var user))
+            {
+                userAdded = true;
+                var userInfo = await _userService.GetUserInfo(o.UserId);
+                user = roomConnections[o.UserId] = HubUser.FromUserInfo(userInfo);
+
+            }
+
+            user.Connections.Add(o.ConnectionId);
+            var exists = _children.TryGetValue(o.RoomId, out var actorRef);
+            if (Equals(actorRef, ActorRefs.Nobody) || !exists)
+            {
+                throw new ActorNotFoundException();
+            }
+            
+            actorRef.Tell(o);
+            
+            if (!userAdded) return;
+
+            var users = roomConnections.Values.Cast<UserInfo>().ToHashSet();
+            actorRef.Tell(new UpdateCurrentUsers(users));
+        });
+
+        Command<UserDisconnected>(o =>
+        {
+            var rooms = _roomUsers
+                .Where(x => x.Value.ContainsKey(o.UserId))
+                .Select(x => new
+                {
+                    Room = x, 
+                    User = x.Value.FirstOrDefault(y => y.Key == o.UserId).Value
+                }).ToList();
+
+            foreach (var room in rooms)
+            {
+                room.User.Connections.Remove(o.ConnectionId);
+
+                var userDisconnected = false;
+                if (!room.User.Connections.Any())
+                {
+                    userDisconnected = room.Room.Value.Remove(o.UserId);
+                }
+                
+                if (!userDisconnected) return;
+                var users = room.Room.Value.Values.Cast<UserInfo>().ToHashSet();
+                var exists = _children.TryGetValue(room.Room.Key, out var actorRef);
+                if (Equals(actorRef, ActorRefs.Nobody) || !exists)
+                {
+                    throw new ActorNotFoundException();
+                }
+                
+                actorRef.Tell(new UpdateCurrentUsers(users));
+                
+            }
         });
 
         CommandAsync<GetAllSummaries>(async _ =>
@@ -148,6 +216,10 @@ public class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterval
     }
 }
 
+
+public record UserConnected(long RoomId, string UserId, string ConnectionId);
+
+public record UserDisconnected(string UserId, string ConnectionId);
 
 public record GetAllSummaries;
 

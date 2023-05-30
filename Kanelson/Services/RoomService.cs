@@ -46,6 +46,20 @@ public class RoomService : IRoomService
         return await room.Ask<RoomStatus>(new GetCurrentState());
     }
 
+    public void UserDisconnected(string userId, string connectionId)
+    {
+        var index = _actorRegistry.Get<RoomIndexActor>();
+
+        index.Tell(new UserDisconnected(userId, connectionId));
+    }
+
+    public void UserConnected(long roomId, string userId, string connectionId)
+    {
+        var index = _actorRegistry.Get<RoomIndexActor>();
+        index.Tell(new UserConnected(roomId, userId, connectionId));
+
+    }
+
     public async Task<ImmutableArray<RoomSummary>> GetAll()
     {
         
@@ -140,4 +154,6 @@ public interface IRoomService
     Task Delete(long roomId);
     Task Answer(long roomId, Guid answerId);
     Task<RoomStatus> GetCurrentState(long roomId);
+    void UserDisconnected(string userId, string connectionId);
+    void UserConnected(long roomId, string userId, string connectionId);
 }

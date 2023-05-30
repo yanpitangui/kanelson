@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using Kanelson.Extensions;
+﻿using Kanelson.Extensions;
 using Kanelson.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -10,14 +9,11 @@ namespace Kanelson.Hubs;
 [Authorize]
 public class RoomHub : Hub
 {
-    private static readonly ConcurrentDictionary<long, ConcurrentDictionary<string, HubUser>> RoomUsers = new();
     private readonly IRoomService _roomService;
-    private readonly IUserService _userService;
     
-    public RoomHub(IRoomService roomService, IUserService userService)
+    public RoomHub(IRoomService roomService)
     {
         _roomService = roomService;
-        _userService = userService;
     }
 
     public async Task JoinRoom(long roomId)
@@ -26,26 +22,7 @@ public class RoomHub : Hub
 
         var userId = Context.GetUserId();
         var connectionId = Context.ConnectionId;
-        var roomOwner = await _roomService.GetOwner(roomId);
-        if (userId == roomOwner) return;
-        var userInfo = await _userService.GetUserInfo(userId);
-
-        var room = RoomUsers.GetOrAdd(roomId, _ => 
-            new ConcurrentDictionary<string, HubUser>());
-        
-        var user = room.GetOrAdd(userId, _ => new HubUser()
-        {
-            Id = userInfo.Id,
-            Name = userInfo.Name
-        });
-
-        lock (user.Connections)
-        {
-            user.Connections.Add(connectionId);
-        }
-
-        var users = room.Values.Cast<UserInfo>().ToHashSet();
-        await _roomService.UpdateCurrentUsers(roomId, users);
+        _roomService.UserConnected(roomId, userId, connectionId);
     }
 
     public async Task Start(long roomId)
@@ -68,39 +45,15 @@ public class RoomHub : Hub
         var userId = Context.GetUserId();
         var connectionId = Context.ConnectionId;
 
-        var rooms = RoomUsers
-            .Where(x => x.Value.ContainsKey(userId))
-            .Select(x => new
-            {
-                Room = x, 
-                User = x.Value.FirstOrDefault(y => y.Key == userId).Value
-            }).ToList();
-
-        foreach (var room in rooms)
-        {
-
-            lock (room.User.Connections)
-            {
-                room.User.Connections.Remove(connectionId);
-            }
-
-            if (!room.User.Connections.Any())
-            {
-                lock (room.Room.Value)
-                {
-                    room.Room.Value.TryRemove(userId, out _);
-                }
-            }
-            
-            var users = room.Room.Value.Values.Cast<UserInfo>().ToHashSet();
-            await _roomService.UpdateCurrentUsers(room.Room.Key, users);
-        }
-
+        _roomService.UserDisconnected(userId, connectionId);
         await base.OnDisconnectedAsync(exception);
+
     }
 }
 
 public record HubUser : UserInfo
 {
+
+    public static HubUser FromUserInfo(UserInfo userInfo) => new() {Id = userInfo.Id, Name = userInfo.Name};
     public HashSet<string> Connections { get; set; } = new();
 }

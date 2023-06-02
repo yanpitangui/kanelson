@@ -28,8 +28,11 @@ else
         <RowTemplate>
             <MudTd DataLabel="Name">@context.Name</MudTd>
             <MudTd DataLabel="Edit/Delete">
-                <MudFab @onclick="@(()=>EditQuestion(@context.Id))" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small" />
-                <MudFab @onclick="@(()=>RemoveQuestion(@context.Id))" Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small" />
+                <MudStack AlignItems="AlignItems.Center" Row="true" Spacing="3">
+                    <MudFab @onclick="@(() => EditQuestion(@context.Id))" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small"/>
+                    <MudFab @onclick="@(() => RemoveQuestion(@context.Id))" Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small"/>
+                </MudStack>
+
             </MudTd>
         </RowTemplate>
      </MudTable>

@@ -32,8 +32,10 @@ else
         <RowTemplate>
             <MudTd DataLabel="Nome">@context.Name</MudTd>
             <MudTd DataLabel="Edit/Delete">
-                <MudFab @onclick="@(()=>EditTemplate(@context.Id))" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small" />
-                <MudFab @onclick="@(()=>DeleteTemplate(@context.Id))" Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small" />
+                <MudStack AlignItems="AlignItems.Center" Row="true" Spacing="3">
+                    <MudFab @onclick="@(() => EditTemplate(@context.Id))" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small"/>
+                    <MudFab @onclick="@(() => DeleteTemplate(@context.Id))" Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small"/>
+                </MudStack>
             </MudTd>
             <MudTd DataLabel="CreateRoom">
                 <MudFab @onclick="@(()=>CreateRoom(@context.Id, @context.Name))" Color="Color.Primary" Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" IconSize="Size.Small" />

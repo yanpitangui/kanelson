@@ -11,3 +11,5 @@ public enum RoomStatus
     Finished,
     Abandoned
 }
+
+public record CurrentQuestionInfo(Question Question, int CurrentNumber, int MaxNumber);

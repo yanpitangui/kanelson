@@ -90,7 +90,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
 
         });
 
-        Command<GetCurrentQuestion>(_ => Sender.Tell(_state.Template.Questions[_state.CurrentQuestionIdx]));
+        Command<GetCurrentQuestion>(_ => Sender.Tell(GetCurrentQuestionInfo()));
 
         Command<Start>(_ =>
         {
@@ -116,7 +116,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
                  Self.Tell(new SendSignalrGroupMessage(_roomIdentifier.ToString(),
                      SignalRMessages.RoundFinished, ranking));
 
-                 if (_state.CurrentQuestionIdx >= _state.MaxQuestionIdx)
+                 if (_state.CurrentQuestionIdx + 1 >= _state.MaxQuestionIdx)
                  {
                      _roomStateMachine.Fire(RoomTrigger.Finish);
 
@@ -190,8 +190,13 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
         });
         Command<DeleteMessagesSuccess>(_ => { });
     }
-    
-    
+
+    private CurrentQuestionInfo GetCurrentQuestionInfo()
+    {
+        return new CurrentQuestionInfo(_state.Template.Questions[_state.CurrentQuestionIdx], _state.CurrentQuestionIdx + 1, _state.MaxQuestionIdx + 1);
+    }
+
+
     private ImmutableArray<UserRanking> GetRanking()
     {
 
@@ -242,7 +247,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
     {
          _roomStateMachine.Fire(RoomTrigger.DisplayQuestion);
          Self.Tell(new SendSignalrGroupMessage(_roomIdentifier.ToString(), SignalRMessages.NextQuestion,
-             CurrentQuestion));
+             GetCurrentQuestionInfo()));
     }
     
     private void SetTimeHandler()

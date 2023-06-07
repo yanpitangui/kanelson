@@ -131,34 +131,20 @@ public class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterval
             }
         });
 
-        CommandAsync<GetAllSummaries>(async _ =>
+        Command<GetAllSummaries>(_ =>
         {
+            var sender = Sender;
+            
+            var tasks = _state.Items.Select(x => _children[x].Ask<RoomSummary>(new GetSummary()));
+            
+            async Task<ImmutableArray<RoomSummary>> ExecuteWork()
+            {
+                var result = await Task.WhenAll(tasks);
+                return result.ToImmutableArray();
+            }
 
-            var keys = _state.Items.ToArray();
-            var tasks = ArrayPool<Task<RoomSummary>>.Shared.Rent(keys.Length);
-            try
-            {
-                // issue all individual requests at the same time
-                for (var i = 0; i < keys.Length; ++i)
-                {
-                    var room = _children[keys[i]];
-                    tasks[i] = room.Ask<RoomSummary>(new GetSummary(), TimeSpan.FromSeconds(3));
-                }
-        
-                // build the result as requests complete
-                var result = ImmutableArray.CreateBuilder<RoomSummary>(keys.Length);
-                for (var i = 0; i < keys.Length; ++i)
-                {
-                    var item = await tasks[i];
-                
-                    result.Add(item);
-                }
-                Sender.Tell(result.ToImmutableArray());
-            }
-            finally
-            {
-                ArrayPool<Task<RoomSummary>>.Shared.Return(tasks);
-            }
+
+            ExecuteWork().PipeTo(sender);
         });
         
         Recover<SnapshotOffer>(o =>

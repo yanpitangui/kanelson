@@ -1,12 +1,12 @@
 @using Kanelson.Contracts.Models
 
 <MudCard>
-    <MudCardHeader Class="question-header">@Question.Name</MudCardHeader>
+    <MudCardHeader Class="question-header">(@Info.CurrentNumber/@Info.MaxNumber) @Info.Question.Name</MudCardHeader>
     <MudCardContent>
         <MudGrid>
-            @for (int i = 0; i < Question.Answers.Count; i++)
+            @for (int i = 0; i < Info.Question.Answers.Count; i++)
             {
-                var answer = Question.Answers[i];
+                var answer = Info.Question.Answers[i];
                 var i1 = i;
                 <MudItem xs="12" sm="6">
                     <AnswerComponent Answer="answer" OnClickCallback="AnswerClickCallback" Idx="@i1"/>
@@ -22,7 +22,7 @@
 
 @code {
     [Parameter]
-    public Question Question { get; set; } = null!;
+    public CurrentQuestionInfo Info { get; set; } = null!;
     
 
     [Parameter]

@@ -30,12 +30,12 @@
     }
 
     
-    <QuestionComponent AnswerClickCallback="@Answer" Question="@_currentQuestion"/>
+    <QuestionComponent AnswerClickCallback="@Answer" Info="@_currentQuestion"/>
 }
 
 @code {
 
-    TemplateQuestion? _currentQuestion;
+    CurrentQuestionInfo? _currentQuestion;
     [Parameter]
     public long RoomId { get; set; }
     private HubConnection? _hubConnection;
@@ -68,11 +68,11 @@
             InvokeAsync(StateHasChanged);
         });
 
-        _hubConnection.On<TemplateQuestion>(SignalRMessages.NextQuestion, (question) =>
+        _hubConnection.On<CurrentQuestionInfo>(SignalRMessages.NextQuestion, (question) =>
         {
             _currentQuestion = question;
             _current = 0;
-            _max = _currentQuestion.TimeLimit;
+            _max = _currentQuestion.Question.TimeLimit;
             _timerHandle.Elapsed += TimeElapsed;
             _timerHandle.Start();
             

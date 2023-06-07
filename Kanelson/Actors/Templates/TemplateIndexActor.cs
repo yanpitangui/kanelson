@@ -66,34 +66,21 @@ public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
         });
         
         
-        CommandAsync<GetAllSummaries>(async o =>
+        Command<GetAllSummaries>(_ =>
         {
-            var keys = _state.Items.ToArray();
-            // fan out to get the individual items from the cluster in parallel
-            var tasks = ArrayPool<Task<TemplateSummary>>.Shared.Rent(keys.Length);
-            try
+            
+            var sender = Sender;
+            
+            var tasks = _state.Items.Select(x => _children[x].Ask<TemplateSummary>(new GetSummary()));
+            
+            async Task<ImmutableArray<TemplateSummary>> ExecuteWork()
             {
-                // issue all individual requests at the same time
-                for (var i = 0; i < keys.Length; ++i)
-                {
-                    var actor = _children[keys[i]];
-                    tasks[i] = actor.Ask<TemplateSummary>(new GetSummary());
-                }
+                var result = await Task.WhenAll(tasks);
+                return result.ToImmutableArray();
+            }
 
-                // build the result as requests complete
-                var result = ImmutableArray.CreateBuilder<TemplateSummary>(keys.Length);
-                for (var i = 0; i < keys.Length; ++i)
-                {
-                    var item = await tasks[i];
-                
-                    result.Add(item);
-                }
-                Sender.Tell(result.ToImmutableArray());
-            }
-            finally
-            {
-                ArrayPool<Task<TemplateSummary>>.Shared.Return(tasks);
-            }
+
+            ExecuteWork().PipeTo(sender);
         });
 
         Command<Exists>(o => Sender.Tell(_state.Items.Contains(o.Id)));

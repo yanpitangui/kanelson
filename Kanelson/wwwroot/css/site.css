@@ -92,8 +92,6 @@ a, .btn-link {
     color: black;
     background-color: oldlace;
     display: flex;
-    flex-direction: column;
-
 }
 
 html {

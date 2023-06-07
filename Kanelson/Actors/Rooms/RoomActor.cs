@@ -116,7 +116,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
                  Self.Tell(new SendSignalrGroupMessage(_roomIdentifier.ToString(),
                      SignalRMessages.RoundFinished, ranking));
 
-                 if (_state.CurrentQuestionIdx + 1 >= _state.MaxQuestionIdx)
+                 if (_state.CurrentQuestionIdx >= _state.MaxQuestionIdx)
                  {
                      _roomStateMachine.Fire(RoomTrigger.Finish);
 
@@ -253,7 +253,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
     private void SetTimeHandler()
     {
         _currentQuestionStartTime = DateTime.Now;
-        Timers.StartPeriodicTimer(AnswerloopTimerName, new HandleAnswerLoop()
+        Timers.StartPeriodicTimer(AnswerloopTimerName, HandleAnswerLoop.Instance
              , TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1));
     }
 
@@ -301,9 +301,14 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
     
     private record SendSignalrUserMessage(string UserId, string MessageName, object Data);
     
-    private record HandleAnswerLoop;
+    private record HandleAnswerLoop
+    {
+        private HandleAnswerLoop()
+        {
+        }
 
-
+        public static HandleAnswerLoop Instance { get; } = new();
+    }
 
 
     private void HandleUpdateUsers(UpdateCurrentUsers r)

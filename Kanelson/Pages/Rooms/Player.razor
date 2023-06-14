@@ -4,6 +4,7 @@
 @using System.Net
 @using System.Timers
 @using Kanelson.Actors.Rooms
+@using Kanelson.Components
 @using Kanelson.Hubs
 @using Kanelson.Services
 @using Microsoft.AspNetCore.SignalR
@@ -26,7 +27,9 @@
 {
     @if (_timerHandle.Enabled)
     {
-        <MudProgressCircular Size="Size.Large" Color="Color.Warning" Value="@_current" Max="@_max">@(_max - _current)</MudProgressCircular>
+        <Progress Status="ProgressStatus.Active" Type="ProgressType.Circle"
+                  TrailColor="#ff4d4f"
+                  Percent="@_percentage" Format="Format"></Progress>
     }
 
     
@@ -43,10 +46,17 @@
     private PlayerStatus _playerStatus = PlayerStatus.Answering;
     private Timer _timerHandle = new Timer(TimeSpan.FromSeconds(1));
     
+    private string Format(double percentage)
+    {
+        return $"{_max - _current}s";
+    }
+
+    
     bool _disposed;
     
-    private int _current = 0;
-    private int _max = 0;
+    private double _current = 0;
+    private double _percentage = 0; 
+    private double _max = 0;
 
 
     protected override async Task OnInitializedAsync()
@@ -73,6 +83,7 @@
         {
             _currentQuestion = question;
             _current = 0;
+            _percentage = 100;
             _max = _currentQuestion.Question.TimeLimit;
             _timerHandle.Elapsed += TimeElapsed;
             _timerHandle.Start();
@@ -90,6 +101,7 @@
     private async void TimeElapsed(object? sender, ElapsedEventArgs e)
     {
         _current++;
+        _percentage = (_max - _current)/_max * 100;
         await InvokeAsync(StateHasChanged);
     } 
 

@@ -94,6 +94,10 @@ a, .btn-link {
     display: flex;
 }
 
+.kanelson-progress-text {
+    color: oldlace;
+}
+
 html {
     --kanelson-primary-color: #1890ff;
     --kanelson-primary-color-hover: #40a9ff;

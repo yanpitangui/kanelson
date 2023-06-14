@@ -6,7 +6,6 @@ using Kanelson.Hubs;
 using Kanelson.Services;
 using Kanelson.Setup;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.ResponseCompression;
 using MudBlazor.Services;
 using Serilog;
 
@@ -80,11 +79,6 @@ builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddMudServices();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddLocalization();
-builder.Services.AddResponseCompression(opts =>
-{
-    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
-        new[] { "application/octet-stream" });
-});
 
 builder.Services.AddIdGen(0, () =>
 {
@@ -101,8 +95,6 @@ builder.Host.AddOpenTelemetrySetup();
 builder.Host.AddDataProtectionSetup();
 
 var app = builder.Build();
-
-app.UseResponseCompression();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -126,7 +118,6 @@ app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseWebSockets();
 app.MapHealthChecks("/healthz");
 
 var supportedCultures = new[] { "en-US", "pt-BR" };

@@ -61,7 +61,7 @@
     [Parameter]
     public long RoomId { get; set; }
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
         _hubConnection = HttpAccessor.GetConnection(Navigation);
 
@@ -93,8 +93,6 @@
         _currentQuestion = await RoomService.GetCurrentQuestion(RoomId);
 
         await InvokeAsync(StateHasChanged);
-
-        await base.OnParametersSetAsync();
     }
 
     protected async Task Start()

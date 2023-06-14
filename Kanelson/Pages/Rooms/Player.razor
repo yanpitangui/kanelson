@@ -48,7 +48,8 @@
     private int _current = 0;
     private int _max = 0;
 
-    protected override async Task OnParametersSetAsync()
+
+    protected override async Task OnInitializedAsync()
     {
         _hubConnection = HttpAccessor.GetConnection(Navigation);
         _hubConnection.On<HashSet<UserInfo>>(SignalRMessages.CurrentUsersUpdated, (users) =>

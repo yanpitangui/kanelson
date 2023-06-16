@@ -33,9 +33,9 @@ else
                         Color="Color.Info" Icon="@Icons.Material.Filled.Outbound"
                         Size="Size.Small" IconSize="Size.Small"/>
                 </MudTd>
-                <MudTd DataLabel="Id">@context.Id</MudTd>
-                <MudTd DataLabel="Name">@context.Name</MudTd>
-                <MudTd DataLabel="Host">
+                <MudTd DataLabel="@Loc["Id"]">@context.Id</MudTd>
+                <MudTd DataLabel="@Loc["Name"]">@context.Name</MudTd>
+                <MudTd DataLabel="@Loc["Host"]">
                     <Avatar GithubId="@context.Owner.Id"/>
                 </MudTd>
                 <MudTd>

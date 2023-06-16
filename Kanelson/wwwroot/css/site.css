@@ -339,3 +339,9 @@ html {
 .kanelson-progress,.kanelson-progress-steps {
     display: inline-block;
 }
+
+.host-identifier {
+    text-transform: capitalize;
+    font-weight: bold;
+    color: oldlace;
+}

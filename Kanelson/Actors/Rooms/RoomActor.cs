@@ -49,8 +49,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
             var ownerInfo = await userService.GetUserInfo(_state.OwnerId); 
             var summary = new RoomSummary(roomIdentifier,
                 _state.Name,
-                ownerInfo,
-                _state.CurrentState);
+                ownerInfo);
             Sender.Tell(summary);
         });
 
@@ -58,9 +57,9 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
         {
 
             var equal = o.Users.SetEquals(_state.CurrentUsers);
-            HandleUpdateUsers(o);
             if (!equal)
             {
+                HandleUpdateUsers(o);
                 Self.Tell(new SendSignalrGroupMessage(roomIdentifier.ToString(), SignalRMessages.CurrentUsersUpdated, o.Users));
                 Self.Tell(new SendSignalrUserMessage(_state.OwnerId, SignalRMessages.CurrentUsersUpdated, o.Users));
             }
@@ -228,7 +227,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
             .ToHashSet();
 
             var unanswered = _state.CurrentUsers
-            .Where(x => !usersWithAnswers.Contains(x.Id))
+            .Where(x => !usersWithAnswers.Contains(x.Id) && x.Id != _state.OwnerId)
             .Select(x => new UserRanking
         {
             Id = x.Id,
@@ -313,7 +312,12 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
 
     private void HandleUpdateUsers(UpdateCurrentUsers r)
     {
-        _state.CurrentUsers = r.Users;
+        _state.CurrentUsers = r.Users.Select(x => new RoomUser
+        {
+            Id = x.Id,
+            Name = x.Name,
+            Owner = x.Id == _state.OwnerId
+        }).ToHashSet();
         ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
     }
 

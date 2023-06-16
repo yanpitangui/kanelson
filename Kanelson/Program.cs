@@ -6,6 +6,7 @@ using Kanelson.Hubs;
 using Kanelson.Services;
 using Kanelson.Setup;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.ResponseCompression;
 using MudBlazor.Services;
 using Serilog;
 
@@ -19,6 +20,13 @@ builder.Logging.ClearProviders();
 var logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger();
+
+
+builder.Services.AddResponseCompression(opts =>
+{
+    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+        new[] { "application/octet-stream" });
+});
 
 // Register Serilog
 builder.Logging.AddSerilog(logger);
@@ -95,6 +103,8 @@ builder.Host.AddOpenTelemetrySetup();
 builder.Host.AddDataProtectionSetup();
 
 var app = builder.Build();
+
+app.UseResponseCompression();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

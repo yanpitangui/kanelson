@@ -1,6 +1,6 @@
 ﻿namespace Kanelson.Contracts.Models;
 
-public record RoomSummary(long Id, string Name, UserInfo Owner, RoomStatus Status);
+public record RoomSummary(long Id, string Name, UserInfo Owner);
 
 public enum RoomStatus
 {

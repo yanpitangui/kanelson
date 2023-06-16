@@ -1,19 +1,20 @@
-﻿@using Microsoft.AspNetCore.SignalR.Client
-@using global::Kanelson.Contracts.Models
-@using System.Collections.Immutable
+﻿@using Kanelson.Contracts.Models
 @using Kanelson.Actors.Rooms
-@using Kanelson.Hubs
-@using Kanelson.Services
-@inject NavigationManager Navigation
-@inject IHttpContextAccessor HttpAccessor
-@inject IRoomService RoomService
-@inject IStringLocalizer<Shared> Loc
+@inherits BaseRoomPage
+
 <MudList>
     
-    @foreach (var user in _connectedUsers)
+    @foreach (var user in ConnectedUsers)
     {
         <MudListItem>
-            <Avatar GithubId="@user.Id"/>  <span>@user.Name</span>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <Avatar GithubId="@user.Id"/>
+                <span>@user.Name</span>
+                @if (user.Owner)
+                {
+                    <span class="host-identifier">[@Loc["Host"]]</span>
+                }
+            </MudStack>
         </MudListItem>
     }
 </MudList>
@@ -23,9 +24,9 @@
 @if (_roomStateMachine != null)
 {
     
-    @if (_currentQuestion is not null && _roomStateMachine.IsInState(RoomStatus.Started))
+    @if (CurrentQuestion is not null && _roomStateMachine.IsInState(RoomStatus.Started))
     {
-        <QuestionComponent Info="_currentQuestion"/>
+        <QuestionComponent Info="CurrentQuestion"/>
     }
 
     
@@ -45,64 +46,5 @@
                        StartIcon="@Icons.Material.Filled.SkipNext">@Loc["NextQuestionButton"]</MudButton>
         }
     </MudCardActions>
-
-}
-
-
-
-
-@code {
-    private HubConnection _hubConnection = null!;
-    private IEnumerable<UserInfo> _connectedUsers = ImmutableArray<UserInfo>.Empty;
-    CurrentQuestionInfo? _currentQuestion;
-    private RoomStateMachine _roomStateMachine = null!;
-
-    
-    [Parameter]
-    public long RoomId { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        _hubConnection = HttpAccessor.GetConnection(Navigation);
-
-        _hubConnection.On<RoomStatus>(SignalRMessages.RoomStatusChanged, (state) =>
-        {
-            _roomStateMachine = RoomBehavior.GetStateMachine(state);
-            InvokeAsync(StateHasChanged);
-        });
-
-        _hubConnection.On<HashSet<UserInfo>>(SignalRMessages.CurrentUsersUpdated, (users) =>
-        {
-            _connectedUsers = users.ToImmutableArray();
-            InvokeAsync(StateHasChanged);
-        });
-        
-        _hubConnection.On<CurrentQuestionInfo>(SignalRMessages.NextQuestion, async (question) =>
-        {
-            _currentQuestion = question;
-            await InvokeAsync(StateHasChanged);
-
-        });
-
-        var currentState = await RoomService.GetCurrentState(RoomId);
-        _roomStateMachine = RoomBehavior.GetStateMachine(currentState);
-
-        await _hubConnection.StartAsync();
-        _connectedUsers = await RoomService.GetCurrentUsers(RoomId);
-
-        _currentQuestion = await RoomService.GetCurrentQuestion(RoomId);
-
-        await InvokeAsync(StateHasChanged);
-    }
-
-    protected async Task Start()
-    {
-        await _hubConnection.SendAsync(SignalRMessages.Start, RoomId);
-    }
-
-    protected async Task NextQuestion()
-    {
-        await RoomService.NextQuestion(RoomId);
-    }
 
 }

@@ -14,7 +14,7 @@ public record RoomState
     
     public RoomStatus CurrentState { get; set; } = RoomStatus.Created;
 
-    public HashSet<UserInfo> CurrentUsers { get; set; } = new();
+    public HashSet<RoomUser> CurrentUsers { get; set; } = new();
     
     public int CurrentQuestionIdx { get; set; }
     
@@ -39,4 +39,9 @@ public record UserRanking : UserInfo
     public decimal AverageTime { get; set; }
     
     public int? Rank { get; set; }
+}
+
+public record RoomUser : UserInfo
+{
+    public bool Owner { get; set; }
 }

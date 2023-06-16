@@ -1,29 +1,23 @@
-﻿@using Microsoft.AspNetCore.SignalR.Client
-@using global::Kanelson.Contracts.Models
-@using System.Collections.Immutable
-@using System.Net
-@using System.Timers
-@using Kanelson.Actors.Rooms
-@using Kanelson.Components
-@using Kanelson.Hubs
-@using Kanelson.Services
-@using Microsoft.AspNetCore.SignalR
-@inject IDialogService DialogService
-@inject NavigationManager Navigation
-@inject IHttpContextAccessor HttpAccessor
-@implements IAsyncDisposable
+﻿@inherits BaseRoomPage
 
 <MudList>
     
-    @foreach (var user in _connectedUsers)
+    @foreach (var user in ConnectedUsers)
     {
         <MudListItem>
-            <Avatar GithubId="@user.Id"/>  <span>@user.Name</span>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <Avatar GithubId="@user.Id"/>
+                <span>@user.Name</span>
+                @if (user.Owner)
+                {
+                    <span class="host-identifier">[@Loc["Host"]]</span>
+                }
+            </MudStack>
         </MudListItem>
     }
 </MudList>
 
-@if (_currentQuestion is not null && _playerStatus != PlayerStatus.Answered)
+@if (CurrentQuestion is not null && _playerStatus != PlayerStatus.Answered)
 {
     @if (_timerHandle.Enabled)
     {
@@ -33,101 +27,5 @@
     }
 
     
-    <QuestionComponent AnswerClickCallback="@Answer" Info="@_currentQuestion"/>
-}
-
-@code {
-
-    CurrentQuestionInfo? _currentQuestion;
-    [Parameter]
-    public long RoomId { get; set; }
-    private HubConnection? _hubConnection;
-    private ImmutableArray<UserInfo> _connectedUsers = ImmutableArray<UserInfo>.Empty;
-    private PlayerStatus _playerStatus = PlayerStatus.Answering;
-    private Timer _timerHandle = new Timer(TimeSpan.FromSeconds(1));
-    
-    private string Format(double percentage)
-    {
-        return $"{_max - _current}s";
-    }
-
-    
-    bool _disposed;
-    
-    private double _current = 0;
-    private double _percentage = 0; 
-    private double _max = 0;
-
-
-    protected override async Task OnInitializedAsync()
-    {
-        _hubConnection = HttpAccessor.GetConnection(Navigation);
-        _hubConnection.On<HashSet<UserInfo>>(SignalRMessages.CurrentUsersUpdated, (users) =>
-        {
-            _connectedUsers = users.ToImmutableArray();
-            InvokeAsync(StateHasChanged);
-        });
-
-        _hubConnection.On<ImmutableArray<UserRanking>>(SignalRMessages.RoundFinished, (ranking) =>
-        {
-            _timerHandle.Stop();
-            var parameters = new DialogParameters { ["Ranking"]=ranking };
-
-            InvokeAsync(() => DialogService.Show<RankingDialog>("Ranking", parameters));
-            
-            _currentQuestion = null;
-            InvokeAsync(StateHasChanged);
-        });
-
-        _hubConnection.On<CurrentQuestionInfo>(SignalRMessages.NextQuestion, (question) =>
-        {
-            _currentQuestion = question;
-            _current = 0;
-            _percentage = 100;
-            _max = _currentQuestion.Question.TimeLimit;
-            _timerHandle.Elapsed += TimeElapsed;
-            _timerHandle.Start();
-            
-            _playerStatus = PlayerStatus.Answering;
-            InvokeAsync(StateHasChanged);
-        });
-        
-        await _hubConnection.StartAsync();
-
-        await _hubConnection.SendAsync(SignalRMessages.JoinRoom, RoomId);
-    }
-    
-    
-    private async void TimeElapsed(object? sender, ElapsedEventArgs e)
-    {
-        _current++;
-        _percentage = (_max - _current)/_max * 100;
-        await InvokeAsync(StateHasChanged);
-    } 
-
-    public async Task Answer(Guid answerId)
-    {
-        _timerHandle.Stop();
-        _playerStatus = PlayerStatus.Answered;
-        await _hubConnection!.SendAsync(SignalRMessages.Answer, RoomId,  answerId);
-        await InvokeAsync(StateHasChanged);
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_hubConnection is IAsyncDisposable disposable)
-        {
-            await disposable.DisposeAsync();
-        }
-        _disposed = true;
-        _timerHandle.Dispose();
-    }
-    
-    
-    private enum PlayerStatus
-    {
-        Answering,
-        Answered
-    }
-
+    <QuestionComponent AnswerClickCallback="@Answer" Info="@CurrentQuestion"/>
 }

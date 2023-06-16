@@ -76,12 +76,12 @@ public class RoomService : IRoomService
         return await room.Ask<RoomSummary>(new GetSummary());
     }
 
-    public async Task<HashSet<UserInfo>> GetCurrentUsers(long roomId)
+    public async Task<HashSet<RoomUser>> GetCurrentUsers(long roomId)
     {
         var index = _actorRegistry.Get<RoomIndexActor>();
         var room = await index.Ask<IActorRef>(new GetRef(roomId));
 
-        return await room.Ask<HashSet<UserInfo>>(new GetCurrentUsers());
+        return await room.Ask<HashSet<RoomUser>>(new GetCurrentUsers());
     }
 
     public async Task<CurrentQuestionInfo> GetCurrentQuestion(long roomId)
@@ -137,7 +137,7 @@ public interface IRoomService
     Task<long> CreateRoom(Guid templateId, string roomName);
     Task<ImmutableArray<RoomSummary>> GetAll();
     Task<RoomSummary> Get(long id);
-    Task<HashSet<UserInfo>> GetCurrentUsers(long roomId);
+    Task<HashSet<RoomUser>> GetCurrentUsers(long roomId);
     Task<CurrentQuestionInfo> GetCurrentQuestion(long roomId);
     Task NextQuestion(long roomId);
     Task Start(long roomId);

@@ -27,7 +27,7 @@ public class BaseRoomPage : ComponentBase, IAsyncDisposable
     [Inject]
     private ISnackbar _snackbar { get; set; } = null!;
 
-    protected List<RoomUser> ConnectedUsers = new();
+    protected HashSet<RoomUser> ConnectedUsers = new();
     
     protected CurrentQuestionInfo? CurrentQuestion;
 
@@ -47,7 +47,7 @@ public class BaseRoomPage : ComponentBase, IAsyncDisposable
 
     protected virtual void ConfigureSignalrEvents()
     {
-        HubConnection.On<List<RoomUser>>(SignalRMessages.CurrentUsersUpdated, (users) =>
+        HubConnection.On<HashSet<RoomUser>>(SignalRMessages.CurrentUsersUpdated, (users) =>
         {
             ConnectedUsers = users;
             InvokeAsync(StateHasChanged);
@@ -56,11 +56,11 @@ public class BaseRoomPage : ComponentBase, IAsyncDisposable
         
         HubConnection.On<string>(SignalRMessages.UserAnswered, (userId) =>
         {
-            var idx = ConnectedUsers.FindIndex(x => x.Id == userId);
-            ConnectedUsers[idx] = ConnectedUsers[idx] with
+            var user = ConnectedUsers.FirstOrDefault(x => x.Id == userId);
+            if (user != null)
             {
-                Answered = true
-            };
+                user.Answered = true;
+            }
         });
 
         HubConnection.On<bool>(SignalRMessages.RoomDeleted, _ =>

@@ -32,6 +32,7 @@ public partial class Player : BaseRoomPage
     protected override void ConfigureSignalrEvents()
     {
         base.ConfigureSignalrEvents();
+        _timerHandle.Elapsed += TimeElapsed;
         HubConnection.On<ImmutableArray<UserRanking>>(SignalRMessages.RoundFinished, (ranking) =>
         {
             _timerHandle.Stop();
@@ -49,7 +50,6 @@ public partial class Player : BaseRoomPage
             _current = 0;
             _percentage = 100;
             _max = CurrentQuestion.Question.TimeLimit;
-            _timerHandle.Elapsed += TimeElapsed;
             _timerHandle.Start();
             
             _playerStatus = PlayerStatus.Answering;

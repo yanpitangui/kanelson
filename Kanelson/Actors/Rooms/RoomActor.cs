@@ -259,9 +259,9 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
 
          _roomStateMachine.OnTransitionCompleted((transition) =>
          {
+             _state.CurrentState = transition.Destination;
              Persist(transition.Destination, o =>
              {
-                 _state.CurrentState = transition.Destination;
                  if (transition.Destination is not RoomStatus.DisplayingQuestion)
                  {
                      ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);

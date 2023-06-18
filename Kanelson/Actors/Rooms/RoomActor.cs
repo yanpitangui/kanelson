@@ -311,7 +311,9 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
             Id = x.Id,
             Name = x.Name,
             Owner = x.Id.Equals(_state.OwnerId)
-        }).ToHashSet();
+        })
+            .OrderByDescending(x => x.Owner)
+            .ToHashSet();
 
         if (!equal)
         {

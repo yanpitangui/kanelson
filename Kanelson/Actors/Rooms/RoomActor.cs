@@ -345,9 +345,11 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
     
     private bool CheckEveryoneAnswered()
     {
-        var users = _state.CurrentUsers.Select(x => x.Id).ToHashSet();
+        var users = _state.CurrentUsers.Select(x => x.Id)
+            .Where(x => x != _state.OwnerId)
+            .ToHashSet();
         var currentQuestion = CurrentQuestion;
-        // verifica se para cada usuário logado, existe um registro de resposta, de maneira burra
+        // verifica se para cada usuário logado, tirando o host, existe um registro de resposta, de maneira burra
         return _state.Answers[currentQuestion.Id].Keys.ToHashSet().SetEquals(users);
     }
 

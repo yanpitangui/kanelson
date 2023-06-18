@@ -44,4 +44,6 @@ public record UserRanking : UserInfo
 public record RoomUser : UserInfo
 {
     public bool Owner { get; set; }
+    
+    public bool Answered { get; set; }
 }

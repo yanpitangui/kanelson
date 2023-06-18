@@ -135,7 +135,7 @@ public class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterval
         {
             var sender = Sender;
             
-            var tasks = _state.Items.Select(x => _children[x].Ask<RoomSummary>(new GetSummary()));
+            var tasks = _state.Items.Select(x => _children[x].Ask<RoomSummary>(GetSummary.Instance));
             
             async Task<ImmutableArray<RoomSummary>> ExecuteWork()
             {

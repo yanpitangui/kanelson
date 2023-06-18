@@ -37,9 +37,7 @@ public partial class Admin : BaseRoomPage
     {
         var currentState = await RoomService.GetCurrentState(RoomId);
         _roomStateMachine = RoomBehavior.GetStateMachine(currentState);
-
-        ConnectedUsers = await RoomService.GetCurrentUsers(RoomId);
-
+        
         CurrentQuestion = await RoomService.GetCurrentQuestion(RoomId);
 
         await InvokeAsync(StateHasChanged);

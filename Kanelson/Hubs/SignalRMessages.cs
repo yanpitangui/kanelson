@@ -9,4 +9,6 @@ public static class SignalRMessages
     public const string RoundFinished = nameof(RoundFinished);
     public const string Answer = nameof(Answer);
     public const string JoinRoom = nameof(JoinRoom);
+    public const string UserAnswered = nameof(UserAnswered);
+    public const string RoomDeleted = nameof(RoomDeleted);
 }

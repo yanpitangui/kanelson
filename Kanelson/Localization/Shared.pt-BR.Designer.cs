@@ -321,6 +321,15 @@ namespace Kanelson.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A sala que você estava foi deletada..
+        /// </summary>
+        internal static string RoomDeleted {
+            get {
+                return ResourceManager.GetString("RoomDeleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Salas.
         /// </summary>
         internal static string Rooms {

@@ -43,7 +43,7 @@ public class RoomService : IRoomService
         var index = _actorRegistry.Get<RoomIndexActor>();
         var room = await index.Ask<IActorRef>(new GetRef(roomId));
 
-        return await room.Ask<RoomStatus>(new GetCurrentState());
+        return await room.Ask<RoomStatus>(Actors.Rooms.GetCurrentState.Instance);
     }
 
     public void UserDisconnected(string userId, string connectionId)
@@ -73,7 +73,7 @@ public class RoomService : IRoomService
         var index = _actorRegistry.Get<RoomIndexActor>();
         var room = await index.Ask<IActorRef>(new GetRef(id));
 
-        return await room.Ask<RoomSummary>(new GetSummary());
+        return await room.Ask<RoomSummary>(GetSummary.Instance);
     }
 
     public async Task<HashSet<RoomUser>> GetCurrentUsers(long roomId)
@@ -81,42 +81,42 @@ public class RoomService : IRoomService
         var index = _actorRegistry.Get<RoomIndexActor>();
         var room = await index.Ask<IActorRef>(new GetRef(roomId));
 
-        return await room.Ask<HashSet<RoomUser>>(new GetCurrentUsers());
+        return await room.Ask<HashSet<RoomUser>>(Actors.Rooms.GetCurrentUsers.Instance);
     }
 
     public async Task<CurrentQuestionInfo> GetCurrentQuestion(long roomId)
     {
         var index = _actorRegistry.Get<RoomIndexActor>();
         var room = await index.Ask<IActorRef>(new GetRef(roomId));
-        return await room.Ask<CurrentQuestionInfo>(new GetCurrentQuestion());
+        return await room.Ask<CurrentQuestionInfo>(Actors.Rooms.GetCurrentQuestion.Instance);
     }
 
     public async Task NextQuestion(long roomId)
     {
         var index = _actorRegistry.Get<RoomIndexActor>();
         var room = await index.Ask<IActorRef>(new GetRef(roomId));
-        room.Tell(new NextQuestion());
+        room.Tell(Actors.Rooms.NextQuestion.Instance);
     }
 
     public async Task Start(long roomId)
     {
         var index = _actorRegistry.Get<RoomIndexActor>();
         var room = await index.Ask<IActorRef>(new GetRef(roomId));
-        room.Tell(new Start());
+        room.Tell(Actors.Rooms.Start.Instance);
     }
 
     public async Task<string> GetOwner(long roomId)
     {
         var index = _actorRegistry.Get<RoomIndexActor>();
         var room = await index.Ask<IActorRef>(new GetRef(roomId));
-        return await room.Ask<string>(new GetOwner());
+        return await room.Ask<string>(Actors.Rooms.GetOwner.Instance);
     }
 
     public async Task Delete(long roomId)
     {
         var index = _actorRegistry.Get<RoomIndexActor>();
         var room = await index.Ask<IActorRef>(new GetRef(roomId), TimeSpan.FromSeconds(3));
-        var owner = await room.Ask<string>(new GetOwner(), TimeSpan.FromSeconds(3));
+        var owner = await room.Ask<string>(Actors.Rooms.GetOwner.Instance, TimeSpan.FromSeconds(3));
         if (owner != _userService.CurrentUser)
         {
             throw new ApplicationException("You are not the room's owner");

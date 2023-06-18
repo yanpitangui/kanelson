@@ -132,4 +132,7 @@
     <data name="Actions" xml:space="preserve">
         <value>Ações</value>
     </data>
+    <data name="RoomDeleted" xml:space="preserve">
+        <value>A sala que você estava foi deletada.</value>
+    </data>
 </root>

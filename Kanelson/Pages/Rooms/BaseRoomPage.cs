@@ -4,6 +4,7 @@ using Kanelson.Hubs;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Localization;
+using MudBlazor;
 
 namespace Kanelson.Pages.Rooms;
 
@@ -22,8 +23,11 @@ public class BaseRoomPage : ComponentBase, IAsyncDisposable
     
     [Inject]
     protected IStringLocalizer<Localization.Shared> Loc { get; set; } = null!;
+    
+    [Inject]
+    private ISnackbar _snackbar { get; set; } = null!;
 
-    protected HashSet<RoomUser> ConnectedUsers = new();
+    protected List<RoomUser> ConnectedUsers = new();
     
     protected CurrentQuestionInfo? CurrentQuestion;
 
@@ -43,10 +47,26 @@ public class BaseRoomPage : ComponentBase, IAsyncDisposable
 
     protected virtual void ConfigureSignalrEvents()
     {
-        HubConnection.On<HashSet<RoomUser>>(SignalRMessages.CurrentUsersUpdated, (users) =>
+        HubConnection.On<List<RoomUser>>(SignalRMessages.CurrentUsersUpdated, (users) =>
         {
             ConnectedUsers = users;
             InvokeAsync(StateHasChanged);
+        });
+        
+        
+        HubConnection.On<string>(SignalRMessages.UserAnswered, (userId) =>
+        {
+            var idx = ConnectedUsers.FindIndex(x => x.Id == userId);
+            ConnectedUsers[idx] = ConnectedUsers[idx] with
+            {
+                Answered = true
+            };
+        });
+
+        HubConnection.On<bool>(SignalRMessages.RoomDeleted, _ =>
+        {
+            _snackbar.Add(Loc["RoomDeleted"], Severity.Warning);
+            Navigation.NavigateTo("rooms");
         });
     }
 

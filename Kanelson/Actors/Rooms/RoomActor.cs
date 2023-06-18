@@ -20,6 +20,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
     
     
     private DateTime _currentQuestionStartTime;
+    private readonly string _roomIdentifierString;
     private TemplateQuestion CurrentQuestion => _state.Template.Questions[_state.CurrentQuestionIdx];
 
 
@@ -27,6 +28,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
     public RoomActor(long roomIdentifier, IHubContext<RoomHub> hubContext, IUserService userService)
     {
         _roomIdentifier = roomIdentifier;
+        _roomIdentifierString = _roomIdentifier.ToString();
         PersistenceId = $"room-{roomIdentifier}";
         
         _state = new RoomState();
@@ -53,40 +55,22 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
             Sender.Tell(summary);
         });
 
-        Recover<UpdateCurrentUsers>(o =>
-        {
+        Recover<UpdateCurrentUsers>(HandleUpdateUsers);
 
-            var equal = o.Users.SetEquals(_state.CurrentUsers);
-            if (!equal)
-            {
-                HandleUpdateUsers(o);
-                Self.Tell(new SendSignalrGroupMessage(roomIdentifier.ToString(), SignalRMessages.CurrentUsersUpdated, o.Users));
-                Self.Tell(new SendSignalrUserMessage(_state.OwnerId, SignalRMessages.CurrentUsersUpdated, o.Users));
-            }
+        Command<SendSignalrGroupMessage>(o =>
+        {
+            hubContext.Clients.Group(o.GroupId).SendAsync(o.MessageName, o.Data).PipeTo(Sender, Self);
         });
 
-        CommandAsync<SendSignalrGroupMessage>(async o =>
+        Command<SendSignalrUserMessage>(o =>
         {
-            await hubContext.Clients.Group(o.GroupId).SendAsync(o.MessageName, o.Data);
-        });
-
-        CommandAsync<SendSignalrUserMessage>(async o =>
-        {
-            await hubContext.Clients.User(o.UserId).SendAsync(o.MessageName, o.Data);
+            hubContext.Clients.User(o.UserId).SendAsync(o.MessageName, o.Data).PipeTo(Sender, Self);
         });
 
 
         Command<UpdateCurrentUsers>(o =>
         { 
-            var equal = o.Users.SetEquals(_state.CurrentUsers);
-
             Persist(o, HandleUpdateUsers);
-            if (!equal)
-            {
-                Self.Tell(new SendSignalrGroupMessage(roomIdentifier.ToString(), SignalRMessages.CurrentUsersUpdated, o.Users));
-                Self.Tell(new SendSignalrUserMessage(_state.OwnerId, SignalRMessages.CurrentUsersUpdated, o.Users));
-            }
-
         });
 
         Command<GetCurrentQuestion>(_ => Sender.Tell(GetCurrentQuestionInfo()));
@@ -112,7 +96,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
                  Timers.Cancel(AnswerloopTimerName);
 
                  var ranking = GetRanking();
-                 Self.Tell(new SendSignalrGroupMessage(_roomIdentifier.ToString(),
+                 Self.Tell(new SendSignalrGroupMessage(_roomIdentifierString,
                      SignalRMessages.RoundFinished, ranking));
 
                  if (_state.CurrentQuestionIdx >= _state.MaxQuestionIdx)
@@ -135,7 +119,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
             SetTimeHandler();
         });
         
-        Command<GetOwner>(o => Sender.Tell(_state.OwnerId));
+        Command<GetOwner>(_ => Sender.Tell(_state.OwnerId));
 
         Command<SendUserAnswer>(o =>
         { 
@@ -145,6 +129,9 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
             if (!exists) return;
             var answerInfo = CalculatePoints(o.AnswerId);
             question!.TryAdd(o.UserId, answerInfo);
+            var user = _state.CurrentUsers.FirstOrDefault(x => x.Id == o.UserId);
+            if (user != null) user.Answered = true;
+            Self.Tell(new SendSignalrGroupMessage(_roomIdentifierString, SignalRMessages.UserAnswered, o.UserId));
         });
 
         Command<GetCurrentUsers>(_ =>
@@ -160,6 +147,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
                 
         Command<ShutdownCommand>(_ =>
         {
+            Self.Tell(new SendSignalrGroupMessage(_roomIdentifierString, SignalRMessages.RoomDeleted, true));
             DeleteMessages(Int64.MaxValue);
             DeleteSnapshots(SnapshotSelectionCriteria.Latest);
         });
@@ -245,7 +233,11 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
     private void SendNextQuestion()
     {
          _roomStateMachine.Fire(RoomTrigger.DisplayQuestion);
-         Self.Tell(new SendSignalrGroupMessage(_roomIdentifier.ToString(), SignalRMessages.NextQuestion,
+         foreach (var user in _state.CurrentUsers)
+         {
+             user.Answered = false;
+         }
+         Self.Tell(new SendSignalrGroupMessage(_roomIdentifierString, SignalRMessages.NextQuestion,
              GetCurrentQuestionInfo()));
     }
     
@@ -312,12 +304,19 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
 
     private void HandleUpdateUsers(UpdateCurrentUsers r)
     {
+        var equal = r.Users.SetEquals(_state.CurrentUsers);
+
         _state.CurrentUsers = r.Users.Select(x => new RoomUser
         {
             Id = x.Id,
             Name = x.Name,
-            Owner = x.Id == _state.OwnerId
+            Owner = x.Id.Equals(_state.OwnerId)
         }).ToHashSet();
+
+        if (!equal)
+        {
+            Self.Tell(new SendSignalrGroupMessage(_roomIdentifierString, SignalRMessages.CurrentUsersUpdated, _state.CurrentUsers));
+        }
         ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
     }
 
@@ -362,23 +361,69 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
 
 public record SetBase(string RoomName, string OwnerId, Template Template);
 
-public record GetCurrentState;
+public record GetCurrentState
+{
+    private GetCurrentState()
+    {
+    }
 
-public record GetSummary;
+    public static GetCurrentState Instance { get; } = new();
+}
 
+public record GetSummary
+{
+    private GetSummary()
+    {
+    }
+
+    public static GetSummary Instance { get; } = new();
+}
 
 public record UpdateCurrentUsers(HashSet<UserInfo> Users);
 
-public record GetCurrentQuestion;
+public record GetCurrentQuestion
+{
+    private GetCurrentQuestion()
+    {
+    }
 
-public record GetCurrentUsers;
+    public static GetCurrentQuestion Instance { get; } = new();
+}
 
+public record GetCurrentUsers
+{
+    private GetCurrentUsers()
+    {
+    }
 
-public record Start;
+    public static GetCurrentUsers Instance { get; } = new();
+}
 
-public record NextQuestion;
+public record Start
+{
+    private Start()
+    {
+    }
 
-public record GetOwner;
+    public static Start Instance { get; } = new();
+}
 
+public record NextQuestion
+{
+    private NextQuestion()
+    {
+    }
+
+    public static NextQuestion Instance { get; } = new();
+}
+
+public record GetOwner
+{
+    private GetOwner()
+    {
+    }
+
+    public static GetOwner Instance { get; } = new();
+}
 
 public record SendUserAnswer(string UserId, Guid AnswerId);

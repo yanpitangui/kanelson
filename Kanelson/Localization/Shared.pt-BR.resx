@@ -135,4 +135,7 @@
     <data name="RoomDeleted" xml:space="preserve">
         <value>A sala que você estava foi deletada.</value>
     </data>
+    <data name="RoomNotFound" xml:space="preserve">
+        <value>A sala que você tentou entrar não existe</value>
+    </data>
 </root>

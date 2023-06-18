@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using Akka.Actor;
 using Akka.Hosting;
+using Akka.Util;
 using IdGen;
 using Kanelson.Actors.Rooms;
 using Kanelson.Contracts.Models;
@@ -41,8 +42,7 @@ public class RoomService : IRoomService
     public async Task<RoomStatus> GetCurrentState(long roomId)
     {
         var index = _actorRegistry.Get<RoomIndexActor>();
-        var room = await index.Ask<IActorRef>(new GetRef(roomId));
-
+        var room = await GetRoomRef(roomId, index);
         return await room.Ask<RoomStatus>(Actors.Rooms.GetCurrentState.Instance);
     }
 
@@ -68,54 +68,57 @@ public class RoomService : IRoomService
         return await index.Ask<ImmutableArray<RoomSummary>>(new GetAllSummaries());
     }
 
-    public async Task<RoomSummary> Get(long id)
+    public async Task<RoomSummary> Get(long roomId)
     {
         var index = _actorRegistry.Get<RoomIndexActor>();
-        var room = await index.Ask<IActorRef>(new GetRef(id));
+        var room = await GetRoomRef(roomId, index);
+
 
         return await room.Ask<RoomSummary>(GetSummary.Instance);
     }
-
-    public async Task<HashSet<RoomUser>> GetCurrentUsers(long roomId)
-    {
-        var index = _actorRegistry.Get<RoomIndexActor>();
-        var room = await index.Ask<IActorRef>(new GetRef(roomId));
-
-        return await room.Ask<HashSet<RoomUser>>(Actors.Rooms.GetCurrentUsers.Instance);
-    }
-
+    
     public async Task<CurrentQuestionInfo> GetCurrentQuestion(long roomId)
     {
         var index = _actorRegistry.Get<RoomIndexActor>();
-        var room = await index.Ask<IActorRef>(new GetRef(roomId));
+        var room = await GetRoomRef(roomId, index);
+
+
         return await room.Ask<CurrentQuestionInfo>(Actors.Rooms.GetCurrentQuestion.Instance);
     }
 
     public async Task NextQuestion(long roomId)
     {
         var index = _actorRegistry.Get<RoomIndexActor>();
-        var room = await index.Ask<IActorRef>(new GetRef(roomId));
+        var room = await GetRoomRef(roomId, index);
+
+
         room.Tell(Actors.Rooms.NextQuestion.Instance);
     }
 
     public async Task Start(long roomId)
     {
         var index = _actorRegistry.Get<RoomIndexActor>();
-        var room = await index.Ask<IActorRef>(new GetRef(roomId));
+        var room = await GetRoomRef(roomId, index);
+
+
         room.Tell(Actors.Rooms.Start.Instance);
     }
 
     public async Task<string> GetOwner(long roomId)
     {
         var index = _actorRegistry.Get<RoomIndexActor>();
-        var room = await index.Ask<IActorRef>(new GetRef(roomId));
+        var room = await GetRoomRef(roomId, index);
+
+
         return await room.Ask<string>(Actors.Rooms.GetOwner.Instance);
     }
 
     public async Task Delete(long roomId)
     {
         var index = _actorRegistry.Get<RoomIndexActor>();
-        var room = await index.Ask<IActorRef>(new GetRef(roomId), TimeSpan.FromSeconds(3));
+        var room = await GetRoomRef(roomId, index);
+
+
         var owner = await room.Ask<string>(Actors.Rooms.GetOwner.Instance, TimeSpan.FromSeconds(3));
         if (owner != _userService.CurrentUser)
         {
@@ -127,8 +130,17 @@ public class RoomService : IRoomService
     public async Task Answer(long roomId, Guid answerId)
     {
         var index = _actorRegistry.Get<RoomIndexActor>();
-        var room = await index.Ask<IActorRef>(new GetRef(roomId), TimeSpan.FromSeconds(3));
+        var room = await GetRoomRef(roomId, index);
+
         room.Tell(new SendUserAnswer(_userService.CurrentUser, answerId));
+    }
+
+    private static async Task<IActorRef> GetRoomRef(long roomId, IActorRef index)
+    {
+        var room = await index.Ask<Option<IActorRef>>(new GetRef(roomId));
+
+        if (room.IsEmpty) throw new ActorNotFoundException();
+        return room.Value;
     }
 }
 
@@ -136,8 +148,7 @@ public interface IRoomService
 {
     Task<long> CreateRoom(Guid templateId, string roomName);
     Task<ImmutableArray<RoomSummary>> GetAll();
-    Task<RoomSummary> Get(long id);
-    Task<HashSet<RoomUser>> GetCurrentUsers(long roomId);
+    Task<RoomSummary> Get(long roomId);
     Task<CurrentQuestionInfo> GetCurrentQuestion(long roomId);
     Task NextQuestion(long roomId);
     Task Start(long roomId);

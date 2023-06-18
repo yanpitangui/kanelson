@@ -330,6 +330,15 @@ namespace Kanelson.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A sala que você tentou entrar não existe.
+        /// </summary>
+        internal static string RoomNotFound {
+            get {
+                return ResourceManager.GetString("RoomNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Salas.
         /// </summary>
         internal static string Rooms {

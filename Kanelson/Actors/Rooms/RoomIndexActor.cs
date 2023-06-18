@@ -1,7 +1,7 @@
-using System.Buffers;
 using System.Collections.Immutable;
 using Akka.Actor;
 using Akka.Persistence;
+using Akka.Util;
 using Kanelson.Contracts.Models;
 using Kanelson.Hubs;
 using Kanelson.Services;
@@ -59,9 +59,9 @@ public class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterval
             var exists = _children.TryGetValue(o.RoomIdentifier, out var actorRef);
             if (Equals(actorRef, ActorRefs.Nobody) || !exists)
             {
-                throw new ActorNotFoundException();
+                Sender.Tell(Option<IActorRef>.Create(null!));
             }
-            Sender.Tell(actorRef);
+            Sender.Tell(Option<IActorRef>.Create(actorRef!));
             
         });
 
@@ -118,12 +118,12 @@ public class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterval
                     userDisconnected = room.Room.Value.Remove(o.UserId);
                 }
                 
-                if (!userDisconnected) return;
+                if (!userDisconnected) continue;
                 var users = room.Room.Value.Values.Cast<UserInfo>().ToHashSet();
                 var exists = _children.TryGetValue(room.Room.Key, out var actorRef);
                 if (Equals(actorRef, ActorRefs.Nobody) || !exists)
                 {
-                    throw new ActorNotFoundException();
+                    continue;
                 }
                 
                 actorRef.Tell(new UpdateCurrentUsers(users));

@@ -4,6 +4,8 @@
 @inject IRoomService RoomService
 @inject IUserService UserService
 @inject IStringLocalizer<Shared> Loc
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
 <MudCard>
     <MudCardContent>
         @if (_summary is not null)
@@ -36,11 +38,27 @@
 
     [Parameter]
     public long Id { get; set; }
-    
+
     protected override async Task OnInitializedAsync()
     {
-        _summary = await RoomService.Get(Id);
-        await base.OnInitializedAsync();
+        try
+        {
+            _summary = await RoomService.Get(Id);
+
+        }
+        catch (Exception)
+        {
+            Snackbar.Add(Loc["RoomNotFound"], Severity.Error, config =>
+            {
+                config.RequireInteraction = true;
+                config.ShowCloseIcon = false;
+                config.Onclick = _ =>
+                {
+                    Navigation.NavigateTo("rooms");
+                    return Task.CompletedTask;
+                };
+            });
+        }
     }
 
 

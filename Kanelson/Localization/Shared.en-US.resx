@@ -135,4 +135,7 @@
     <data name="RoomDeleted" xml:space="preserve">
         <value>The room you were in was deleted.</value>
     </data>
+    <data name="RoomNotFound" xml:space="preserve">
+        <value>The room you tried to enter does not exist</value>
+    </data>
 </root>

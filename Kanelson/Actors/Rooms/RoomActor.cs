@@ -356,7 +356,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
 
     public static Props Props(long roomIdentifier, IHubContext<RoomHub> hubContext, IUserService userService)
     {
-        return Akka.Actor.Props.Create(() => new RoomActor(roomIdentifier, hubContext, userService));
+        return Akka.Actor.Props.Create<RoomActor>(roomIdentifier, hubContext, userService);
     }
 
 

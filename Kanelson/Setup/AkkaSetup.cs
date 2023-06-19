@@ -25,21 +25,21 @@ public static class AkkaSetup
                 akkaBuilder
                     .WithActors((system, registry, sp) =>
                     {
-                        var userIndexActor = system.ActorOf(Props.Create(() => new UserIndexActor("user-index")),
+                        var userIndexActor = system.ActorOf(Props.Create<UserIndexActor>("user-index"),
                             "user-index");
                         registry.Register<UserIndexActor>(userIndexActor);
 
 
                         var userQuestionIndex =
-                            system.ActorOf(Props.Create(() => new QuestionIndexActor("user-question-index")),
+                            system.ActorOf(Props.Create<QuestionIndexActor>("user-question-index"),
                                 "user-question-index");
 
                         registry.Register<QuestionIndexActor>(userQuestionIndex);
 
                         var roomIndex =
-                            system.ActorOf(Props.Create(() => new RoomIndexActor("room-index",
+                            system.ActorOf(Props.Create<RoomIndexActor>("room-index",
                                     sp.GetService<IHubContext<RoomHub>>(),
-                                    sp.GetService<IUserService>())),
+                                    sp.GetService<IUserService>()),
                                 "room-index");
 
                         registry.Register<RoomIndexActor>(roomIndex);

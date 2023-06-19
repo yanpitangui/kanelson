@@ -133,7 +133,7 @@ public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
 
     public static Props Props(string userId)
     {
-        return Akka.Actor.Props.Create(() => new TemplateIndexActor(userId));
+        return Akka.Actor.Props.Create<TemplateIndexActor>(userId);
     }
 
     private record Register(Guid Id);

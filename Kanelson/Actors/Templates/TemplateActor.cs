@@ -64,7 +64,7 @@ public class TemplateActor : ReceivePersistentActor, IHasSnapshotInterval
 
     public static Props Props(Guid templateId)
     {
-        return Akka.Actor.Props.Create(() => new TemplateActor(templateId));
+        return Akka.Actor.Props.Create<TemplateActor>(templateId);
     }
 
 }

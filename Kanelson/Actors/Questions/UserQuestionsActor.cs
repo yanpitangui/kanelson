@@ -82,7 +82,7 @@ public class UserQuestionsActor : ReceivePersistentActor, IHasSnapshotInterval
 
     public static Props Props(string userId)
     {
-        return Akka.Actor.Props.Create(() => new UserQuestionsActor(userId));
+        return Akka.Actor.Props.Create<UserQuestionsActor>(userId);
     }
 }
 

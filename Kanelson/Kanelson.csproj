@@ -11,8 +11,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Akka.Cluster.Hosting" Version="1.5.7" />
-      <PackageReference Include="Akka.Logger.Serilog" Version="1.5.7" />
+      <PackageReference Include="Akka.Cluster.Hosting" Version="1.5.8" />
       <PackageReference Include="Akka.Management" Version="1.5.7" />
       <PackageReference Include="Akka.Persistence.Azure.Hosting" Version="1.5.1" />
       <PackageReference Include="AspNet.Security.OAuth.GitHub" Version="7.0.2" />

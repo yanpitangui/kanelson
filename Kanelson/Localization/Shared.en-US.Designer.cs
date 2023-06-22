@@ -96,6 +96,15 @@ namespace Kanelson.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You have to select at least one question..
+        /// </summary>
+        internal static string AtLeastOneQuestion {
+            get {
+                return ResourceManager.GetString("AtLeastOneQuestion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Available questions.
         /// </summary>
         internal static string AvailableQuestions {

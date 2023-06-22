@@ -20,6 +20,8 @@
             <MudPaper Class="pa-4">
                 <EditForm Model="@_template" OnValidSubmit="SaveTemplate">
                     <ObjectGraphDataAnnotationsValidator />
+                    <ServerModelValidator @ref="_serverModelValidator"/>
+                    <ValidationSummary/>
                     <MudCardContent>
                         <MudTextField @bind-Value="_template.Name"
                                       For="@(() => _template.Name)"
@@ -64,6 +66,7 @@
     private Template _template = new();
 
     private List<TemplateQuestionDrop> _items = new();
+    private ServerModelValidator _serverModelValidator;
 
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -149,13 +152,20 @@
             )
             .OrderBy(x => x.Order)
             .ToList();
+
+        if (_template.Questions.Count == 0)
+        {
+            _serverModelValidator.DisplayError("TemplateQuestions", @Loc["AtLeastOneQuestion"]);
+            return;
+        }
+        
         await Service.UpsertTemplate(_template!);
         SnackBar.Add(Loc["TemplateSavedSuccess"], Severity.Success);
         Navigation.NavigateTo("templates");
         
     }
 
-    public record TemplateQuestionDrop : QuestionSummary
+    private record TemplateQuestionDrop : QuestionSummary
     {
         public string Selector { get; set; } = "1";
         public int Order { get; set; }

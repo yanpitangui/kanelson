@@ -144,4 +144,7 @@
     <data name="TemplateNotFound" xml:space="preserve">
         <value>O template que você estava tentando editar não existe</value>
     </data>
+    <data name="AtLeastOneQuestion" xml:space="preserve">
+        <value>Você deve selecionar pelo menos uma questão.</value>
+    </data>
 </root>

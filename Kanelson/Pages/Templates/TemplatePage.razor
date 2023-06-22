@@ -2,7 +2,6 @@
 @using Kanelson.Services
 @using Microsoft.AspNetCore.Components
 @using global::Kanelson.Contracts.Models
-@using System.Collections.Immutable
 @using MudBlazor.Utilities
 @inject ITemplateService Service
 @inject NavigationManager Navigation
@@ -19,20 +18,20 @@
     <MudGrid>
         <MudItem xs="12" sm="7">
             <MudPaper Class="pa-4">
-                <MudForm @ref="@_form" @bind-IsValid="@_valid" Model="@_template"
-                         ValidationDelay="0">
+                <EditForm Model="@_template" OnValidSubmit="SaveTemplate">
+                    <ObjectGraphDataAnnotationsValidator />
                     <MudCardContent>
                         <MudTextField @bind-Value="_template.Name"
                                       For="@(() => _template.Name)"
                                       Immediate="true"
                                       Label="@Loc["Name"]"/>
-                        <MudDropContainer Items="_items"  T="TemplateQuestionDrop"
-                                          ItemsSelector="@((item,dropzone) => item.Selector == dropzone)"
+                        <MudDropContainer Items="_items" T="TemplateQuestionDrop" Context="templateContext"
+                                          ItemsSelector="@((item, dropzone) => item.Selector == dropzone)"
                                           ItemDropped="ItemUpdated" Class="d-flex flex-wrap flex-grow-1">
                             <ChildContent>
                                 <MudDropZone T="TemplateQuestionDrop" Identifier="1" item Class="rounded border-1 mud-border-lines-default pa-6 ma-8 flex-grow-1">
                                     <MudText Typo="Typo.h6" Class="mb-4">@Loc["AvailableQuestions"]</MudText>
-                                 </MudDropZone>
+                                </MudDropZone>
                                 <MudDropZone T="TemplateQuestionDrop" Identifier="2"
                                              AllowReorder="true"
                                              Class="rounded border-1 mud-border-lines-default pa-6 ma-8 flex-grow-1">
@@ -40,17 +39,17 @@
                                 </MudDropZone>
                             </ChildContent>
                             <ItemRenderer>
-                                <MudListItem Class="mud-elevation-25 rounded" Text="@context.Name" />
+                                <MudListItem Class="mud-elevation-25 rounded" Text="@templateContext.Name"/>
                             </ItemRenderer>
                         </MudDropContainer>
                     </MudCardContent>
                     <MudCardActions>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveTemplate"
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary"
                                    Class="ml-auto">
                             @Loc["Save"]
                         </MudButton>
                     </MudCardActions>
-                </MudForm>
+                </EditForm>
             </MudPaper>
         </MudItem>
     </MudGrid>
@@ -62,10 +61,7 @@
     [Parameter]
     public Guid? Id { get; set; }
     
-    MudForm _form;
-    
     private Template _template = new();
-    bool _valid;
 
     private List<TemplateQuestionDrop> _items = new();
 
@@ -81,7 +77,19 @@
             }
             else
             {
-                _template = await Service.GetTemplate(Id!.Value);
+                try
+                {
+                    _template = await Service.GetTemplate(Id!.Value);
+                }        catch (Exception)
+                {
+                    SnackBar.Add(Loc["TemplateNotFound"], Severity.Error, config =>
+                    {
+                        config.CloseAfterNavigation = false;
+                        config.RequireInteraction = false;
+                        config.ShowCloseIcon = false;
+                    });
+                    Navigation.NavigateTo("templates");
+                }
 
             }
             var items = (await QuestionService.GetQuestionsSummary())
@@ -122,33 +130,29 @@
     
     private async Task SaveTemplate()
     {
-        await _form.Validate();
+        var availableQuestions = await QuestionService.GetQuestions(_items
+            .Where(x => x.Selector == "2").Select(x => x.Id).ToHashSet());
 
-        if (_form.IsValid)
-        {
-            var availableQuestions = await QuestionService.GetQuestions(_items
-                .Where(x => x.Selector == "2").Select(x => x.Id).ToHashSet());
-
-            _template.Questions = availableQuestions
-                .Join(_items, original => original.Id, changed => changed.Id, (question, drop) =>
-                
-                    new TemplateQuestion
-                    {
-                        Id = question.Id,
-                        Answers = question.Answers,
-                        Name = question.Name,
-                        Order = drop.Order,
-                        Points = question.Points,
-                        Type = question.Type,
-                        TimeLimit = question.TimeLimit
-                    }
-                )
-                .OrderBy(x => x.Order)
-                .ToList();
-            await Service.UpsertTemplate(_template!);
-            SnackBar.Add(Loc["TemplateSavedSuccess"], Severity.Success);
-            Navigation.NavigateTo("templates");
-        }
+        _template.Questions = availableQuestions
+            .Join(_items, original => original.Id, changed => changed.Id, (question, drop) =>
+            
+                new TemplateQuestion
+                {
+                    Id = question.Id,
+                    Answers = new List<Answer>(question.Answers),
+                    Name = question.Name,
+                    Order = drop.Order,
+                    Points = question.Points,
+                    Type = question.Type,
+                    TimeLimit = question.TimeLimit
+                }
+            )
+            .OrderBy(x => x.Order)
+            .ToList();
+        await Service.UpsertTemplate(_template!);
+        SnackBar.Add(Loc["TemplateSavedSuccess"], Severity.Success);
+        Navigation.NavigateTo("templates");
+        
     }
 
     public record TemplateQuestionDrop : QuestionSummary

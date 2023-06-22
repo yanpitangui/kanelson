@@ -138,4 +138,10 @@
     <data name="RoomNotFound" xml:space="preserve">
         <value>The room you tried to enter does not exist</value>
     </data>
+    <data name="QuestionNotFound" xml:space="preserve">
+        <value>The question you tried to edit does not exist</value>
+    </data>
+    <data name="TemplateNotFound" xml:space="preserve">
+        <value>The template you tried to edit does not exist</value>
+    </data>
 </root>

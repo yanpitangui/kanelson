@@ -1,4 +1,6 @@
-﻿namespace Kanelson.Contracts.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Kanelson.Contracts.Models;
 
 public record QuestionSummary
 {
@@ -11,17 +13,25 @@ public record Question
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     
+    [Required]
+    [StringLength(200, MinimumLength = 3)]
     public string Name { get; set; } = null!;
 
     /// <summary>
     /// Time limit in seconds for someone to answer it
     /// </summary>
+    [Required]
     public int TimeLimit { get; set; } = 5;
 
+    [Required]
+    [Range(0, 2000)]
     public int Points { get; set; } = 1000;
     
+    [Required]
+    [ValidateComplexType]
     public List<Answer> Answers { get; init; } = new();
     
+    [Required]
     public QuestionType Type { get; set; }
 }
 
@@ -35,8 +45,11 @@ public record Answer
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     
+    [Required]
+    [StringLength(200, MinimumLength = 4)]
     public string Description { get; set; } = null!;
     
+    [Required]
     public bool Correct { get; set; }
 }
 

@@ -17,8 +17,8 @@
     <MudGrid>
         <MudItem xs="12" sm="7">
             <MudPaper Class="pa-4">
-                <MudForm @ref="@form" @bind-IsValid="@valid" Model="@_question"
-                         ValidationDelay="0">
+                <EditForm Model="@_question" OnValidSubmit="SaveQuestion">
+                    <ObjectGraphDataAnnotationsValidator />
                     <MudCardContent>
                         <MudTextField @bind-Value="_question.Name"
                                       For="@(() => _question.Name)"
@@ -35,8 +35,8 @@
                                 <MudSelectItem T="int" Value="@tempo">@tempo seg.</MudSelectItem>
                             }
                         </MudSelect>
-                        <MudSelect Immediate="@true" T="QuestionType"  For="@(() => _question.Type)"
-                                   ValueExpression="@(()=>_question.Type)" Value="_question.Type" 
+                        <MudSelect Immediate="@true" T="QuestionType" For="@(() => _question.Type)"
+                                   ValueExpression="@(() => _question.Type)" Value="_question.Type"
                                    ValueChanged="@((QuestionType value) => SelectedValueChange(value))"
                                    Required="true" Placeholder="@Loc["Select"]" Label="@Loc["Type"]"
                                    Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
@@ -45,7 +45,7 @@
                                 <MudSelectItem Value="@item">@Loc[$"QuestionType_{item.ToString()}"]</MudSelectItem>
                             }
                         </MudSelect>
-                        <MudSelect Immediate="@true" T="int" For="@(() => _question.Points)" Required="true" 
+                        <MudSelect Immediate="@true" T="int" For="@(() => _question.Points)" Required="true"
                                    Placeholder="@Loc["Select"]" @bind-Value="_question.Points" Label="@Loc["Points"]"
                                    Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
                             <MudSelectItem Value="0">0 pts</MudSelectItem>
@@ -54,44 +54,45 @@
                         </MudSelect>
                     </MudCardContent>
                     <MudCardContent Class="pa-0">
-                        <MudTable Items="@_question.Answers"  Comparer="_comparer" Hover="true" Breakpoint="Breakpoint.None" Dense="@true" Elevation="0">
-                    		    <HeaderContent>
-                                    <MudTh>@Loc["Answers"]</MudTh>
-                                    <MudTh><MudFab @onclick="AddAnswer" Disabled="_question.Type == QuestionType.TrueFalse"
-                                           Color="Color.Secondary" Icon="@Icons.Material.Filled.Add" 
-                                           Size="Size.Small" IconSize="Size.Small" /></MudTh>
-                    		    </HeaderContent>
+                        <MudTable Context="answerContext" Items="@_question.Answers" Comparer="_comparer" Hover="true" Breakpoint="Breakpoint.None" Dense="@true" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>@Loc["Answers"]</MudTh>
+                                <MudTh>
+                                    <MudFab @onclick="AddAnswer" Disabled="_question.Type == QuestionType.TrueFalse"
+                                            Color="Color.Secondary" Icon="@Icons.Material.Filled.Add"
+                                            Size="Size.Small" IconSize="Size.Small"/></MudTh>
+                            </HeaderContent>
                             <RowTemplate>
-                                    <MudTd DataLabel="AnswerDescription">
-                                        <MudTextField Label="@Loc["AnswerDescription"]" Immediate="@true" 
-                                                      Disabled="_question.Type == QuestionType.TrueFalse"
-                                                      @bind-Value="@context.Description"
-                                                      For="@(() => context.Description)"/>
+                                <MudTd DataLabel="AnswerDescription">
+                                    <MudTextField Label="@Loc["AnswerDescription"]" Immediate="@true"
+                                                  Disabled="_question.Type == QuestionType.TrueFalse"
+                                                  @bind-Value="@answerContext.Description"
+                                                  For="@(() => answerContext.Description)"/>
 
-                                    </MudTd>
-                                    <MudTd DataLabel="Correct">
-                                        <MudCheckBox @bind-Checked="@context.Correct" @bind-Value="@context.Correct"
-                                                     For="@(() => context.Correct)"
-                                                     Label="@Loc["Correct"]" Color="Color.Primary"></MudCheckBox>
+                                </MudTd>
+                                <MudTd DataLabel="Correct">
+                                    <MudCheckBox @bind-Checked="@answerContext.Correct" @bind-Value="@answerContext.Correct"
+                                                 For="@(() => answerContext.Correct)"
+                                                 Label="@Loc["Correct"]" Color="Color.Primary"></MudCheckBox>
 
-                                    </MudTd>
-                                    <MudTd DataLabel="Delete">
-                                        <MudFab @onclick="@(() => DeleteAnswer(@context))"
-                                                Disabled="_question.Type == QuestionType.TrueFalse"
-                                                Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete"
-                                                Size="Size.Small" IconSize="Size.Small"/>
+                                </MudTd>
+                                <MudTd DataLabel="Delete">
+                                    <MudFab @onclick="@(() => DeleteAnswer(@answerContext))"
+                                            Disabled="_question.Type == QuestionType.TrueFalse"
+                                            Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete"
+                                            Size="Size.Small" IconSize="Size.Small"/>
 
-                                    </MudTd>
+                                </MudTd>
                             </RowTemplate>
-                            </MudTable>
+                        </MudTable>
                     </MudCardContent>
                     <MudCardActions>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveQuestion"
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary"
                                    Class="ml-auto">
                             @Loc["Save"]
                         </MudButton>
                     </MudCardActions>
-                </MudForm>
+                </EditForm>
             </MudPaper>
         </MudItem>
     </MudGrid>
@@ -110,12 +111,6 @@
 
     private static int[] _tempos = new[] {5, 10, 20, 30, 60, 90, 120, 240};
     
-    
-    MudForm form;
-
-
-    bool valid;
-
     internal void SelectedValueChange(QuestionType value)
     {
         _question.Type = value;
@@ -155,22 +150,29 @@
             }
             else
             {
-                _question = await _service.GetQuestion(Id!.Value);
-                await InvokeAsync(StateHasChanged);
+                try
+                {
+                    _question = await _service.GetQuestion(Id!.Value);
+                    await InvokeAsync(StateHasChanged);
+                }
+                catch (Exception)
+                {
+                    snackBar.Add(Loc["QuestionNotFound"], Severity.Error, config =>
+                    {
+                        config.CloseAfterNavigation = false;
+                        config.RequireInteraction = false;
+                    });
+                    Navigation.NavigateTo("questions");
+                }
             }
         }
     }
 
     private async Task SaveQuestion()
     {
-        await form.Validate();
-
-        if (form.IsValid)
-        {
-            await _service.SaveQuestion(_question!);
-            snackBar.Add(Loc["QuestionSavedSuccess"], Severity.Success);
-            Navigation.NavigateTo("questions");
-        }
+        await _service.SaveQuestion(_question!);
+        snackBar.Add(Loc["QuestionSavedSuccess"], Severity.Success);
+        Navigation.NavigateTo("questions");
     }
 
     private void DeleteAnswer(Answer answer)

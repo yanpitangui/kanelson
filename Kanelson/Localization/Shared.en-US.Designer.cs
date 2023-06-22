@@ -267,6 +267,15 @@ namespace Kanelson.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The question you tried to edit does not exist.
+        /// </summary>
+        internal static string QuestionNotFound {
+            get {
+                return ResourceManager.GetString("QuestionNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Questions.
         /// </summary>
         internal static string Questions {
@@ -371,6 +380,15 @@ namespace Kanelson.Localization {
         internal static string StartButton {
             get {
                 return ResourceManager.GetString("StartButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The template you tried to edit does not exist.
+        /// </summary>
+        internal static string TemplateNotFound {
+            get {
+                return ResourceManager.GetString("TemplateNotFound", resourceCulture);
             }
         }
         

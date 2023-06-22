@@ -1,12 +1,17 @@
-﻿namespace Kanelson.Contracts.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Kanelson.Contracts.Models;
 
 
 public record Template
 {
     public Guid Id { get; init; } = Guid.NewGuid();
     
+    [Required]
+    [StringLength(30, MinimumLength = 3)]
     public string Name { get; set; } = null!;
     
+    [MinLength(1)]
     public List<TemplateQuestion> Questions { get; set; } = new();
 }
 

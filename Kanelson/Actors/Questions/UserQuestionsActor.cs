@@ -1,7 +1,9 @@
 using System.Collections.Immutable;
 using Akka.Actor;
 using Akka.Persistence;
+using Akka.Util;
 using Kanelson.Contracts.Models;
+using OneOf.Types;
 
 namespace Kanelson.Actors.Questions;
 
@@ -45,6 +47,16 @@ public class UserQuestionsActor : ReceivePersistentActor, IHasSnapshotInterval
         Command<GetQuestions>(o =>
         {
             Sender.Tell(_state.Questions.Values.Where(x => o.Ids.Contains(x.Id)).ToImmutableArray());
+        });
+        
+        Command<GetQuestion>(o =>
+        {
+            var found = _state.Questions.TryGetValue(o.Id, out var question);
+            // Faz uma cópia simples da questão
+            Sender.Tell(found ? Option<Question>.Create(question! with
+            {
+                Answers = question.Answers.Select(x => x with {}).ToList()
+            }) : Option<Question>.Create(null!));
         });
         
         
@@ -93,4 +105,13 @@ public record RemoveQuestion(Guid Id);
 
 public record GetQuestions(params Guid[] Ids);
 
-public record GetQuestionsSummary;
+public record GetQuestion(Guid Id);
+
+public record GetQuestionsSummary
+{
+    private GetQuestionsSummary()
+    {
+    }
+
+    public static GetQuestionsSummary Instance { get; } = new();
+}

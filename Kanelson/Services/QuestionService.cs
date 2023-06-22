@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using Akka.Actor;
 using Akka.Hosting;
+using Akka.Util;
 using FluentValidation.Results;
 using Kanelson.Actors.Questions;
 using Kanelson.Contracts.Models;
@@ -33,19 +34,23 @@ public class QuestionService : IQuestionService
         userQuestionsActor.Tell(new RemoveQuestion(id));
     }
 
-    public async Task<Question?> GetQuestion(Guid id)
+    public async Task<Question> GetQuestion(Guid id)
     {
         var index = await _actorRegistry.GetAsync<QuestionIndexActor>();
         var userQuestionsActor = await index.Ask<IActorRef>(new GetRef(_userService.CurrentUser));
-        var result = await userQuestionsActor.Ask<ImmutableArray<Question>>(new GetQuestions(id));
-        return result.FirstOrDefault();
+        var result = await userQuestionsActor.Ask<Option<Question>>(new GetQuestion(id));
+        if (result.HasValue)
+        {
+            return result.Value;
+        }
+        throw new KeyNotFoundException();
     }
 
     public async Task<ImmutableArray<QuestionSummary>> GetQuestionsSummary()
     {
         var index = await _actorRegistry.GetAsync<QuestionIndexActor>();
         var userQuestionsActor = await index.Ask<IActorRef>(new GetRef(_userService.CurrentUser));
-        return await userQuestionsActor.Ask<ImmutableArray<QuestionSummary>>(new GetQuestionsSummary());
+        return await userQuestionsActor.Ask<ImmutableArray<QuestionSummary>>(Actors.Questions.GetQuestionsSummary.Instance);
     }
 
     public async Task<ImmutableArray<Question>> GetQuestions(HashSet<Guid> ids)
@@ -63,6 +68,6 @@ public interface IQuestionService
     public Task<ImmutableArray<QuestionSummary>> GetQuestionsSummary();
 
     Task RemoveQuestion(Guid id);
-    Task<Question?> GetQuestion(Guid id);
+    Task<Question> GetQuestion(Guid id);
     Task<ImmutableArray<Question>> GetQuestions(HashSet<Guid> ids);
 }

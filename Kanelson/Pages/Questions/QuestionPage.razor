@@ -1,5 +1,5 @@
 ﻿@page "/question/{Id:guid?}"
-@using global::Kanelson.Contracts.Models
+@using Kanelson.Models
 @using Kanelson.Services
 @using Severity = MudBlazor.Severity
 @inject IQuestionService _service
@@ -54,30 +54,30 @@
                         </MudSelect>
                     </MudCardContent>
                     <MudCardContent Class="pa-0">
-                        <MudTable Context="answerContext" Items="@_question.Answers" Comparer="_comparer" Hover="true" Breakpoint="Breakpoint.None" Dense="@true" Elevation="0">
+                        <MudTable Context="alternativeContext" Items="@_question.Alternatives" Comparer="_comparer" Hover="true" Breakpoint="Breakpoint.None" Dense="@true" Elevation="0">
                             <HeaderContent>
-                                <MudTh>@Loc["Answers"]</MudTh>
+                                <MudTh>@Loc["Alternatives"]</MudTh>
                                 <MudTh>
-                                    <MudFab @onclick="AddAnswer" Disabled="_question.Type == QuestionType.TrueFalse"
+                                    <MudFab @onclick="AddAlternative" Disabled="_question.Type == QuestionType.TrueFalse"
                                             Color="Color.Secondary" Icon="@Icons.Material.Filled.Add"
                                             Size="Size.Small" IconSize="Size.Small"/></MudTh>
                             </HeaderContent>
                             <RowTemplate>
-                                <MudTd DataLabel="AnswerDescription">
-                                    <MudTextField Label="@Loc["AnswerDescription"]" Immediate="@true"
+                                <MudTd DataLabel="AlternativeDescription">
+                                    <MudTextField Label="@Loc["AlternativeDescription"]" Immediate="@true"
                                                   Disabled="_question.Type == QuestionType.TrueFalse"
-                                                  @bind-Value="@answerContext.Description"
-                                                  For="@(() => answerContext.Description)"/>
+                                                  @bind-Value="@alternativeContext.Description"
+                                                  For="@(() => alternativeContext.Description)"/>
 
                                 </MudTd>
                                 <MudTd DataLabel="Correct">
-                                    <MudCheckBox @bind-Checked="@answerContext.Correct" @bind-Value="@answerContext.Correct"
-                                                 For="@(() => answerContext.Correct)"
+                                    <MudCheckBox @bind-Checked="@alternativeContext.Correct" @bind-Value="@alternativeContext.Correct"
+                                                 For="@(() => alternativeContext.Correct)"
                                                  Label="@Loc["Correct"]" Color="Color.Primary"></MudCheckBox>
 
                                 </MudTd>
                                 <MudTd DataLabel="Delete">
-                                    <MudFab @onclick="@(() => DeleteAnswer(@answerContext))"
+                                    <MudFab @onclick="@(() => DeleteAlternative(@alternativeContext))"
                                             Disabled="_question.Type == QuestionType.TrueFalse"
                                             Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete"
                                             Size="Size.Small" IconSize="Size.Small"/>
@@ -107,9 +107,9 @@
 
     private Question _question = new();
     
-    private AnswerComparer _comparer = new();
+    private AlternativeComparer _comparer = new();
 
-    private static int[] _tempos = new[] {5, 10, 20, 30, 60, 90, 120, 240};
+    private static int[] _tempos = {5, 10, 20, 30, 60, 90, 120, 240};
     
     internal void SelectedValueChange(QuestionType value)
     {
@@ -117,20 +117,20 @@
 
         if (value == QuestionType.TrueFalse)
         {
-            _question.Answers.Clear();
-            ReseedAnswers();
+            _question.Alternatives.Clear();
+            ReseedAlternatives();
         }
     }
 
-    private void ReseedAnswers()
+    private void ReseedAlternatives()
     {
-        _question.Answers.Add(new Answer
+        _question.Alternatives.Add(new Alternative
         {
             Description = Loc["True"],
             Correct = true
         });
 
-        _question.Answers.Add(new Answer
+        _question.Alternatives.Add(new Alternative
         {
             Description = Loc["False"],
             Correct = false
@@ -145,7 +145,7 @@
             if (Id is null)
             {
                 _question = new Question();
-                ReseedAnswers();
+                ReseedAlternatives();
                 await InvokeAsync(StateHasChanged);
             }
             else
@@ -175,14 +175,14 @@
         Navigation.NavigateTo("questions");
     }
 
-    private void DeleteAnswer(Answer answer)
+    private void DeleteAlternative(Alternative alternative)
     {
-        _question.Answers.Remove(answer);
+        _question.Alternatives.Remove(alternative);
     }
 
-    private void AddAnswer()
+    private void AddAlternative()
     {
-        _question.Answers.Add(new Answer());
+        _question.Alternatives.Add(new Alternative());
     }
 
 

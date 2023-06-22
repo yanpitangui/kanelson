@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using Kanelson.Actors.Rooms;
-using Kanelson.Contracts.Models;
 using Kanelson.Hubs;
+using Kanelson.Models;
 using Kanelson.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -46,7 +46,7 @@ public partial class Admin : BaseRoomPage
 
     private async Task Start()
     {
-        await HubConnection.SendAsync(SignalRMessages.Start, RoomId);
+        await RoomService.Start(RoomId);
     }
 
     private async Task NextQuestion()

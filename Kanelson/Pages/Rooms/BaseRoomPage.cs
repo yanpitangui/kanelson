@@ -1,6 +1,6 @@
 using Kanelson.Actors.Rooms;
-using Kanelson.Contracts.Models;
 using Kanelson.Hubs;
+using Kanelson.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Localization;

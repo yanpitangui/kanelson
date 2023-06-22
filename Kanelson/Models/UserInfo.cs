@@ -1,4 +1,4 @@
-﻿namespace Kanelson.Contracts.Models;
+﻿namespace Kanelson.Models;
 
 public record UserInfo
 {

@@ -39,14 +39,14 @@
     <data name="Save" xml:space="preserve">
         <value>Save</value>
     </data>
-    <data name="Answers" xml:space="preserve">
-        <value>Answers</value>
+    <data name="Alternatives" xml:space="preserve">
+        <value>Alternatives</value>
     </data>
     <data name="Correct" xml:space="preserve">
         <value>Correct</value>
     </data>
-    <data name="AnswerDescription" xml:space="preserve">
-        <value>Answer description</value>
+    <data name="AlternativeDescription" xml:space="preserve">
+        <value>Alternative description</value>
     </data>
     <data name="Loading" xml:space="preserve">
         <value>Loading</value>
@@ -70,7 +70,7 @@
         <value>Edit/Delete</value>
     </data>
     <data name="TimeToAnswer" xml:space="preserve">
-        <value>Time to answer</value>
+        <value>Time to alternative</value>
     </data>
     <data name="CreateRoom" xml:space="preserve">
         <value>Create room</value>

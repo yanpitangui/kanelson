@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Kanelson.Contracts.Models;
+namespace Kanelson.Models;
 
 public record QuestionSummary
 {
@@ -29,19 +29,19 @@ public record Question
     
     [Required]
     [ValidateComplexType]
-    public List<Answer> Answers { get; init; } = new();
+    public List<Alternative> Alternatives { get; init; } = new();
     
     [Required]
     public QuestionType Type { get; set; }
 }
 
-public class AnswerComparer : IEqualityComparer<Answer>
+public class AlternativeComparer : IEqualityComparer<Alternative>
 {
-    public bool Equals(Answer? a, Answer? b) => a?.Id == b?.Id;
-    public int GetHashCode(Answer x) => HashCode.Combine(x?.Id);
+    public bool Equals(Alternative? a, Alternative? b) => a?.Id == b?.Id;
+    public int GetHashCode(Alternative x) => HashCode.Combine(x?.Id);
 }
 
-public record Answer
+public record Alternative
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     

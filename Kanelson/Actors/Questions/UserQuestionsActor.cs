@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using Akka.Actor;
 using Akka.Persistence;
 using Akka.Util;
-using Kanelson.Contracts.Models;
+using Kanelson.Models;
 using OneOf.Types;
 
 namespace Kanelson.Actors.Questions;
@@ -55,7 +55,7 @@ public class UserQuestionsActor : ReceivePersistentActor, IHasSnapshotInterval
             // Faz uma cópia simples da questão
             Sender.Tell(found ? Option<Question>.Create(question! with
             {
-                Answers = question.Answers.Select(x => x with {}).ToList()
+                Alternatives = question.Alternatives.Select(x => x with {}).ToList()
             }) : Option<Question>.Create(null!));
         });
         

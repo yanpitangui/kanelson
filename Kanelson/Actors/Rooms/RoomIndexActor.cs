@@ -2,8 +2,8 @@ using System.Collections.Immutable;
 using Akka.Actor;
 using Akka.Persistence;
 using Akka.Util;
-using Kanelson.Contracts.Models;
 using Kanelson.Hubs;
+using Kanelson.Models;
 using Kanelson.Services;
 using Microsoft.AspNetCore.SignalR;
 

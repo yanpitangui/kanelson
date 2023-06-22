@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using OneOf;
 
-namespace Kanelson.Components;
+namespace Kanelson.Components.progress;
 
 public partial class Progress : MudComponentBase
 {
@@ -115,7 +115,7 @@ public partial class Progress : MudComponentBase
         [Parameter]
         public ProgressGapPosition GapPosition { get; set; } = ProgressGapPosition.Bottom;
         
-        protected Helpers.ClassMapper ClassMapper { get; } = new Helpers.ClassMapper();
+        protected Helpers.ClassMapper ClassMapper { get; } = new();
 
 
         #endregion Parameters

@@ -4,7 +4,7 @@ using Akka.Hosting;
 using Akka.Util;
 using IdGen;
 using Kanelson.Actors.Rooms;
-using Kanelson.Contracts.Models;
+using Kanelson.Models;
 using GetRef = Kanelson.Actors.Rooms.GetRef;
 using Register = Kanelson.Actors.Rooms.Register;
 
@@ -127,12 +127,12 @@ public class RoomService : IRoomService
         index.Tell(new Unregister(roomId));
     }
 
-    public async Task Answer(long roomId, Guid answerId)
+    public async Task Answer(long roomId, Guid alternativeId)
     {
         var index = _actorRegistry.Get<RoomIndexActor>();
         var room = await GetRoomRef(roomId, index);
 
-        room.Tell(new SendUserAnswer(_userService.CurrentUser, answerId));
+        room.Tell(new SendUserAnswer(_userService.CurrentUser, new []{ alternativeId }));
     }
 
     private static async Task<IActorRef> GetRoomRef(long roomId, IActorRef index)
@@ -154,7 +154,7 @@ public interface IRoomService
     Task Start(long roomId);
     Task<string> GetOwner(long roomId);
     Task Delete(long roomId);
-    Task Answer(long roomId, Guid answerId);
+    Task Answer(long roomId, Guid alternativeId);
     Task<RoomStatus> GetCurrentState(long roomId);
     void UserDisconnected(string userId, string connectionId);
     void UserConnected(long roomId, string userId, string connectionId);

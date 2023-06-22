@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Kanelson.Contracts.Models;
+namespace Kanelson.Models;
 
 
 public record Template

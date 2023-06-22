@@ -1,4 +1,4 @@
-using Kanelson.Contracts.Models;
+using Kanelson.Models;
 
 namespace Kanelson.Actors.Rooms;
 
@@ -24,12 +24,11 @@ public record RoomState
 
 public record RoomAnswer
 {
-    public Guid AnswerId { get; init; }
+    public IEnumerable<Guid> Alternatives { get; init; } = Enumerable.Empty<Guid>();
 
-    public TimeSpan TimeToAnswer { get; init; } = new();
+    public required TimeSpan TimeToAnswer { get; init; } = new();
     
-    public decimal Points { get; init; }
-    public bool Correct { get; set; }
+    public required decimal Points { get; init; }
 }
 
 public record UserRanking : UserInfo

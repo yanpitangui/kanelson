@@ -3,7 +3,7 @@ using System.Security.Claims;
 using Akka.Actor;
 using Akka.Hosting;
 using Kanelson.Actors;
-using Kanelson.Contracts.Models;
+using Kanelson.Models;
 
 namespace Kanelson.Services;
 

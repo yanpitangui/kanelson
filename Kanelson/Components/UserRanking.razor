@@ -1,0 +1,26 @@
+﻿@using System.Collections.Immutable
+@inject IStringLocalizer<Shared> Loc
+
+<MudTable Items="Ranking" Hover="true" Breakpoint="Breakpoint.Sm">
+    <HeaderContent>
+        <MudTh>Pos.</MudTh>
+        <MudTh>@Loc["Name"]</MudTh>
+        <MudTh>@Loc["Points"]</MudTh>
+        <MudTh>@Loc["AverageTime"]</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Pos.">@(context.Rank?.ToString() ?? "--")</MudTd>
+        <MudTd DataLabel="Name">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <Avatar GithubId="@context.Id"/>
+                <span>@context.Name</span>
+            </MudStack>
+        </MudTd>
+        <MudTd DataLabel="Points">@context.Points</MudTd>
+        <MudTd DataLabel="Average Time">@context.AverageTime</MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    [Parameter] public ImmutableArray<Actors.Rooms.UserRanking> Ranking { get; set; } = ImmutableArray<Actors.Rooms.UserRanking>.Empty;
+}

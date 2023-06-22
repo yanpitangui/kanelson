@@ -1,8 +1,8 @@
 ﻿using Kanelson.Extensions;
+using Kanelson.Models;
 using Kanelson.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using Kanelson.Contracts.Models;
 
 namespace Kanelson.Hubs;
 
@@ -35,9 +35,9 @@ public class RoomHub : Hub
         }
     }
 
-    public async Task Answer(long roomId, Guid answerId)
+    public async Task Answer(long roomId, Guid alternativeId)
     {
-        await _roomService.Answer(roomId, answerId);
+        await _roomService.Answer(roomId, alternativeId);
     }
     
     public override async Task OnDisconnectedAsync(Exception? exception)

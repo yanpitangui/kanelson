@@ -1,5 +1,5 @@
-@using Color = Kanelson.Shared.AnswerColor
-@using Kanelson.Contracts.Models
+@using Color = Kanelson.Shared.AlternativeColor
+@using Kanelson.Models
 
 @Render()
 
@@ -9,31 +9,31 @@
     public int Idx { get; set; }
 
     [Parameter]
-    public Answer Answer { get; set; } = null!;
+    public Alternative Alternative { get; set; } = null!;
     
     [Parameter]
     public EventCallback<Guid> OnClickCallback {get; set;}
 
 
-    private AnswerColor _answerColor;
+    private AlternativeColor _alternativeColor;
 
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        _answerColor = AnswerColor.GetColor(Idx);
+        _alternativeColor = AlternativeColor.GetColor(Idx);
     }
 
     private async Task OnClick()
     {
-        await OnClickCallback.InvokeAsync(Answer.Id);
+        await OnClickCallback.InvokeAsync(Alternative.Id);
     }
     
     RenderFragment Render()
     {
-        var style = $"background: {_answerColor?.Code} !important;";
+        var style = $"background: {_alternativeColor?.Code} !important;";
         return @<MudButton Style=@style Class="e-paper d-flex align-center justify-center mud-width-full py-8" @onclick="@OnClick">
-                    <span class="answer-description">@Answer.Description</span>
+                    <span class="alternative-description">@Alternative.Description</span>
                 </MudButton>;
     }
     

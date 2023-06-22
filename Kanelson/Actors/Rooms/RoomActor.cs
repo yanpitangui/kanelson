@@ -1,8 +1,8 @@
 using System.Collections.Immutable;
 using Akka.Actor;
 using Akka.Persistence;
-using Kanelson.Contracts.Models;
 using Kanelson.Hubs;
+using Kanelson.Models;
 using Kanelson.Services;
 using Microsoft.AspNetCore.SignalR;
 
@@ -23,6 +23,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
     private readonly string _roomIdentifierString;
     private TemplateQuestion CurrentQuestion => _state.Template.Questions[_state.CurrentQuestionIdx];
 
+    private IEnumerable<RoomUser> Users => _state.CurrentUsers.Where(x => x.Owner == false);
 
 
     public RoomActor(long roomIdentifier, IHubContext<RoomHub> hubContext, IUserService userService)
@@ -95,25 +96,32 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
              {
                  Timers.Cancel(AnswerloopTimerName);
 
-                 var ranking = GetRanking();
-                 Self.Tell(new SendSignalrGroupMessage(_roomIdentifierString,
-                     SignalRMessages.RoundFinished, ranking));
+                 Self.Tell(new SendSignalrGroupMessage(_roomIdentifierString, SignalRMessages.RoundFinished));
 
-                 if (_state.CurrentQuestionIdx >= _state.MaxQuestionIdx)
+                 FillAnswersFromUsersThatHaveNotAnswered();
+                 
+                 foreach (var user in Users)
                  {
-                     _roomStateMachine.Fire(RoomTrigger.Finish);
-
+                     Self.Tell(new SendSignalrUserMessage(user.Id, SignalRMessages.RoundSummary, GetUserRoundSummary(user.Id)));
                  }
-                 else
+
+                 if (_state.CurrentQuestionIdx < _state.MaxQuestionIdx)
                  {
                      _roomStateMachine.Fire(RoomTrigger.WaitForNextQuestion);
                  }
+                 else
+                 {
+                     _roomStateMachine.Fire(RoomTrigger.Finish);
+                     Self.Tell(new SendSignalrGroupMessage(_roomIdentifierString, SignalRMessages.RoomFinished,
+                         GetRanking()));
+                 }
+
              }
         });
 
         Command<NextQuestion>(o =>
         {
-            if (_state.CurrentQuestionIdx + 1 > _state.MaxQuestionIdx) return; 
+            if (_state.CurrentQuestionIdx + 1 > _state.MaxQuestionIdx || _state.CurrentState == RoomStatus.DisplayingQuestion) return; 
             _state.CurrentQuestionIdx+= 1;
             SendNextQuestion();
             SetTimeHandler();
@@ -122,13 +130,18 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
         Command<GetOwner>(_ => Sender.Tell(_state.OwnerId));
 
         Command<SendUserAnswer>(o =>
-        { 
-            if (!CurrentQuestion.Answers.Select(x => x.Id).Contains(o.AnswerId)) return;
+        {
+            if (!CurrentQuestion.Alternatives.Select(x => x.Id).Contains(o.AlternativeIds.First()))
+            {
+                // TODO: Escutar no front caso a resposta seja rejeitada
+                Self.Tell(new SendSignalrUserMessage(o.UserId, SignalRMessages.AnswerRejected));
+                return;
+            }
             var exists = _state.Answers.TryGetValue(CurrentQuestion.Id, out var question);
 
             if (!exists) return;
-            var answerInfo = CalculatePoints(o.AnswerId);
-            question!.TryAdd(o.UserId, answerInfo);
+            var alternativeInfo = CalculatePoints(o.AlternativeIds);
+            question!.TryAdd(o.UserId, alternativeInfo);
             var user = _state.CurrentUsers.FirstOrDefault(x => x.Id == o.UserId);
             if (user != null) user.Answered = true;
             Self.Tell(new SendSignalrGroupMessage(_roomIdentifierString, SignalRMessages.UserAnswered, o.UserId));
@@ -142,6 +155,8 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
         Command<UserConnected>(o =>
         {
             Self.Tell(new SendSignalrUserMessage(o.UserId, SignalRMessages.CurrentUsersUpdated, _state.CurrentUsers));
+            if(_state.CurrentState == RoomStatus.Finished) 
+                Self.Tell(new SendSignalrUserMessage(o.UserId, SignalRMessages.RoomFinished, GetRanking()));
         });
         
                 
@@ -178,6 +193,35 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
         Command<DeleteMessagesSuccess>(_ => { });
     }
 
+    private void FillAnswersFromUsersThatHaveNotAnswered()
+    {
+        var usersWithAnswers = _state.Answers.Select(x => x.Value)
+            .SelectMany(x => x)
+            .Select(x => x.Key)
+            .ToHashSet();
+
+        var unanswered = Users
+            .Where(x => !usersWithAnswers.Contains(x.Id));
+
+        var timeToAnswer = TimeSpan.FromSeconds(CurrentQuestion.TimeLimit);
+        var question = _state.Answers[CurrentQuestion.Id];
+        foreach (var user in unanswered)
+        {
+            question[user.Id] = new RoomAnswer
+            {
+                Points = 0,
+                TimeToAnswer = timeToAnswer
+            };
+        }
+    }
+
+    private UserAnswerSummary GetUserRoundSummary(string userId)
+    {
+        var alternatives = CurrentQuestion.Alternatives;
+        var userAnswer = _state.Answers[CurrentQuestion.Id][userId];
+        return new UserAnswerSummary(CurrentQuestion.Name, alternatives, userAnswer.Alternatives);
+    }
+
     private CurrentQuestionInfo GetCurrentQuestionInfo()
     {
         return new CurrentQuestionInfo(_state.Template.Questions[_state.CurrentQuestionIdx], _state.CurrentQuestionIdx + 1, _state.MaxQuestionIdx + 1);
@@ -187,7 +231,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
     private ImmutableArray<UserRanking> GetRanking()
     {
 
-        var answered = _state.Answers.Select(x => x.Value)
+        var anwsered = _state.Answers.Select(x => x.Value)
             .SelectMany(x => x)
             .GroupBy(x => x.Key)
             .Select(x => new
@@ -208,25 +252,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
                 Rank = i + 1
             }).ToArray();
 
-
-        var usersWithAnswers = _state.Answers.Select(x => x.Value)
-            .SelectMany(x => x)
-            .Select(x => x.Key)
-            .ToHashSet();
-
-            var unanswered = _state.CurrentUsers
-            .Where(x => !usersWithAnswers.Contains(x.Id) && x.Id != _state.OwnerId)
-            .Select(x => new UserRanking
-        {
-            Id = x.Id,
-            AverageTime = 0,
-            Name = x.Name,
-            Points = 0,
-            Rank = null
-        });
-
-
-        return answered.Concat(unanswered).OrderBy(x => x.Rank == null).ThenBy(x => x.Rank)
+        return anwsered
             .ToImmutableArray();
     }
     
@@ -271,26 +297,26 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
          });
      }
      
-     private RoomAnswer CalculatePoints(Guid answerId)
+     private RoomAnswer CalculatePoints(Guid[] alternativeIds)
      {
          var timeToAnswer = DateTime.Now - _currentQuestionStartTime;
-         var isCorrect = CurrentQuestion.Answers.Where(x => x.Correct).Select(x => x.Id).Contains(answerId);
+         // TODO: Quando adicionar a possibilidade de marcar mais de uma alternativa, alterar esta lógica
+         var isCorrect = CurrentQuestion.Alternatives.Where(x => x.Correct).Select(x => x.Id).Contains(alternativeIds.First());
          // Kahoot formula: https://support.kahoot.com/hc/en-us/articles/115002303908-How-points-work
          var wouldBePoints = Math.Round((decimal)
              (1 - (timeToAnswer.TotalSeconds /  CurrentQuestion.TimeLimit) / 2) * CurrentQuestion.Points);
 
          return new RoomAnswer
          {
-             AnswerId = answerId,
-             Correct = isCorrect,
+             Alternatives = alternativeIds,
              Points = isCorrect ? wouldBePoints : 0,
              TimeToAnswer = timeToAnswer
          };
      }
 
-    private record SendSignalrGroupMessage(string GroupId, string MessageName, object Data);
+    private record SendSignalrGroupMessage(string GroupId, string MessageName, object? Data = null);
     
-    private record SendSignalrUserMessage(string UserId, string MessageName, object Data);
+    private record SendSignalrUserMessage(string UserId, string MessageName, object? Data = null);
     
     private record HandleAnswerLoop
     {
@@ -430,4 +456,4 @@ public record GetOwner
     public static GetOwner Instance { get; } = new();
 }
 
-public record SendUserAnswer(string UserId, Guid AnswerId);
+public record SendUserAnswer(string UserId, Guid[] AlternativeIds);

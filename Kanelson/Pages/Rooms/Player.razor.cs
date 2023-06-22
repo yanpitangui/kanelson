@@ -1,8 +1,8 @@
 using System.Collections.Immutable;
 using System.Timers;
 using Kanelson.Actors.Rooms;
-using Kanelson.Contracts.Models;
 using Kanelson.Hubs;
+using Kanelson.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
@@ -12,10 +12,6 @@ namespace Kanelson.Pages.Rooms;
 
 public partial class Player : BaseRoomPage
 {
-    
-    [Inject]
-    protected IDialogService DialogService { get; set; } = null!;
-    
 
     private PlayerStatus _playerStatus = PlayerStatus.Answering;
     private Timer _timerHandle = new(TimeSpan.FromSeconds(1));
@@ -33,13 +29,9 @@ public partial class Player : BaseRoomPage
     {
         base.ConfigureSignalrEvents();
         _timerHandle.Elapsed += TimeElapsed;
-        HubConnection.On<ImmutableArray<UserRanking>>(SignalRMessages.RoundFinished, (ranking) =>
+        HubConnection.On<UserAnswerSummary>(SignalRMessages.RoundFinished, (summary) =>
         {
             _timerHandle.Stop();
-            var parameters = new DialogParameters { ["Ranking"]=ranking };
-
-            InvokeAsync(() => DialogService.Show<RankingDialog>("Ranking", parameters));
-            
             CurrentQuestion = null;
             InvokeAsync(StateHasChanged);
         });
@@ -66,11 +58,11 @@ public partial class Player : BaseRoomPage
         InvokeAsync(StateHasChanged);
     }
 
-    private async Task Answer(Guid answerId)
+    private async Task Answer(Guid alternativeId)
     {
         _timerHandle.Stop();
         _playerStatus = PlayerStatus.Answered;
-        await HubConnection!.SendAsync(SignalRMessages.Answer, RoomId,  answerId);
+        await HubConnection!.SendAsync(SignalRMessages.Answer, RoomId,  alternativeId);
         await InvokeAsync(StateHasChanged);
     }
 

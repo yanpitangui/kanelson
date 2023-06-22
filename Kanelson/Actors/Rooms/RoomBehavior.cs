@@ -1,4 +1,4 @@
-using Kanelson.Contracts.Models;
+using Kanelson.Models;
 using Stateless;
 
 namespace Kanelson.Actors.Rooms;

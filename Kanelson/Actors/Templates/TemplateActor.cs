@@ -1,6 +1,6 @@
 using Akka.Actor;
 using Akka.Persistence;
-using Kanelson.Contracts.Models;
+using Kanelson.Models;
 
 namespace Kanelson.Actors.Templates;
 

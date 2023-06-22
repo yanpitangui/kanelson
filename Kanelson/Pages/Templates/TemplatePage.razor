@@ -1,7 +1,7 @@
 ﻿@page "/template/{Id:guid?}"
 @using Kanelson.Services
 @using Microsoft.AspNetCore.Components
-@using global::Kanelson.Contracts.Models
+@using Kanelson.Models
 @using MudBlazor.Utilities
 @inject ITemplateService Service
 @inject NavigationManager Navigation
@@ -142,7 +142,7 @@
                 new TemplateQuestion
                 {
                     Id = question.Id,
-                    Answers = new List<Answer>(question.Answers),
+                    Alternatives = new List<Alternative>(question.Alternatives),
                     Name = question.Name,
                     Order = drop.Order,
                     Points = question.Points,

@@ -21,6 +21,7 @@
       <PackageReference Include="FluentValidation" Version="11.5.2" />
       <PackageReference Include="IdGen" Version="3.0.3" />
       <PackageReference Include="IdGen.DependencyInjection" Version="3.0.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Components.DataAnnotations.Validation" Version="3.2.0-rc1.20223.4" />
       <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.7" />
       <PackageReference Include="Microsoft.Azure.AppConfiguration.AspNetCore" Version="6.0.1" />
       <PackageReference Include="MudBlazor" Version="6.4.1" />
@@ -35,10 +36,6 @@
       <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
       <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
       <PackageReference Include="Stateless" Version="5.13.0" />
-    </ItemGroup>
-    
-    <ItemGroup>
-      <ProjectReference Include="..\Kanelson.Contracts\Kanelson.Contracts.csproj" />
     </ItemGroup>
     
     <ItemGroup>

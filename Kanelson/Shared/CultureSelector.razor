@@ -12,10 +12,9 @@
 
 @code
 {
-    private CultureInfo[] supportedCultures = new[]
-    {
-        new CultureInfo("en-US"),
-        new CultureInfo("pt-BR"),
+    private CultureInfo[] supportedCultures = {
+        new("en-US"),
+        new("pt-BR"),
     };
 
     protected override void OnInitialized()

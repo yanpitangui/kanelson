@@ -69,20 +69,20 @@ namespace Kanelson.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Descrição da resposta.
+        ///   Looks up a localized string similar to Descrição da alternativa.
         /// </summary>
-        internal static string AnswerDescription {
+        internal static string AlternativeDescription {
             get {
-                return ResourceManager.GetString("AnswerDescription", resourceCulture);
+                return ResourceManager.GetString("AlternativeDescription", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Respostas.
+        ///   Looks up a localized string similar to Alternativas.
         /// </summary>
-        internal static string Answers {
+        internal static string Alternatives {
             get {
-                return ResourceManager.GetString("Answers", resourceCulture);
+                return ResourceManager.GetString("Alternatives", resourceCulture);
             }
         }
         

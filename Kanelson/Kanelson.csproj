@@ -22,7 +22,7 @@
       <PackageReference Include="IdGen" Version="3.0.3" />
       <PackageReference Include="IdGen.DependencyInjection" Version="3.0.0" />
       <PackageReference Include="Microsoft.AspNetCore.Components.DataAnnotations.Validation" Version="3.2.0-rc1.20223.4" />
-      <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.7" />
+      <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.8" />
       <PackageReference Include="Microsoft.Azure.AppConfiguration.AspNetCore" Version="6.0.1" />
       <PackageReference Include="MudBlazor" Version="6.4.1" />
       <PackageReference Include="Npgsql" Version="7.0.4" />

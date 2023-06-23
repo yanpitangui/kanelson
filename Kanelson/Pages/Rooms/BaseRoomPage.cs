@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Timers;
 using Kanelson.Actors.Rooms;
 using Kanelson.Hubs;
@@ -29,6 +30,8 @@ public class BaseRoomPage : ComponentBase, IAsyncDisposable
     private ISnackbar _snackbar { get; set; } = null!;
 
     protected HashSet<RoomUser> ConnectedUsers = new();
+
+    protected ImmutableArray<UserRanking>? Rankings = null;
     
     protected CurrentQuestionInfo? CurrentQuestion;
 
@@ -57,6 +60,13 @@ public class BaseRoomPage : ComponentBase, IAsyncDisposable
     {
         
         TimerConfig.SetupAction(TimeElapsed);
+
+
+        HubConnection.On<ImmutableArray<UserRanking>>(SignalRMessages.RoomFinished, (ranking) =>
+        {
+            Rankings = ranking;
+            InvokeAsync(StateHasChanged);
+        });
         
         HubConnection.On<CurrentQuestionInfo>(SignalRMessages.NextQuestion, (question) =>
         {

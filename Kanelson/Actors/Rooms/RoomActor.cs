@@ -1,10 +1,12 @@
 using System.Collections.Immutable;
 using Akka.Actor;
+using Akka.Event;
 using Akka.Persistence;
 using Kanelson.Hubs;
 using Kanelson.Models;
 using Kanelson.Services;
 using Microsoft.AspNetCore.SignalR;
+using LogLevel = Akka.Event.LogLevel;
 
 namespace Kanelson.Actors.Rooms;
 
@@ -89,7 +91,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
             var time = _currentQuestionStartTime;
             
             var currentQuestion = CurrentQuestion;
-             var everyoneAnswered = CheckEveryoneAnswered();
+            var everyoneAnswered = CheckEveryoneAnswered();
              
              // Finaliza o round e espera a próxima pergunta (se tiver)
              if (DateTime.Now - time >= TimeSpan.FromSeconds(currentQuestion.TimeLimit) || everyoneAnswered)
@@ -166,6 +168,9 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
             DeleteMessages(Int64.MaxValue);
             DeleteSnapshots(SnapshotSelectionCriteria.Latest);
         });
+        
+        Command<SaveSnapshotSuccess>(_ => { });
+
         
         Recover<SnapshotOffer>(o =>
         {
@@ -264,7 +269,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
     {
         _currentQuestionStartTime = DateTime.Now;
         Timers.StartPeriodicTimer(AnswerloopTimerName, HandleAnswerLoop.Instance
-             , TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(1));
+             , TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
     }
 
     private void SetStateMachineByCurrentState()
@@ -364,12 +369,11 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
     
     private bool CheckEveryoneAnswered()
     {
-        var users = _state.CurrentUsers.Select(x => x.Id)
-            .Where(x => x != _state.OwnerId)
+        var users = Users.Select(x => x.Id)
             .ToHashSet();
-        var currentQuestion = CurrentQuestion;
         // verifica se para cada usuário logado, tirando o host, existe um registro de resposta, de maneira burra
-        return _state.Answers[currentQuestion.Id].Keys.ToHashSet().SetEquals(users);
+        var isEqual = users.SetEquals(_state.Answers[CurrentQuestion.Id].Keys);
+        return isEqual;
     }
 
 

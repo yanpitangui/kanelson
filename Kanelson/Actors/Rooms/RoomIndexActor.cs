@@ -147,6 +147,9 @@ public class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterval
             ExecuteWork().PipeTo(sender);
         });
         
+        Command<SaveSnapshotSuccess>(_ => { });
+
+        
         Recover<SnapshotOffer>(o =>
         {
             if (o.Snapshot is RoomIndexState state)
@@ -176,6 +179,7 @@ public class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterval
             child.Tell(ShutdownCommand.Instance);
         }
         _state.Items.Remove(r.RoomIdentifier);
+        _children.Remove(r.RoomIdentifier);
         ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
         
     }

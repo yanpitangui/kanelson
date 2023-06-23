@@ -23,6 +23,11 @@
             
             <QuestionComponent Info="CurrentQuestion"/>
         }
+        
+        else if (Rankings != null)
+        {
+            <UserRanking Ranking="Rankings.Value"/>
+        }
 
         
         <MudCardActions>

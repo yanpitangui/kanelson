@@ -23,6 +23,18 @@ public partial class Player : BaseRoomPage
         await InvokeAsync(StateHasChanged);
     }
 
+    protected override void ConfigureSignalrEvents()
+    {
+        base.ConfigureSignalrEvents();
+
+        HubConnection.On<UserAnswerSummary>(SignalRMessages.RoundSummary, summary =>
+        {
+            // TODO: Exibir essa informação de alguma maneira
+
+            InvokeAsync(StateHasChanged);
+        });
+    }
+
     protected override void OnNextQuestion()
     {
         _playerStatus = PlayerStatus.Answering;

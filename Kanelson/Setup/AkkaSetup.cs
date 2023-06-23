@@ -23,6 +23,11 @@ public static class AkkaSetup
             services.AddAkka(actorSystemName, (akkaBuilder) =>
             {
                 akkaBuilder
+                    .ConfigureLoggers(setup =>
+                    {
+                        setup.ClearLoggers();
+                        setup.AddLoggerFactory();
+                    })
                     .WithActors((system, registry, sp) =>
                     {
                         var userIndexActor = system.ActorOf(Props.Create<UserIndexActor>("user-index"),

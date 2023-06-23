@@ -1,0 +1,26 @@
+@using Kanelson.Actors.Rooms
+<MudList>
+    @foreach (var user in ConnectedUsers)
+    {
+        <MudListItem>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <Avatar GithubId="@user.Id"/>
+                <span>@user.Name</span>
+                @if (user.Owner)
+                {
+                    <span class="host-identifier">[@Localizer["Host"]]</span>
+                }
+            </MudStack>
+        </MudListItem>
+    }
+</MudList>
+
+@code {
+
+    [Parameter]
+    public HashSet<RoomUser> ConnectedUsers { get; set; } = new();
+
+    [Inject]
+    private IStringLocalizer<Shared> Localizer { get; set; } = null!;
+
+}

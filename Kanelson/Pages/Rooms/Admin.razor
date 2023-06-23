@@ -1,50 +1,47 @@
 ﻿@using Kanelson.Actors.Rooms
+@using Kanelson.Components.progress
 @using Kanelson.Models
 @inherits BaseRoomPage
 
-<MudList>
-    
-    @foreach (var user in ConnectedUsers)
+<MudStack>
+    <ConnectedUsersComponent ConnectedUsers="ConnectedUsers"/>
+
+    @if (_roomStateMachine != null)
     {
-        <MudListItem>
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                <Avatar GithubId="@user.Id"/>
-                <span>@user.Name</span>
-                @if (user.Owner)
-                {
-                    <span class="host-identifier">[@Loc["Host"]]</span>
-                }
-            </MudStack>
-        </MudListItem>
-    }
-</MudList>
-
-
-
-@if (_roomStateMachine != null)
-{
-    
-    @if (CurrentQuestion is not null && _roomStateMachine.IsInState(RoomStatus.Started))
-    {
-        <QuestionComponent Info="CurrentQuestion"/>
-    }
-
-    
-    <MudCardActions>
-        @if (_roomStateMachine.PermittedTriggers.Contains(RoomTrigger.Start))
-        {
-            <MudButton @onclick="Start" Color="Color.Primary" 
-                       Variant="Variant.Filled"
-                       StartIcon="@Icons.Material.Filled.Start">@Loc["StartButton"]</MudButton>
-        }
         
-    
-        @if (_roomStateMachine.PermittedTriggers.Contains(RoomTrigger.DisplayQuestion) && !_roomStateMachine.IsInState(RoomStatus.Finished))
+        
+        @if (CurrentQuestion is not null && _roomStateMachine.IsInState(RoomStatus.Started))
         {
-            <MudButton @onclick="NextQuestion" Color="Color.Primary" 
-                       Variant="Variant.Filled"
-                       StartIcon="@Icons.Material.Filled.SkipNext">@Loc["NextQuestionButton"]</MudButton>
+            
+            @if (TimerConfig.Enabled)
+            {
+                <Progress Status="ProgressStatus.Active" Type="ProgressType.Circle"
+                          TrailColor="#ff4d4f"
+                          Percent="@TimerConfig.Percentage" Format="TimerConfig.Format"></Progress>
+            }
+            
+            
+            <QuestionComponent Info="CurrentQuestion"/>
         }
-    </MudCardActions>
 
-}
+        
+        <MudCardActions>
+            @if (_roomStateMachine.PermittedTriggers.Contains(RoomTrigger.Start))
+            {
+                <MudButton @onclick="Start" Color="Color.Primary" 
+                           Variant="Variant.Filled"
+                           StartIcon="@Icons.Material.Filled.Start">@Loc["StartButton"]</MudButton>
+            }
+            
+        
+            @if (_roomStateMachine.PermittedTriggers.Contains(RoomTrigger.DisplayQuestion) && !_roomStateMachine.IsInState(RoomStatus.Finished))
+            {
+                <MudButton @onclick="NextQuestion" Color="Color.Primary" 
+                           Variant="Variant.Filled"
+                           StartIcon="@Icons.Material.Filled.SkipNext">@Loc["NextQuestionButton"]</MudButton>
+            }
+        </MudCardActions>
+
+    }
+</MudStack>
+

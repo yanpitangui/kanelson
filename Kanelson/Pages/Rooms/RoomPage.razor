@@ -50,14 +50,11 @@
         {
             Snackbar.Add(Loc["RoomNotFound"], Severity.Error, config =>
             {
-                config.RequireInteraction = true;
+                config.RequireInteraction = false;
+                config.CloseAfterNavigation = false;
                 config.ShowCloseIcon = false;
-                config.Onclick = _ =>
-                {
-                    Navigation.NavigateTo("rooms");
-                    return Task.CompletedTask;
-                };
             });
+            Navigation.NavigateTo("rooms");
         }
     }
 

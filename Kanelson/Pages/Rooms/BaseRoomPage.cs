@@ -1,3 +1,4 @@
+using System.Timers;
 using Kanelson.Actors.Rooms;
 using Kanelson.Hubs;
 using Kanelson.Models;
@@ -32,6 +33,13 @@ public class BaseRoomPage : ComponentBase, IAsyncDisposable
     protected CurrentQuestionInfo? CurrentQuestion;
 
 
+    protected readonly TimerConfiguration TimerConfig = new(); 
+    private void TimeElapsed(object? sender, ElapsedEventArgs e)
+    {
+        TimerConfig.Increment();
+        InvokeAsync(StateHasChanged);
+    }
+
     protected sealed override async Task OnInitializedAsync()
     {
         HubConnection = HttpAccessor.GetConnection(Navigation);
@@ -47,6 +55,26 @@ public class BaseRoomPage : ComponentBase, IAsyncDisposable
 
     protected virtual void ConfigureSignalrEvents()
     {
+        
+        TimerConfig.SetupAction(TimeElapsed);
+        
+        HubConnection.On<CurrentQuestionInfo>(SignalRMessages.NextQuestion, (question) =>
+        {
+            CurrentQuestion = question;
+            TimerConfig.ResetAndStart(question.Question.TimeLimit);
+            OnNextQuestion();
+            InvokeAsync(StateHasChanged);
+        });
+        
+        
+        HubConnection.On<bool>(SignalRMessages.RoundFinished, (_) =>
+        {
+            TimerConfig.Stop();
+            CurrentQuestion = null;
+            InvokeAsync(StateHasChanged);
+        });
+
+        
         HubConnection.On<HashSet<RoomUser>>(SignalRMessages.CurrentUsersUpdated, (users) =>
         {
             ConnectedUsers = users;
@@ -70,17 +98,29 @@ public class BaseRoomPage : ComponentBase, IAsyncDisposable
         });
     }
 
+    protected virtual void OnNextQuestion()
+    {
+        
+    }
+
     protected virtual Task AfterConnectedConfiguration()
     {
         return Task.CompletedTask;
     }
 
 
-    public virtual async ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (HubConnection is IAsyncDisposable disposable)
         {
             await disposable.DisposeAsync();
         }
+
+        if (TimerConfig is IDisposable handle)
+        {
+            handle.Dispose();
+        }
     }
+
+    
 }

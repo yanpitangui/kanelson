@@ -99,15 +99,7 @@ public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
             }
         });
         
-        Command<SaveSnapshotSuccess>(success => {
-            // soft-delete the journal up until the sequence # at
-            // which the snapshot was taken
-            DeleteMessages(success.Metadata.SequenceNr); 
-            DeleteSnapshots(new SnapshotSelectionCriteria(success.Metadata.SequenceNr - 1));
-        });
-
-        Command<DeleteSnapshotsSuccess>(_ => { });
-        Command<DeleteMessagesSuccess>(_ => { });
+        Command<SaveSnapshotSuccess>(_ => { });
         
     }
 

@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Kanelson.Actors.Rooms;
 
-public class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterval
+public sealed class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterval
 {
     public override string PersistenceId { get; }
 

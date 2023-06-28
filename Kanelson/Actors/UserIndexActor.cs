@@ -7,7 +7,7 @@ namespace Kanelson.Actors;
 
 
 
-public class UserIndexActor : ReceivePersistentActor, IHasSnapshotInterval
+public sealed class UserIndexActor : ReceivePersistentActor, IHasSnapshotInterval
 {
    
     private UserIndexState _state;

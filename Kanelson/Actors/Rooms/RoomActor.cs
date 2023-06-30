@@ -286,16 +286,39 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
      private RoomAnswer CalculatePoints(Guid[] alternativeIds)
      {
          var timeToAnswer = DateTime.Now - _currentQuestionStartTime;
-         // TODO: Quando adicionar a possibilidade de marcar mais de uma alternativa, alterar esta lógica
-         var isCorrect = CurrentQuestion.Alternatives.Where(x => x.Correct).Select(x => x.Id).Contains(alternativeIds.First());
+         
+         var correctAlternatives = CurrentQuestion
+             .Alternatives
+             .Where(x => x.Correct)
+             .Select(x => x.Id)
+             .ToList();
+
+         var maxCorrect = correctAlternatives.Count;
+         
+         var correct = correctAlternatives
+             .Intersect(alternativeIds)
+             .Count();
+
+
+         var wrong = CurrentQuestion.Alternatives
+             .Where(x => !x.Correct)
+             .Select(x => x.Id)
+             .Intersect(alternativeIds)
+             .Count();
+
+         var percentage = wrong >= correct ? 0 : (decimal)maxCorrect / ((decimal)correct - (decimal)wrong); 
+             
+         
+         var timeMinusDelay = Math.Max(timeToAnswer.TotalSeconds - 0.2d , 0); // Retira 200ms do cálculo para considerar delay  
+             
          // Kahoot formula: https://support.kahoot.com/hc/en-us/articles/115002303908-How-points-work
          var wouldBePoints = Math.Round((decimal)
-             (1 - (timeToAnswer.TotalSeconds /  CurrentQuestion.TimeLimit) / 2) * CurrentQuestion.Points);
+             (1 - ( timeMinusDelay  /  CurrentQuestion.TimeLimit) / 2) * CurrentQuestion.Points);
 
          return new RoomAnswer
          {
              Alternatives = alternativeIds,
-             Points = isCorrect ? wouldBePoints : 0,
+             Points = wouldBePoints * percentage,
              TimeToAnswer = timeToAnswer
          };
      }

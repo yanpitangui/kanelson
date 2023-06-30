@@ -141,11 +141,6 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
             if (user != null) user.Answered = true;
             _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifierString, SignalRMessages.UserAnswered, o.UserId));
         });
-
-        Command<GetCurrentUsers>(_ =>
-        {
-            Sender.Tell(_state.CurrentUsers);
-        });
         
         Command<UserConnected>(o =>
         {
@@ -404,15 +399,6 @@ public record GetCurrentQuestion
     }
 
     public static GetCurrentQuestion Instance { get; } = new();
-}
-
-public record GetCurrentUsers
-{
-    private GetCurrentUsers()
-    {
-    }
-
-    public static GetCurrentUsers Instance { get; } = new();
 }
 
 public record Start

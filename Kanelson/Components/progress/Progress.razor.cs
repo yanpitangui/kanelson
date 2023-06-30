@@ -10,14 +10,14 @@ public partial class Progress : MudComponentBase
 {
         private const string PrefixCls = "kanelson-progress";
         private const double CircleDash = 295.31;
-        private string _bgStyle;
-        private string _bgSuccessStyle;
-        private string _circleTrailStyle;
-        private string _circlePathStyle;
-        private string _circleSuccessStyle;
+        private string _bgStyle = null!;
+        private string _bgSuccessStyle = null!;
+        private string _circleTrailStyle = null!;
+        private string _circlePathStyle = null!;
+        private string _circleSuccessStyle = null!;
         private bool _format = false;
 
-        private static readonly Regex _hexColor = new(@"^#(?<r>[a-fA-F0-9]{2})(?<g>[a-fA-F0-9]{2})(?<b>[a-fA-F0-9]{2})$");
+        private static readonly Regex HexColor = ColorRegex();
 
         #region Parameters
 
@@ -73,7 +73,7 @@ public partial class Progress : MudComponentBase
         /// color of unfilled part
         /// </summary>
         [Parameter]
-        public string TrailColor { get; set; }
+        public string TrailColor { get; set; } = null!;
 
         /// <summary>
         /// to set the width of the progress bar, unit: px
@@ -142,7 +142,7 @@ public partial class Progress : MudComponentBase
                 StrokeWidth = 6;
             }
 
-            if (dict.TryGetValue(nameof(Percent), out var percentObject) && percentObject is double percent && percent == 100)
+            if (dict.TryGetValue(nameof(Percent), out var percentObject) && percentObject is double and 100)
             {
                 Status = ProgressStatus.Success;
             }
@@ -161,7 +161,7 @@ public partial class Progress : MudComponentBase
                 .Get(() => $"{PrefixCls}-{Size.Name}")
                 .GetIf(() => $"{PrefixCls}-{Type.Name}", () => Type != ProgressType.Dashboard)
                 .GetIf(() => $"{PrefixCls}-{ProgressType.Circle.Name}", () => Type == ProgressType.Dashboard)
-                .GetIf(() => $"{PrefixCls}-status-{Status.Name}", () => Status != null)
+                .GetIf(() => $"{PrefixCls}-status-{Status?.Name}", () => Status != null)
                 .GetIf(() => $"{PrefixCls}-show-info", () => ShowInfo)
                 .GetIf(() => $"{PrefixCls}-steps", () => Steps > 0);
         }
@@ -170,7 +170,7 @@ public partial class Progress : MudComponentBase
         {
             if (Type == ProgressType.Line)
             {
-                _bgStyle = GetLineBGStyle();
+                _bgStyle = GetLineBgStyle();
                 if (SuccessPercent != 0)
                 {
                     _bgSuccessStyle = FormattableString.Invariant($" width: {SuccessPercent}%; height: {StrokeWidth}px;");
@@ -208,7 +208,7 @@ public partial class Progress : MudComponentBase
             }
         }
 
-        private string GetLineBGStyle()
+        private string GetLineBgStyle()
         {
             var baseStyle = FormattableString.Invariant($"{(StrokeLinecap == ProgressStrokeLinecap.Round ? string.Empty : "border-radius: 0px; ")}width: {Percent}%; height: {StrokeWidth}px;");
 
@@ -226,7 +226,7 @@ public partial class Progress : MudComponentBase
             {
                 try
                 {
-                    var gradientPoints = string.Join(", ", StrokeColor.AsT1.Select(pair => $"{ToRGB(pair.Value)} {pair.Key}"));
+                    var gradientPoints = string.Join(", ", StrokeColor.AsT1.Select(pair => $"{ToRgb(pair.Value)} {pair.Key}"));
                     style.Append($" background-image: linear-gradient(to right, {gradientPoints})");
                 }
                 catch
@@ -237,16 +237,16 @@ public partial class Progress : MudComponentBase
             else if (StrokeColor.IsT0)
             {
                 style.Append("background: ");
-                style.Append(ToRGB(StrokeColor.AsT0));
+                style.Append(ToRgb(StrokeColor.AsT0));
                 style.Append(';');
             }
 
             return style.ToString();
         }
 
-        private string ToRGB(string color)
+        private string ToRgb(string color)
         {
-            var hexMatch = _hexColor.Match(color);
+            var hexMatch = HexColor.Match(color);
             if (!hexMatch.Success)
             {
                 throw new ArgumentOutOfRangeException($"{nameof(StrokeColor)}'s value must be like \"#ffffff\"");
@@ -257,4 +257,7 @@ public partial class Progress : MudComponentBase
             }
             return $"rgb({ColFromHex("r")}, {ColFromHex("g")}, {ColFromHex("b")})";
         }
+
+    [GeneratedRegex("^#(?<r>[a-fA-F0-9]{2})(?<g>[a-fA-F0-9]{2})(?<b>[a-fA-F0-9]{2})$", RegexOptions.Compiled, 300)]
+    private static partial Regex ColorRegex();
 }

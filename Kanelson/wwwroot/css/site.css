@@ -94,10 +94,6 @@ a, .btn-link {
     display: flex;
 }
 
-.kanelson-progress-text {
-    color: oldlace;
-}
-
 html {
     --kanelson-primary-color: #1890ff;
     --kanelson-primary-color-hover: #40a9ff;
@@ -229,7 +225,7 @@ html {
     display: inline-block;
     width: 2em;
     margin-left: 8px;
-    color: rgba(0,0,0,.85);
+    color: oldlace;
     font-size: 1em;
     line-height: 1;
     white-space: nowrap;
@@ -334,10 +330,6 @@ html {
 
 .kanelson-progress-inner,.kanelson-progress-text,.ant-rate-star-first .anticon,.ant-rate-star-second .anticon {
     vertical-align: middle
-}
-
-.kanelson-progress,.kanelson-progress-steps {
-    display: inline-block;
 }
 
 .host-identifier {

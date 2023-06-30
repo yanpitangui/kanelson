@@ -25,7 +25,7 @@
                     int index = i;
                     if (Percent >= 100 / Steps * (index + 1))
                     {
-                        <div class="kanelson-progress-steps-item" style="width: @(Size == ProgressSize.Default?"14":"2")px; height: 8px; background-color: @(ToRGB(StrokeColor.AsT0));"></div>
+                        <div class="kanelson-progress-steps-item" style="width: @(Size == ProgressSize.Default?"14":"2")px; height: 8px; background-color: @(ToRgb(StrokeColor.AsT0));"></div>
                     }
                     else
                     {
@@ -61,7 +61,7 @@
                         <linearGradient id="kanelson-progress-gradient" x1="100%" y1="0%" x2="0%" y2="0%">
                             @foreach (var pair in StrokeColor.AsT1)
                             {
-                                <stop stop-color="@ToRGB(pair.Value)" offset="@(pair.Key)" />
+                                <stop stop-color="@ToRgb(pair.Value)" offset="@(pair.Key)" />
                             }
                         </linearGradient>
                     </defs>

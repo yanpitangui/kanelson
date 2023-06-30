@@ -64,7 +64,7 @@ public class QuestionIndexActor : ReceivePersistentActor, IHasSnapshotInterval
     {
         if (_state.Index.Add(user))
         {
-            ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+            SaveSnapshot(_state);
         }
     }
 

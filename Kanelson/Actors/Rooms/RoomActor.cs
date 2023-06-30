@@ -20,7 +20,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
     private RoomState _state;
     private RoomStateMachine _roomStateMachine = null!;
 
-    private IActorRef _signalrActor;
+    private readonly IActorRef _signalrActor;
     
     
     private DateTime _currentQuestionStartTime;

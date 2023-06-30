@@ -3,7 +3,7 @@ using Timer = System.Timers.Timer;
 
 namespace Kanelson.Pages.Rooms;
 
-public class TimerConfiguration : IDisposable
+public sealed class TimerConfiguration : IDisposable
 {
     private double _current;
     private readonly Timer _timerHandle = new(TimeSpan.FromSeconds(1));
@@ -37,9 +37,21 @@ public class TimerConfiguration : IDisposable
         _current++;
         Percentage = (_max - _current)/_max * 100;
     }
-
+    
     public void Dispose()
     {
-        _timerHandle.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    public void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            if (_timerHandle is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+        }
     }
 }

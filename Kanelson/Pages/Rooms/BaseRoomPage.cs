@@ -130,6 +130,7 @@ public class BaseRoomPage : ComponentBase, IAsyncDisposable
         {
             handle.Dispose();
         }
+        GC.SuppressFinalize(this);
     }
 
     

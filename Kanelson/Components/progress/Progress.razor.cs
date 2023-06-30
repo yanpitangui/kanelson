@@ -220,9 +220,6 @@ public partial class Progress : MudComponentBase
 
             var style = new StringBuilder(baseStyle);
 
-            // width: 99.9%; height: 8px; background-image: linear-gradient(to right, rgb(16, 142, 233) 0%, rgb(135, 208, 104) 100%);
-            // width: 99.9%; height: 8px; background-image: linear-gradient(to right, rgb(16, 142, 233), rgb(135, 208, 104));
-            // '0%': '#108ee9', '100%': '#87d068',
             if (StrokeColor.IsT1)
             {
                 try

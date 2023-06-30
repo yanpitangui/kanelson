@@ -189,7 +189,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
         var usersWithAnswers = _state.Answers.Select(x => x.Value)
             .SelectMany(x => x)
             .Select(x => x.Key)
-            .ToHashSet();
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var unanswered = Users
             .Where(x => !usersWithAnswers.Contains(x.Id));
@@ -224,7 +224,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
 
         var anwsered = _state.Answers.Select(x => x.Value)
             .SelectMany(x => x)
-            .GroupBy(x => x.Key)
+            .GroupBy(x => x.Key, StringComparer.OrdinalIgnoreCase)
             .Select(x => new
             {
                 Id = x.Key,
@@ -352,14 +352,14 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
          _state.CurrentQuestionIdx = 0;
          foreach (var question in _state.Template.Questions)
          {
-             _state.Answers.TryAdd(question.Id, new Dictionary<string, RoomAnswer>());
+             _state.Answers.TryAdd(question.Id, new Dictionary<string, RoomAnswer>(StringComparer.OrdinalIgnoreCase));
          }
      }
     
     private bool CheckEveryoneAnswered()
     {
         var users = Users.Select(x => x.Id)
-            .ToHashSet();
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
         // verifica se para cada usuário logado, tirando o host, existe um registro de resposta, de maneira burra
         var isEqual = users.SetEquals(_state.Answers[CurrentQuestion.Id].Keys);
         return isEqual;

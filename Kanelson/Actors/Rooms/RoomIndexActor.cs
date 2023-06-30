@@ -43,9 +43,6 @@ public sealed class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterva
         });
 
         Command<Exists>(o => Sender.Tell(_state.Items.Contains(o.RoomIdentifier)));
-
-        Command<GetAllKeys>(_ => Sender.Tell(_state.Items.ToImmutableArray()));
-
         
         Recover<Unregister>(HandleUnregister);
         
@@ -70,7 +67,7 @@ public sealed class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterva
             
             if(!_roomUsers.TryGetValue(o.RoomId, out var roomConnections))
             {
-                roomConnections = _roomUsers[o.RoomId] = new Dictionary<string, HubUser>();
+                roomConnections = _roomUsers[o.RoomId] = new Dictionary<string, HubUser>(StringComparer.OrdinalIgnoreCase);
             }
 
             var userAdded = false;
@@ -105,7 +102,7 @@ public sealed class RoomIndexActor : ReceivePersistentActor, IHasSnapshotInterva
                 .Select(x => new
                 {
                     Room = x, 
-                    User = x.Value.FirstOrDefault(y => y.Key == o.UserId).Value
+                    User = x.Value.FirstOrDefault(y => string.Equals(y.Key, o.UserId, StringComparison.OrdinalIgnoreCase)).Value
                 }).ToList();
 
             foreach (var room in rooms)
@@ -201,7 +198,14 @@ public record UserConnected(long RoomId, string UserId, string ConnectionId);
 
 public record UserDisconnected(string UserId, string ConnectionId);
 
-public record GetAllSummaries;
+public record GetAllSummaries
+{
+    private GetAllSummaries()
+    {
+    }
+
+    public static GetAllSummaries Instance { get; } = new();
+}
 
 public record Register(long RoomIdentifier, SetBase RoomBase);
 
@@ -209,6 +213,5 @@ public record Exists(long RoomIdentifier);
 
 public record GetRef(long RoomIdentifier);
 
-public record GetAllKeys;
 
 public record Unregister(long RoomIdentifier);

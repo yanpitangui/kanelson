@@ -16,7 +16,7 @@ public class QuestionIndexActor : ReceivePersistentActor, IHasSnapshotInterval
     public QuestionIndexActor(string persistenceId)
     {
         PersistenceId = persistenceId;
-        _children = new();
+        _children = new(StringComparer.OrdinalIgnoreCase);
 
         _state = new QuestionIndexState();
         Command<GetRef>(o =>

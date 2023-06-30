@@ -31,7 +31,7 @@ public class RoomService : IRoomService
     public async Task<long> CreateRoom(Guid templateId, string roomName)
     {
         var roomId = _idGenerator.CreateId();
-        var index = _actorRegistry.Get<RoomIndexActor>();
+        var index = await _actorRegistry.GetAsync<RoomIndexActor>();
         var template = await _templateService.GetTemplate(templateId);
 
         index.Tell(new Register(roomId, new SetBase(roomName, _userService.CurrentUser, template)));
@@ -41,7 +41,7 @@ public class RoomService : IRoomService
 
     public async Task<RoomStatus> GetCurrentState(long roomId)
     {
-        var index = _actorRegistry.Get<RoomIndexActor>();
+        var index = await _actorRegistry.GetAsync<RoomIndexActor>();
         var room = await GetRoomRef(roomId, index);
         return await room.Ask<RoomStatus>(Actors.Rooms.GetCurrentState.Instance);
     }
@@ -63,14 +63,14 @@ public class RoomService : IRoomService
     public async Task<ImmutableArray<RoomSummary>> GetAll()
     {
         
-        var index = _actorRegistry.Get<RoomIndexActor>();
+        var index = await _actorRegistry.GetAsync<RoomIndexActor>();
 
-        return await index.Ask<ImmutableArray<RoomSummary>>(new GetAllSummaries());
+        return await index.Ask<ImmutableArray<RoomSummary>>(GetAllSummaries.Instance);
     }
 
     public async Task<RoomSummary> Get(long roomId)
     {
-        var index = _actorRegistry.Get<RoomIndexActor>();
+        var index = await _actorRegistry.GetAsync<RoomIndexActor>();
         var room = await GetRoomRef(roomId, index);
 
 
@@ -79,7 +79,7 @@ public class RoomService : IRoomService
     
     public async Task<CurrentQuestionInfo> GetCurrentQuestion(long roomId)
     {
-        var index = _actorRegistry.Get<RoomIndexActor>();
+        var index = await _actorRegistry.GetAsync<RoomIndexActor>();
         var room = await GetRoomRef(roomId, index);
 
 
@@ -88,7 +88,7 @@ public class RoomService : IRoomService
 
     public async Task NextQuestion(long roomId)
     {
-        var index = _actorRegistry.Get<RoomIndexActor>();
+        var index = await _actorRegistry.GetAsync<RoomIndexActor>();
         var room = await GetRoomRef(roomId, index);
 
 
@@ -97,7 +97,7 @@ public class RoomService : IRoomService
 
     public async Task Start(long roomId)
     {
-        var index = _actorRegistry.Get<RoomIndexActor>();
+        var index = await _actorRegistry.GetAsync<RoomIndexActor>();
         var room = await GetRoomRef(roomId, index);
 
 
@@ -106,14 +106,14 @@ public class RoomService : IRoomService
 
     public async Task<string> GetOwner(long roomId)
     {
-        var index = _actorRegistry.Get<RoomIndexActor>();
+        var index = await _actorRegistry.GetAsync<RoomIndexActor>();
         var room = await GetRoomRef(roomId, index);
         return await room.Ask<string>(Actors.Rooms.GetOwner.Instance);
     }
 
     public async Task Delete(long roomId)
     {
-        var index = _actorRegistry.Get<RoomIndexActor>();
+        var index = await _actorRegistry.GetAsync<RoomIndexActor>();
         var room = await GetRoomRef(roomId, index);
 
 
@@ -127,7 +127,7 @@ public class RoomService : IRoomService
 
     public async Task Answer(long roomId, Guid alternativeId)
     {
-        var index = _actorRegistry.Get<RoomIndexActor>();
+        var index = await _actorRegistry.GetAsync<RoomIndexActor>();
         var room = await GetRoomRef(roomId, index);
 
         room.Tell(new SendUserAnswer(_userService.CurrentUser, new []{ alternativeId }));

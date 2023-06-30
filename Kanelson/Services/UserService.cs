@@ -28,13 +28,13 @@ public class UserService : IUserService
 
     public async Task<ImmutableArray<UserInfo>> GetUsersInfo(params string[] ids)
     {
-        var actor = _actorRegistry.Get<UserIndexActor>();
+        var actor = await _actorRegistry.GetAsync<UserIndexActor>();
         return await actor.Ask<ImmutableArray<UserInfo>>(new GetUserInfos(ids));
     }
     
     public async Task<UserInfo> GetUserInfo(string id)
     {
-        var actor = _actorRegistry.Get<UserIndexActor>();
+        var actor = await _actorRegistry.GetAsync<UserIndexActor>();
         var result = await actor.Ask<ImmutableArray<UserInfo>>(new GetUserInfos(id));
         return result.First();
     }

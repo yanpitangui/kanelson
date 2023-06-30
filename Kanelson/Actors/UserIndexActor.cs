@@ -24,7 +24,7 @@ public sealed class UserIndexActor : ReceivePersistentActor, IHasSnapshotInterva
         });
         Command<GetUserInfos>(o =>
         {
-            var users = _state.Users.Where(x => o.Ids.Contains(x.Id)).ToImmutableArray();
+            var users = _state.Users.Where(x => o.Ids.Contains(x.Id, StringComparer.OrdinalIgnoreCase)).ToImmutableArray();
             Sender.Tell(users);
         });
         
@@ -41,7 +41,7 @@ public sealed class UserIndexActor : ReceivePersistentActor, IHasSnapshotInterva
 
     private void HandleUpsert(UpsertUser user)
     {
-        _state.Users.RemoveWhere(x => x.Id == user.Id);
+        _state.Users.RemoveWhere(x => string.Equals(x.Id, user.Id, StringComparison.OrdinalIgnoreCase));
         _state.Users.Add(new UserInfo(user.Id, user.Name));
         ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
     }

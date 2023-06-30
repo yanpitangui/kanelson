@@ -1,5 +1,12 @@
 # Kanelson
 
+[![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-white.svg)](https://sonarcloud.io/summary/overall?id=yanpitangui_kanelson)
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=yanpitangui_kanelson&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=yanpitangui_kanelson)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=yanpitangui_kanelson&metric=coverage)](https://sonarcloud.io/summary/new_code?id=yanpitangui_kanelson)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=yanpitangui_kanelson&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=yanpitangui_kanelson)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=yanpitangui_kanelson&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=yanpitangui_kanelson)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=yanpitangui_kanelson&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=yanpitangui_kanelson)
 ## O que é?
 Kanelson é uma aplicação de quiz, inspirada no Kahoot, porém free e open source.
 

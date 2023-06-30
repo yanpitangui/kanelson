@@ -2,13 +2,8 @@ name: Trigger auto deployment for kanelson
 
 # When this action will be executed
 on:
-  # Automatically trigger it when detected changes in repo
-  push:
-    branches: 
-      [ main ]
-    paths:
-    - '**'
-    - '.github/workflows/kanelson-AutoDeployTrigger-21688402-bb4d-4ba5-aad6-3bd17e5efeb7.yml'
+  release:
+    types: [created]
 
   # Allow mannually trigger 
   workflow_dispatch:

@@ -5,12 +5,21 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Pipeline", "Pipeline", "{0D1F9F23-FDD1-4648-A9CD-1845B607CC0E}"
 	ProjectSection(SolutionItems) = preProject
 		.github\dependabot.yml = .github\dependabot.yml
+		.github\workflows\kanelson-AutoDeployTrigger-21688402-bb4d-4ba5-aad6-3bd17e5efeb7.yml = .github\workflows\kanelson-AutoDeployTrigger-21688402-bb4d-4ba5-aad6-3bd17e5efeb7.yml
+		.github\workflows\build.yml = .github\workflows\build.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFolder", "SolutionFolder", "{50FCAFC4-0891-4F2E-9AF3-B120BC8C6B18}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
 		docker-compose.yml = docker-compose.yml
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kanelson.Tests", "Kanelson.Tests\Kanelson.Tests.csproj", "{564E6574-731E-4816-88FB-FA90DE39AD18}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{71FFF149-B5E9-415E-9B10-C0C5E0203E99}"
+	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
 	EndProjectSection
 EndProject
@@ -24,5 +33,9 @@ Global
 		{A0333199-47DD-4194-AB0D-FA171882428C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0333199-47DD-4194-AB0D-FA171882428C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0333199-47DD-4194-AB0D-FA171882428C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{564E6574-731E-4816-88FB-FA90DE39AD18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{564E6574-731E-4816-88FB-FA90DE39AD18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{564E6574-731E-4816-88FB-FA90DE39AD18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{564E6574-731E-4816-88FB-FA90DE39AD18}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

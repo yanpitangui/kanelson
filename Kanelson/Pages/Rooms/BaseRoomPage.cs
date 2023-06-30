@@ -94,7 +94,7 @@ public class BaseRoomPage : ComponentBase, IAsyncDisposable
         
         HubConnection.On<string>(SignalRMessages.UserAnswered, (userId) =>
         {
-            var user = ConnectedUsers.FirstOrDefault(x => x.Id == userId);
+            var user = ConnectedUsers.FirstOrDefault(x => string.Equals(x.Id, userId, StringComparison.OrdinalIgnoreCase));
             if (user != null)
             {
                 user.Answered = true;

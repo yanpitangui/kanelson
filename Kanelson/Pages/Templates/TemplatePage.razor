@@ -117,6 +117,7 @@
     private void ItemUpdated(MudItemDropInfo<TemplateQuestionDrop> dropItem)
     {
 
+        if (dropItem?.Item is null) return;
         
         dropItem.Item.Selector = dropItem.DropzoneIdentifier;
         

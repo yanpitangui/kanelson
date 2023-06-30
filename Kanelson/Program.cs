@@ -90,7 +90,7 @@ builder.Services.AddLocalization();
 
 builder.Services.AddIdGen(0, () =>
 {
-    var epoch = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+    var epoch = new DateTimeOffset(new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc));
     var structure = new IdStructure(41, 10, 12);
     var options = new IdGeneratorOptions(structure, new DefaultTimeSource(epoch));
     return options;

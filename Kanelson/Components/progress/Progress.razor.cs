@@ -232,7 +232,7 @@ public partial class Progress : MudComponentBase
                 }
                 catch
                 {
-                    throw new ArgumentOutOfRangeException($"{nameof(StrokeColor)}'s value must be dictionary like \"0%\": \"#108ee9\", \"100%\": \"#87d068\"");
+                    throw new NotSupportedException($"{nameof(StrokeColor)}'s value must be dictionary like \"0%\": \"#108ee9\", \"100%\": \"#87d068\"");
                 }
             }
             else if (StrokeColor.IsT0)
@@ -250,7 +250,7 @@ public partial class Progress : MudComponentBase
             var hexMatch = HexColor.Match(color);
             if (!hexMatch.Success)
             {
-                throw new ArgumentOutOfRangeException($"{nameof(StrokeColor)}'s value must be like \"#ffffff\"");
+                throw new NotSupportedException($"{nameof(StrokeColor)}'s value must be like \"#ffffff\"");
             }
             int ColFromHex(string groupName)
             {

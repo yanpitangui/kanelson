@@ -29,7 +29,7 @@ public class RoomHub : Hub
     {
         var owner = await _roomService.GetOwner(roomId);
         var userId = Context.GetUserId();
-        if (owner == userId)
+        if (string.Equals(owner, userId, StringComparison.OrdinalIgnoreCase))
         {
             await _roomService.Start(roomId);
         }

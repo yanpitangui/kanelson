@@ -71,7 +71,7 @@ public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
             
             var sender = Sender;
             
-            var tasks = _state.Items.Select(x => _children[x].Ask<TemplateSummary>(new GetSummary()));
+            var tasks = _state.Items.Select(x => _children[x].Ask<TemplateSummary>(GetSummary.Instance));
             
             async Task<ImmutableArray<TemplateSummary>> ExecuteWork()
             {
@@ -84,8 +84,6 @@ public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
         });
 
         Command<Exists>(o => Sender.Tell(_state.Items.Contains(o.Id)));
-        
-        Command<GetAll>(o => Sender.Tell(ImmutableArray.CreateRange(_state.Items)));
         
         Recover<SnapshotOffer>(o =>
         {
@@ -117,7 +115,7 @@ public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
         ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
     }
 
-    private IActorRef GetChildTemplateActorRef(Guid id)
+    private static IActorRef GetChildTemplateActorRef(Guid id)
     {
         return Context.ActorOf(TemplateActor.Props(id), $"template-{id}");
     }
@@ -128,19 +126,22 @@ public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
         return Akka.Actor.Props.Create<TemplateIndexActor>(userId);
     }
 
-    private record Register(Guid Id);
+    private sealed record Register(Guid Id);
 
 }
 
 
-public record GetAllSummaries;
+public record GetAllSummaries
+{
+    private GetAllSummaries()
+    {
+    }
+
+    public static GetAllSummaries Instance { get; } = new();
+}
 
 public record Exists(Guid Id);
 
 public record GetRef(Guid Id);
 
-public record Register(Guid Id);
-
 public record Unregister(Guid Id);
-
-public record GetAll;

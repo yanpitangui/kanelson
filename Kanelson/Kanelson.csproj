@@ -21,6 +21,10 @@
       <PackageReference Include="FluentValidation" />
       <PackageReference Include="IdGen" />
       <PackageReference Include="IdGen.DependencyInjection" />
+      <PackageReference Include="Meziantou.Analyzer">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
       <PackageReference Include="Microsoft.AspNetCore.Components.DataAnnotations.Validation" />
       <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
       <PackageReference Include="Microsoft.Azure.AppConfiguration.AspNetCore" />

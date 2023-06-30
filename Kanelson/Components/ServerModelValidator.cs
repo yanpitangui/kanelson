@@ -5,7 +5,7 @@ namespace Kanelson.Components;
 
 public class ServerModelValidator : ComponentBase
 {
-    private ValidationMessageStore _messageStore;
+    private ValidationMessageStore _messageStore = null!;
 
     [CascadingParameter] EditContext CurrentEditContext { get; set; } = null!;
 

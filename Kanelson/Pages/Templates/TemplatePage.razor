@@ -65,8 +65,8 @@
     
     private Template _template = new();
 
-    private List<TemplateQuestionDrop> _items = new();
-    private ServerModelValidator _serverModelValidator;
+    private readonly List<TemplateQuestionDrop> _items = new();
+    private ServerModelValidator _serverModelValidator = null!;
 
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -165,7 +165,7 @@
         
     }
 
-    private record TemplateQuestionDrop : QuestionSummary
+    private sealed record TemplateQuestionDrop : QuestionSummary
     {
         public string Selector { get; set; } = "1";
         public int Order { get; set; }

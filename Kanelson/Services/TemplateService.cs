@@ -17,7 +17,7 @@ public class TemplateService : ITemplateService
 
     static TemplateService()
     {
-        Indexes = new();
+        Indexes = new ConcurrentDictionary<string, IActorRef>(StringComparer.OrdinalIgnoreCase);
     }
 
     public TemplateService(ActorSystem actorSystem, IUserService userService)
@@ -36,7 +36,7 @@ public class TemplateService : ITemplateService
     public Task<ImmutableArray<TemplateSummary>> GetTemplates()
     {
         var index = GetOrCreateIndexRef();
-        return index.Ask<ImmutableArray<TemplateSummary>>(new GetAllSummaries());
+        return index.Ask<ImmutableArray<TemplateSummary>>(GetAllSummaries.Instance);
     }
 
     public async Task<Template> GetTemplate(Guid id)
@@ -49,7 +49,7 @@ public class TemplateService : ITemplateService
         }
 
         var actorRef = await index.Ask<IActorRef>(new GetRef(id));
-        return await actorRef.Ask<Template>(new GetTemplate());
+        return await actorRef.Ask<Template>(Actors.Templates.GetTemplate.Instance);
     }
 
     public async Task DeleteTemplate(Guid id)
@@ -71,19 +71,10 @@ public class TemplateService : ITemplateService
             actorRef = _actorSystem.ActorOf(TemplateIndexActor.Props(_userService.CurrentUser), $"template-index-{_userService.CurrentUser}");
         }
 
-        Indexes.AddOrUpdate(_userService.CurrentUser, (_) => actorRef!, 
+        Indexes.AddOrUpdate(_userService.CurrentUser, _ => actorRef!, 
             (_, _) => actorRef!);
 
         return actorRef!;
 
     }
-}
-
-public interface ITemplateService
-{
-    Task UpsertTemplate(Template template);
-    Task<ImmutableArray<TemplateSummary>> GetTemplates();
-    
-    Task<Template> GetTemplate(Guid id);
-    Task DeleteTemplate(Guid id);
 }

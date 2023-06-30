@@ -21,8 +21,6 @@ public class TemplateActor : ReceivePersistentActor, IHasSnapshotInterval
 
         Recover<Upsert>(HandleUpsert);
         Command<Upsert>(upsert => Persist(upsert, HandleUpsert));
-
-        Command<GetOwner>(_ => Sender.Tell(_state.OwnerId));
         
         Command<GetTemplate>(_ => Sender.Tell(_state.Template));
 
@@ -64,12 +62,22 @@ public class TemplateActor : ReceivePersistentActor, IHasSnapshotInterval
 
 }
 
-public record GetSummary;
+public record GetSummary
+{
+    private GetSummary()
+    {
+    }
 
+    public static GetSummary Instance { get; } = new();
+}
 
-public record GetTemplate;
+public record GetTemplate
+{
+    private GetTemplate()
+    {
+    }
 
-
-public record GetOwner;
+    public static GetTemplate Instance { get; } = new();
+}
 
 public record Upsert(Template Template, string OwnerId);

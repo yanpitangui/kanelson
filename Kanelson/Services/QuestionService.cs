@@ -60,14 +60,3 @@ public class QuestionService : IQuestionService
         return await userQuestionsActor.Ask<ImmutableArray<Question>>(new GetQuestions(ids.ToArray()));
     }
 }
-
-
-public interface IQuestionService
-{
-    public Task<ValidationResult> SaveQuestion(Question question);
-    public Task<ImmutableArray<QuestionSummary>> GetQuestionsSummary();
-
-    Task RemoveQuestion(Guid id);
-    Task<Question> GetQuestion(Guid id);
-    Task<ImmutableArray<Question>> GetQuestions(HashSet<Guid> ids);
-}

@@ -1,12 +1,10 @@
 using System.Collections.Immutable;
 using Akka.Actor;
-using Akka.Event;
 using Akka.Persistence;
 using Kanelson.Hubs;
 using Kanelson.Models;
 using Kanelson.Services;
 using Microsoft.AspNetCore.SignalR;
-using LogLevel = Akka.Event.LogLevel;
 
 namespace Kanelson.Actors.Rooms;
 
@@ -27,7 +25,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
     private readonly string _roomIdentifierString;
     private TemplateQuestion CurrentQuestion => _state.Template.Questions[_state.CurrentQuestionIdx];
 
-    private IEnumerable<RoomUser> Users => _state.CurrentUsers.Where(x => x.Owner == false);
+    private IEnumerable<RoomUser> Users => _state.CurrentUsers.Where(x => !x.Owner);
 
 
     public RoomActor(long roomIdentifier, IHubContext<RoomHub> hubContext, IUserService userService)
@@ -96,9 +94,9 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
 
                  FillAnswersFromUsersThatHaveNotAnswered();
                  
-                 foreach (var user in Users)
+                 foreach (var userId in Users.Select(x => x.Id))
                  {
-                     _signalrActor.Tell(new SendSignalrUserMessage(user.Id, SignalRMessages.RoundSummary, GetUserRoundSummary(user.Id)));
+                     _signalrActor.Tell(new SendSignalrUserMessage(userId, SignalRMessages.RoundSummary, GetUserRoundSummary(userId)));
                  }
 
                  if (_state.CurrentQuestionIdx < _state.MaxQuestionIdx)
@@ -127,7 +125,8 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
 
         Command<SendUserAnswer>(o =>
         {
-            if (!CurrentQuestion.Alternatives.Select(x => x.Id).Contains(o.AlternativeIds.First()))
+            var possibleAlternatives = CurrentQuestion.Alternatives.Select(static x => x.Id);
+            if (!o.AlternativeIds.All(x => possibleAlternatives.Contains(x)))
             {
                 // TODO: Escutar no front caso a resposta seja rejeitada
                 _signalrActor.Tell(new SendSignalrUserMessage(o.UserId, SignalRMessages.AnswerRejected));
@@ -138,7 +137,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
             if (!exists) return;
             var alternativeInfo = CalculatePoints(o.AlternativeIds);
             question!.TryAdd(o.UserId, alternativeInfo);
-            var user = _state.CurrentUsers.FirstOrDefault(x => x.Id == o.UserId);
+            var user = _state.CurrentUsers.FirstOrDefault(x => string.Equals(x.Id, o.UserId, StringComparison.OrdinalIgnoreCase));
             if (user != null) user.Answered = true;
             _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifierString, SignalRMessages.UserAnswered, o.UserId));
         });
@@ -240,7 +239,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
                 AverageTime = x.Average,
                 Points = x.Points,
                 // talvez trocar isso aqui se tiver muito lerdo
-                Name = _state.CurrentUsers.FirstOrDefault(y => y.Id == x.Id)?.Name!,
+                Name = _state.CurrentUsers.FirstOrDefault(y => string.Equals(y.Id, x.Id, StringComparison.OrdinalIgnoreCase))?.Name!,
                 Rank = i + 1
             }).ToArray();
 
@@ -306,7 +305,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
          };
      }
     
-    private record HandleAnswerLoop
+    private sealed record HandleAnswerLoop
     {
         private HandleAnswerLoop()
         {

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Components;
@@ -173,21 +174,21 @@ public partial class Progress : MudComponentBase
                 _bgStyle = GetLineBgStyle();
                 if (SuccessPercent != 0)
                 {
-                    _bgSuccessStyle = FormattableString.Invariant($" width: {SuccessPercent}%; height: {StrokeWidth}px;");
+                    _bgSuccessStyle = string.Create(CultureInfo.InvariantCulture, $" width: {SuccessPercent}%; height: {StrokeWidth}px;");
                 }
             }
             else if (Type == ProgressType.Circle)
             {
                 _bgStyle = Size == ProgressSize.Default ? $"width: {Width}px; height: {Width}px; font-size: 24px;" : "width: 80px; height: 80px; font-size: 18px;";
-                _circleTrailStyle = FormattableString.Invariant($"stroke:{TrailColor}; transition:stroke-dashoffset 0.3s, stroke-dasharray 0.3s, stroke 0.3s, stroke-width 0.06s 0.3s; stroke-dasharray: {CircleDash}px, {CircleDash}px; stroke-dashoffset: 0px;");
+                _circleTrailStyle = string.Create(CultureInfo.InvariantCulture, $"stroke:{TrailColor}; transition:stroke-dashoffset 0.3s, stroke-dasharray 0.3s, stroke 0.3s, stroke-width 0.06s 0.3s; stroke-dasharray: {CircleDash}px, {CircleDash}px; stroke-dashoffset: 0px;");
                 if (SuccessPercent == 0)
                 {
-                    _circlePathStyle = FormattableString.Invariant($"transition:stroke-dashoffset 0.3s, stroke-dasharray 0.3s, stroke 0.3s, stroke-width 0.06s 0.3s; stroke-dasharray: {CircleDash * Percent / 100}px, {CircleDash}px; stroke-dashoffset: 0px;");
+                    _circlePathStyle = string.Create(CultureInfo.InvariantCulture, $"transition:stroke-dashoffset 0.3s, stroke-dasharray 0.3s, stroke 0.3s, stroke-width 0.06s 0.3s; stroke-dasharray: {CircleDash * Percent / 100}px, {CircleDash}px; stroke-dashoffset: 0px;");
                 }
                 else
                 {
-                    _circlePathStyle = FormattableString.Invariant($"transition:stroke-dashoffset 0.3s, stroke-dasharray 0.3s, stroke 0.3s, stroke-width 0.06s 0.3s; stroke-dasharray: {CircleDash * (Percent - SuccessPercent) / 100}px, {CircleDash}px; stroke-dashoffset: 0px;");
-                    _circleSuccessStyle = FormattableString.Invariant($"transition:stroke-dashoffset 0.3s, stroke-dasharray 0.3s, stroke 0.3s, stroke-width 0.06s 0.3s; stroke-dasharray: {CircleDash * SuccessPercent / 100}px, {CircleDash}px; stroke-dashoffset: {-CircleDash * SuccessPercent / 100}px;");
+                    _circlePathStyle = string.Create(CultureInfo.InvariantCulture, $"transition:stroke-dashoffset 0.3s, stroke-dasharray 0.3s, stroke 0.3s, stroke-width 0.06s 0.3s; stroke-dasharray: {CircleDash * (Percent - SuccessPercent) / 100}px, {CircleDash}px; stroke-dashoffset: 0px;");
+                    _circleSuccessStyle = string.Create(CultureInfo.InvariantCulture, $"transition:stroke-dashoffset 0.3s, stroke-dasharray 0.3s, stroke 0.3s, stroke-width 0.06s 0.3s; stroke-dasharray: {CircleDash * SuccessPercent / 100}px, {CircleDash}px; stroke-dashoffset: {-CircleDash * SuccessPercent / 100}px;");
                 }
             }
             else
@@ -195,22 +196,22 @@ public partial class Progress : MudComponentBase
                 _bgStyle = Size == ProgressSize.Default ? $"width: 120px; height: 120px; font-size: 24px;" : $"width: 80px; height: 80px; font-size: 18px;";
                 double circumference = CircleDash - GapDegree;
                 double dashoffset = -GapDegree / 2.0;
-                _circleTrailStyle = FormattableString.Invariant($"stroke:{TrailColor}; transition:stroke-dashoffset 0.3s, stroke-dasharray 0.3s, stroke 0.3s, stroke-width 0.06s 0.3s; stroke-dasharray: {circumference}px, {CircleDash}px; stroke-dashoffset: {dashoffset}px;");
+                _circleTrailStyle = string.Create(CultureInfo.InvariantCulture, $"stroke:{TrailColor}; transition:stroke-dashoffset 0.3s, stroke-dasharray 0.3s, stroke 0.3s, stroke-width 0.06s 0.3s; stroke-dasharray: {circumference}px, {CircleDash}px; stroke-dashoffset: {dashoffset}px;");
                 if (SuccessPercent == 0)
                 {
-                    _circlePathStyle = FormattableString.Invariant($"transition:stroke-dashoffset 0.3s, stroke-dasharray 0.3s, stroke 0.3s, stroke-width 0.06s 0.3s; stroke-dasharray: {circumference * Percent / 100}px, {CircleDash}px; stroke-dashoffset: {dashoffset}px;");
+                    _circlePathStyle = string.Create(CultureInfo.InvariantCulture, $"transition:stroke-dashoffset 0.3s, stroke-dasharray 0.3s, stroke 0.3s, stroke-width 0.06s 0.3s; stroke-dasharray: {circumference * Percent / 100}px, {CircleDash}px; stroke-dashoffset: {dashoffset}px;");
                 }
                 else
                 {
-                    _circlePathStyle = FormattableString.Invariant($"transition:stroke-dashoffset 0.3s, stroke-dasharray 0.3s, stroke 0.3s, stroke-width 0.06s 0.3s; stroke-dasharray: {circumference * (Percent - SuccessPercent) / 100}px, {CircleDash}px; stroke-dashoffset: {dashoffset}px;");
-                    _circleSuccessStyle = FormattableString.Invariant($"transition:stroke-dashoffset 0.3s, stroke-dasharray 0.3s, stroke 0.3s, stroke-width 0.06s 0.3s; stroke-dasharray: {circumference * SuccessPercent / 100}px, {CircleDash}px; stroke-dashoffset: {dashoffset - circumference * SuccessPercent / 100}px;");
+                    _circlePathStyle = string.Create(CultureInfo.InvariantCulture, $"transition:stroke-dashoffset 0.3s, stroke-dasharray 0.3s, stroke 0.3s, stroke-width 0.06s 0.3s; stroke-dasharray: {circumference * (Percent - SuccessPercent) / 100}px, {CircleDash}px; stroke-dashoffset: {dashoffset}px;");
+                    _circleSuccessStyle = string.Create(CultureInfo.InvariantCulture, $"transition:stroke-dashoffset 0.3s, stroke-dasharray 0.3s, stroke 0.3s, stroke-width 0.06s 0.3s; stroke-dasharray: {circumference * SuccessPercent / 100}px, {CircleDash}px; stroke-dashoffset: {dashoffset - circumference * SuccessPercent / 100}px;");
                 }
             }
         }
 
         private string GetLineBgStyle()
         {
-            var baseStyle = FormattableString.Invariant($"{(StrokeLinecap == ProgressStrokeLinecap.Round ? string.Empty : "border-radius: 0px; ")}width: {Percent}%; height: {StrokeWidth}px;");
+            var baseStyle = string.Create(CultureInfo.InvariantCulture, $"{(StrokeLinecap == ProgressStrokeLinecap.Round ? string.Empty : "border-radius: 0px; ")}width: {Percent}%; height: {StrokeWidth}px;");
 
             if (StrokeColor.Value == null)
             {

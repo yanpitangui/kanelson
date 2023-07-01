@@ -5,6 +5,7 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
+COPY ["./Directory.Packages.props", "./"]
 COPY ["Kanelson/Kanelson.csproj", "Kanelson/"]
 
 RUN dotnet restore "Kanelson/Kanelson.csproj"

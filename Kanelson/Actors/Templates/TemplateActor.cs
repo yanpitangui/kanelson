@@ -4,7 +4,7 @@ using Kanelson.Models;
 
 namespace Kanelson.Actors.Templates;
 
-public class TemplateActor : ReceivePersistentActor, IHasSnapshotInterval
+public class TemplateActor : BaseWithSnapshotFrequencyActor
 {
 
     public override string PersistenceId { get; }
@@ -52,7 +52,7 @@ public class TemplateActor : ReceivePersistentActor, IHasSnapshotInterval
     {
         _state.Template = o.Template;
         _state.OwnerId = o.OwnerId;
-        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+        SaveSnapshotIfPassedInterval(_state);
     }
 
     public static Props Props(Guid templateId)

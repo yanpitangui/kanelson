@@ -6,7 +6,7 @@ using Kanelson.Models;
 
 namespace Kanelson.Actors.Templates;
 
-public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
+public class TemplateIndexActor : BaseWithSnapshotFrequencyActor
 {
     public override string PersistenceId { get; }
 
@@ -42,11 +42,7 @@ public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
             Persist(o, HandleUnregister);
         });
         
-        Recover<Register>(o =>
-        {
-            HandleRegister(o);
-            _children[o.Id] = GetChildTemplateActorRef(o.Id);
-        });
+        Recover<Register>(HandleRegister);
 
         Command<GetRef>(o =>
         {
@@ -90,10 +86,6 @@ public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
             if (o.Snapshot is TemplateIndexState state)
             {
                 _state = state;
-                foreach (var item in _state.Items)
-                {
-                    _children[item] = GetChildTemplateActorRef(item);
-                }
             }
         });
         
@@ -101,18 +93,27 @@ public class TemplateIndexActor : ReceivePersistentActor, IHasSnapshotInterval
         
     }
 
+    protected override void OnReplaySuccess()
+    {
+        base.OnReplaySuccess();
+        foreach (var item in _state.Items)
+        {
+            _children[item] = GetChildTemplateActorRef(item);
+        }
+    }
+
     private void HandleRegister(Register r)
     {
         if (_state.Items.Add(r.Id))
         {
-            ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+            SaveSnapshotIfPassedInterval(_state);
         }
     }
 
     private void HandleUnregister(Unregister r)
     {
         _state.Items.Remove(r.Id);
-        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+        SaveSnapshotIfPassedInterval(_state);
     }
 
     private static IActorRef GetChildTemplateActorRef(Guid id)

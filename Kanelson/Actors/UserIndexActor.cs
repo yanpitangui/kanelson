@@ -7,7 +7,7 @@ namespace Kanelson.Actors;
 
 
 
-public sealed class UserIndexActor : ReceivePersistentActor, IHasSnapshotInterval
+public sealed class UserIndexActor : BaseWithSnapshotFrequencyActor
 {
    
     private UserIndexState _state;
@@ -43,7 +43,7 @@ public sealed class UserIndexActor : ReceivePersistentActor, IHasSnapshotInterva
     {
         _state.Users.RemoveWhere(x => string.Equals(x.Id, user.Id, StringComparison.OrdinalIgnoreCase));
         _state.Users.Add(new UserInfo(user.Id, user.Name));
-        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+        SaveSnapshotIfPassedInterval(_state);
     }
 
     public override string PersistenceId { get; }

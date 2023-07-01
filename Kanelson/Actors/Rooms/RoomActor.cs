@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Kanelson.Actors.Rooms;
 
-public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTimers
+public class RoomActor : BaseWithSnapshotFrequencyActor, IWithTimers
 {
     private const string AnswerloopTimerName = "AnswerLoop";
     private readonly long _roomIdentifier;
@@ -165,7 +165,6 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
             if (o.Snapshot is RoomState state)
             {
                 _state = state;
-                SetStateMachineByCurrentState();
             }
         });
 
@@ -177,6 +176,12 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
             }
         });
         Command<DeleteMessagesSuccess>(_ => { });
+    }
+
+    protected override void OnReplaySuccess()
+    {
+        base.OnReplaySuccess();
+        SetStateMachineByCurrentState();
     }
 
     private void FillAnswersFromUsersThatHaveNotAnswered()
@@ -276,7 +281,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
              {
                  if (transition.Destination is not RoomStatus.DisplayingQuestion)
                  {
-                     ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+                     SaveSnapshotIfPassedInterval(_state);
                  }
                  _signalrActor.Tell(new SendSignalrUserMessage(_state.OwnerId,SignalRMessages.RoomStatusChanged, _state.CurrentState));
              });
@@ -350,7 +355,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
         {
             _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifierString, SignalRMessages.CurrentUsersUpdated, _state.CurrentUsers));
         }
-        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+        SaveSnapshotIfPassedInterval(_state);
     }
 
     private void HandleSetBase(SetBase r)
@@ -360,7 +365,7 @@ public class RoomActor : ReceivePersistentActor, IHasSnapshotInterval, IWithTime
         _state.Name = r.RoomName;
         _state.MaxQuestionIdx = Math.Clamp(_state.Template.Questions.Count - 1, 0, 100);
         _state.CurrentQuestionIdx = 0;
-        ((IHasSnapshotInterval) this).SaveSnapshotIfPassedInterval(_state);
+        SaveSnapshotIfPassedInterval(_state);
     }
     
     private void SetStartedState()

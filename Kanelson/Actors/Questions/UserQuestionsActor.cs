@@ -7,7 +7,7 @@ using OneOf.Types;
 
 namespace Kanelson.Actors.Questions;
 
-public class UserQuestionsActor : ReceivePersistentActor, IHasSnapshotInterval
+public class UserQuestionsActor : BaseWithSnapshotFrequencyActor
 {
 
     private UserQuestionsState _state;
@@ -75,13 +75,13 @@ public class UserQuestionsActor : ReceivePersistentActor, IHasSnapshotInterval
     private void PersistAdd(Question question)
     {
         _state.Questions[question.Id] = question;
-        ((IHasSnapshotInterval)this).SaveSnapshotIfPassedInterval(_state);
+        SaveSnapshotIfPassedInterval(_state);
     }
 
     private void PersistRemove(Guid id)
     {
         _state.Questions.Remove(id);
-        ((IHasSnapshotInterval)this).SaveSnapshotIfPassedInterval(_state);
+        SaveSnapshotIfPassedInterval(_state);
     }
 
     public static Props Props(string userId)

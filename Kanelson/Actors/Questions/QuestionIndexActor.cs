@@ -3,7 +3,7 @@ using Akka.Persistence;
 
 namespace Kanelson.Actors.Questions;
 
-public class QuestionIndexActor : ReceivePersistentActor, IHasSnapshotInterval
+public class QuestionIndexActor : BaseWithSnapshotFrequencyActor
 {
 
     private readonly Dictionary<string, IActorRef> _children;
@@ -16,6 +16,7 @@ public class QuestionIndexActor : ReceivePersistentActor, IHasSnapshotInterval
     public QuestionIndexActor(string persistenceId)
     {
         PersistenceId = persistenceId;
+        
         _children = new(StringComparer.OrdinalIgnoreCase);
 
         _state = new QuestionIndexState();
@@ -36,24 +37,13 @@ public class QuestionIndexActor : ReceivePersistentActor, IHasSnapshotInterval
             Sender.Tell(actorRef);
         });
 
-        Recover<string>(s =>
-        {
-            HandleAddUser(s);
-            if (!_children.TryGetValue(s, out var actorRef) || actorRef.Equals(ActorRefs.Nobody))
-            {
-                _children[s] = GetChildQuestionActor(s);
-            }
-        });
+        Recover<string>(HandleAddUser);
         
         Recover<SnapshotOffer>(o =>
         {
             if (o.Snapshot is QuestionIndexState state)
             {
                 _state = state;
-                foreach (var item in _state.Index)
-                {
-                    _children[item] = GetChildQuestionActor(item);
-                }
             }
         });
         
@@ -64,7 +54,16 @@ public class QuestionIndexActor : ReceivePersistentActor, IHasSnapshotInterval
     {
         if (_state.Index.Add(user))
         {
-            SaveSnapshot(_state);
+            SaveSnapshotIfPassedInterval(_state);
+        }
+    }
+    
+    protected override void OnReplaySuccess()
+    {
+        base.OnReplaySuccess();
+        foreach (var item in _state.Index)
+        {
+            _children[item] = GetChildQuestionActor(item);
         }
     }
 
@@ -72,6 +71,7 @@ public class QuestionIndexActor : ReceivePersistentActor, IHasSnapshotInterval
     {
         return Context.ActorOf(UserQuestionsActor.Props(userId), $"user-questions-{userId}");
     }
+
 }
 
 public record GetRef(string UserId);

@@ -32,7 +32,6 @@
     <PackageVersion Include="Serilog.Exceptions" Version="8.4.0" />
     <PackageVersion Include="Serilog.Sinks.Async" Version="1.5.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="4.1.0" />
-    <PackageVersion Include="Stateless" Version="5.13.0" />
     <PackageVersion Include="xunit" Version="2.4.2" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.4.5" />
   </ItemGroup>

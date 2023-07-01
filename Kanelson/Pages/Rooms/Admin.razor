@@ -6,11 +6,11 @@
 <MudStack>
     <ConnectedUsersComponent ConnectedUsers="ConnectedUsers"/>
 
-    @if (_roomStateMachine != null)
+    @if (_roomStatus != null)
     {
         
         
-        @if (CurrentQuestion is not null && _roomStateMachine.IsInState(RoomStatus.Started))
+        @if (CurrentQuestion is not null && _roomStatus == RoomStatus.DisplayingQuestion)
         {
             
             @if (TimerConfig.Enabled)
@@ -31,7 +31,7 @@
 
         
         <MudCardActions>
-            @if (_roomStateMachine.PermittedTriggers.Contains(RoomTrigger.Start))
+            @if (_roomStatus == RoomStatus.Created)
             {
                 <MudButton @onclick="Start" Color="Color.Primary" 
                            Variant="Variant.Filled"
@@ -39,7 +39,7 @@
             }
             
         
-            @if (_roomStateMachine.PermittedTriggers.Contains(RoomTrigger.DisplayQuestion) && !_roomStateMachine.IsInState(RoomStatus.Finished))
+            @if (_roomStatus == RoomStatus.AwaitingForNextQuestion)
             {
                 <MudButton @onclick="NextQuestion" Color="Color.Primary" 
                            Variant="Variant.Filled"

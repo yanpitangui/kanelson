@@ -13,30 +13,23 @@ public partial class Admin : BaseRoomPage
 {
     [Inject] 
     private IRoomService RoomService {get; set; } = null!;
-    
-    private RoomStateMachine _roomStateMachine = null!;
+
+    private RoomStatus _roomStatus;
 
     protected override void ConfigureSignalrEvents()
     {
         base.ConfigureSignalrEvents();
         HubConnection.On<RoomStatus>(SignalRMessages.RoomStatusChanged, (state) =>
         {
-            _roomStateMachine = RoomBehavior.GetStateMachine(state);
+            _roomStatus = state;
             InvokeAsync(StateHasChanged);
-        });
-        
-        HubConnection.On<CurrentQuestionInfo>(SignalRMessages.NextQuestion, (question) =>
-        {
-            CurrentQuestion = question;
-            InvokeAsync(StateHasChanged);
-
         });
     }
 
     protected override async Task AfterConnectedConfiguration()
     {
         var currentState = await RoomService.GetCurrentState(RoomId);
-        _roomStateMachine = RoomBehavior.GetStateMachine(currentState);
+        _roomStatus = currentState;
         
         CurrentQuestion = await RoomService.GetCurrentQuestion(RoomId);
 

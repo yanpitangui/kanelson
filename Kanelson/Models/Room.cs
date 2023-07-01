@@ -14,4 +14,4 @@ public enum RoomStatus
 
 public record CurrentQuestionInfo(Question Question, int CurrentNumber, int MaxNumber);
 
-public record UserAnswerSummary(string AnswerName, List<Alternative> Alternatives, IEnumerable<Guid> Answered);
+public record UserAnswerSummary(Question Question, IEnumerable<Guid> Answered);

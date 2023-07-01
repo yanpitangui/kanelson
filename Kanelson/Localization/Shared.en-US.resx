@@ -147,4 +147,10 @@
     <data name="AtLeastOneQuestion" xml:space="preserve">
         <value>You have to select at least one question.</value>
     </data>
+    <data name="ImageUrl" xml:space="preserve">
+        <value>Image url</value>
+    </data>
+    <data name="ImageLabel" xml:space="preserve">
+        <value>Image related to the question</value>
+    </data>
 </root>

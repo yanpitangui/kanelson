@@ -11,7 +11,10 @@ public record QuestionSummary
 
 public record Question
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; init; } = Guid.NewGuid();
+    
+    [Url]
+    public string? ImageUrl { get; set; }
     
     [Required]
     [StringLength(200, MinimumLength = 3)]

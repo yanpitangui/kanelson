@@ -6,47 +6,43 @@
 <MudStack>
     <ConnectedUsersComponent ConnectedUsers="ConnectedUsers"/>
 
-    @if (_roomStatus != null)
+        
+    @if (CurrentQuestion is not null && _roomStatus == RoomStatus.DisplayingQuestion)
     {
         
-        
-        @if (CurrentQuestion is not null && _roomStatus == RoomStatus.DisplayingQuestion)
+        @if (TimerConfig.Enabled)
         {
-            
-            @if (TimerConfig.Enabled)
-            {
-                <Progress Status="ProgressStatus.Active" Type="ProgressType.Circle"
-                          TrailColor="#ff4d4f"
-                          Percent="@TimerConfig.Percentage" Format="TimerConfig.Format"></Progress>
-            }
-            
-            
-            <QuestionComponent Info="CurrentQuestion"/>
+            <Progress Status="ProgressStatus.Active" Type="ProgressType.Circle"
+                      TrailColor="#ff4d4f"
+                      Percent="@TimerConfig.Percentage" Format="TimerConfig.Format"></Progress>
         }
         
-        else if (Rankings != null)
-        {
-            <UserRanking Ranking="Rankings.Value"/>
-        }
-
         
-        <MudCardActions>
-            @if (_roomStatus == RoomStatus.Created)
-            {
-                <MudButton @onclick="Start" Color="Color.Primary" 
-                           Variant="Variant.Filled"
-                           StartIcon="@Icons.Material.Filled.Start">@Loc["StartButton"]</MudButton>
-            }
-            
-        
-            @if (_roomStatus == RoomStatus.AwaitingForNextQuestion)
-            {
-                <MudButton @onclick="NextQuestion" Color="Color.Primary" 
-                           Variant="Variant.Filled"
-                           StartIcon="@Icons.Material.Filled.SkipNext">@Loc["NextQuestionButton"]</MudButton>
-            }
-        </MudCardActions>
-
+        <QuestionComponent Info="CurrentQuestion"/>
     }
+    
+    else if (Rankings != null)
+    {
+        <UserRanking Ranking="Rankings.Value"/>
+    }
+
+    
+    <MudCardActions>
+        @if (_roomStatus == RoomStatus.Created)
+        {
+            <MudButton @onclick="Start" Color="Color.Primary" 
+                       Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.Start">@Loc["StartButton"]</MudButton>
+        }
+        
+    
+        @if (_roomStatus == RoomStatus.AwaitingForNextQuestion)
+        {
+            <MudButton @onclick="NextQuestion" Color="Color.Primary" 
+                       Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.SkipNext">@Loc["NextQuestionButton"]</MudButton>
+        }
+    </MudCardActions>
+    
 </MudStack>
 

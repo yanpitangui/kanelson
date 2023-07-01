@@ -20,10 +20,23 @@
                 <EditForm Model="@_question" OnValidSubmit="SaveQuestion">
                     <ObjectGraphDataAnnotationsValidator />
                     <MudCardContent>
+                        <MudStack>
+                            
                         <MudTextField @bind-Value="_question.Name"
                                       For="@(() => _question.Name)"
                                       Immediate="true"
                                       Label="@Loc["Name"]"/>
+
+                        <MudTextField @bind-Value="_question.ImageUrl"
+                                      For="@(() => _question.ImageUrl)"
+                                      Immediate="true"
+                                      Label="@Loc["ImageUrl"]"/>
+
+                        @if (_question.ImageUrl != null)
+                        {
+                            <MudImage Src="@_question.ImageUrl"/>
+                        }
+
 
                         <MudSelect Immediate="@true"
                                    T="int" Required="true" For="@(() => _question.TimeLimit)"
@@ -52,6 +65,7 @@
                             <MudSelectItem Value="1000">1000 pts</MudSelectItem>
                             <MudSelectItem Value="2000">2000 pts</MudSelectItem>
                         </MudSelect>
+                                                </MudStack>
                     </MudCardContent>
                     <MudCardContent Class="pa-0">
                         <MudTable Context="alternativeContext" Items="@_question.Alternatives" Comparer="_comparer" Hover="true" Breakpoint="Breakpoint.None" Dense="@true" Elevation="0">

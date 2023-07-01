@@ -200,9 +200,8 @@
 
         private UserAnswerSummary GetUserRoundSummary(string userId)
         {
-            var alternatives = CurrentQuestion.Alternatives;
             var userAnswer = _state.Answers[CurrentQuestion.Id][userId];
-            return new UserAnswerSummary(CurrentQuestion.Name, alternatives, userAnswer.Alternatives);
+            return new UserAnswerSummary(CurrentQuestion, userAnswer.Alternatives);
         }
 
         private CurrentQuestionInfo GetCurrentQuestionInfo()

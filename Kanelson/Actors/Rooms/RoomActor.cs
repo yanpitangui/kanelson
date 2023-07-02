@@ -265,7 +265,15 @@
             {
                 if (o is not RoomStatus.DisplayingQuestion)
                 {
-                    SaveSnapshotIfPassedInterval(_state);
+                    if (o is RoomStatus.Finished or RoomStatus.Abandoned)
+                    {
+                        SaveSnapshot(_state);
+                    }
+                    else
+                    {
+                        SaveSnapshotIfPassedInterval(_state);
+
+                    }
                 }
                 _signalrActor.Tell(new SendSignalrUserMessage(_state.OwnerId,SignalRMessages.RoomStatusChanged, _state.CurrentState));
             });

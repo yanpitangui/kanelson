@@ -21,7 +21,7 @@ public class UserQuestionsActor : BaseWithSnapshotFrequencyActor
         
         Recover<Question>(PersistAdd);
         
-        Recover<Guid>(PersistRemove);
+        Recover<RemoveQuestion>(PersistRemove);
         
         Command<UpsertQuestion>(o =>
         {
@@ -31,7 +31,7 @@ public class UserQuestionsActor : BaseWithSnapshotFrequencyActor
 
         Command<RemoveQuestion>(o =>
         {
-            Persist(o.Id, PersistRemove);
+            Persist(o, PersistRemove);
         });
 
         Command<GetQuestionsSummary>(o =>
@@ -78,9 +78,9 @@ public class UserQuestionsActor : BaseWithSnapshotFrequencyActor
         SaveSnapshotIfPassedInterval(_state);
     }
 
-    private void PersistRemove(Guid id)
+    private void PersistRemove(RemoveQuestion removeQuestion)
     {
-        _state.Questions.Remove(id);
+        _state.Questions.Remove(removeQuestion.Id);
         SaveSnapshotIfPassedInterval(_state);
     }
 

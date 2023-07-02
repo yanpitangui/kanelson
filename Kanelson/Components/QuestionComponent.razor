@@ -4,7 +4,14 @@
     
     @if (Info.Question.ImageUrl != null)
     {
-        <MudCardMedia Image="@Info.Question.ImageUrl" Title="@Loc["ImageLabel"]" Style="background-size: 100% 100%;"/>
+    
+    
+        <MudStack AlignItems="AlignItems.Center">
+            <MudCardHeader>
+                <MudImage Src="@Info.Question.ImageUrl"/>
+            </MudCardHeader>
+        </MudStack>
+
 
     }
     <MudCardHeader Class="question-header">(@Info.CurrentNumber/@Info.MaxNumber) @Info.Question.Name</MudCardHeader>

@@ -27,7 +27,7 @@ public class BaseRoomPage : ComponentBase, IAsyncDisposable
     protected IStringLocalizer<Localization.Shared> Loc { get; set; } = null!;
     
     [Inject]
-    private ISnackbar _snackbar { get; set; } = null!;
+    protected ISnackbar Snackbar { get; set; } = null!;
 
     protected HashSet<RoomUser> ConnectedUsers = new();
 
@@ -103,7 +103,7 @@ public class BaseRoomPage : ComponentBase, IAsyncDisposable
 
         HubConnection.On<bool>(SignalRMessages.RoomDeleted, _ =>
         {
-            _snackbar.Add(Loc["RoomDeleted"], Severity.Warning);
+            Snackbar.Add(Loc["RoomDeleted"], Severity.Warning);
             Navigation.NavigateTo("rooms");
         });
     }

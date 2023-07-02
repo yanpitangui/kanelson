@@ -33,6 +33,24 @@ public partial class Player : BaseRoomPage
 
             InvokeAsync(StateHasChanged);
         });
+
+        HubConnection.On<RejectionReason>(SignalRMessages.AnswerRejected, reason =>
+        {
+            var stringReason = reason is RejectionReason.InvalidState
+                ? Loc["InvalidState"]
+                : Loc["AnswerRejected"];
+            if (reason is RejectionReason.InvalidAlternatives)
+            {
+                _playerStatus = PlayerStatus.Answering;
+            }
+            Snackbar.Add(stringReason, Severity.Error, config =>
+            {
+                config.RequireInteraction = false;
+                config.CloseAfterNavigation = false;
+                config.ShowCloseIcon = false;
+            });
+            InvokeAsync(StateHasChanged);
+        });
     }
 
     protected override void OnNextQuestion()

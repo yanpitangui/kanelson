@@ -158,15 +158,20 @@ public class RoomActor : BaseWithSnapshotFrequencyActor, IWithTimers
             var possibleAlternatives = CurrentQuestion.Alternatives.Select(static x => x.Id);
             if (!o.AlternativeIds.All(x => possibleAlternatives.Contains(x)))
             {
-                // TODO: Escutar no front caso a resposta seja rejeitada
-                _signalrActor.Tell(new SendSignalrUserMessage(o.UserId, SignalRMessages.AnswerRejected));
+                _signalrActor.Tell(new SendSignalrUserMessage(o.UserId, SignalRMessages.AnswerRejected, RejectionReason.InvalidAlternatives));
                 return;
             }
-            var exists = _state.Answers.TryGetValue(CurrentQuestion.Id, out var question);
 
-            if (!exists) return;
+            if (_state.CurrentState is not RoomStatus.DisplayingQuestion)
+            {
+                _signalrActor.Tell(new SendSignalrUserMessage(o.UserId, 
+                    SignalRMessages.AnswerRejected,
+                    RejectionReason.InvalidState));
+                return;
+            }
+            var questionAnswers = _state.Answers[CurrentQuestion.Id];
             var alternativeInfo = CalculatePoints(o.AlternativeIds);
-            question!.TryAdd(o.UserId, alternativeInfo);
+            questionAnswers!.TryAdd(o.UserId, alternativeInfo);
             var user = _state.CurrentUsers.FirstOrDefault(x => string.Equals(x.Id, o.UserId, StringComparison.OrdinalIgnoreCase));
             if (user != null) user.Answered = true;
             _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifierString, SignalRMessages.UserAnswered, o.UserId));
@@ -421,6 +426,8 @@ public class RoomActor : BaseWithSnapshotFrequencyActor, IWithTimers
     private sealed record StatusChanged(RoomStatus Status, bool IncrementedQuestionIdx);
 
 
+
+
 }
 
 public record SetBase(string RoomName, string OwnerId, Template Template);
@@ -482,3 +489,9 @@ public record GetOwner
 }
 
 public record SendUserAnswer(string UserId, Guid[] AlternativeIds);
+
+public enum RejectionReason
+{
+    InvalidState,
+    InvalidAlternatives
+}

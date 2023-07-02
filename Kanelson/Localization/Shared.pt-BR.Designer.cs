@@ -87,6 +87,15 @@ namespace Kanelson.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Alternativas inválidas. Por favor, tente responder novamente..
+        /// </summary>
+        internal static string AnswerRejected {
+            get {
+                return ResourceManager.GetString("AnswerRejected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Perguntas atribuídas.
         /// </summary>
         internal static string AssignedQuestions {
@@ -218,6 +227,15 @@ namespace Kanelson.Localization {
         internal static string InitialPage {
             get {
                 return ResourceManager.GetString("InitialPage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Status inválido da sala, não foi possível enviar resposta..
+        /// </summary>
+        internal static string InvalidState {
+            get {
+                return ResourceManager.GetString("InvalidState", resourceCulture);
             }
         }
         

@@ -153,4 +153,10 @@
     <data name="ImageLabel" xml:space="preserve">
         <value>Image related to the question</value>
     </data>
+    <data name="InvalidState" xml:space="preserve">
+        <value>Invalid room state, answer could not be sent.</value>
+    </data>
+    <data name="AnswerRejected" xml:space="preserve">
+        <value>Invalid alternatives. Please try answering again.</value>
+    </data>
 </root>

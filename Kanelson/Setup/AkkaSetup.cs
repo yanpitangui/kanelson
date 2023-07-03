@@ -15,8 +15,10 @@ namespace Kanelson.Setup;
 
 public static class AkkaSetup
 {
-    public static IHostBuilder AddAkkaSetup(this IHostBuilder hostBuilder, string actorSystemName)
+    public static IHostBuilder AddAkkaSetup(this IHostBuilder hostBuilder)
     {
+        const string actorSystemName = "Kanelson";
+
         hostBuilder.ConfigureServices((ctx, services) =>
         {
             

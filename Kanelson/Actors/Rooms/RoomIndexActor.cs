@@ -45,8 +45,6 @@ public sealed class RoomIndexActor : BaseWithSnapshotFrequencyActor
             AddToChildren(o);
             Persist(o, HandleRegister);
         });
-
-        Command<Exists>(o => Sender.Tell(_state.Items.Contains(o.RoomIdentifier)));
         
         Recover<Unregister>(HandleUnregister);
         
@@ -220,8 +218,6 @@ public record GetAllSummaries
 }
 
 public record Register(long RoomIdentifier, SetBase RoomBase);
-
-public record Exists(long RoomIdentifier);
 
 public record GetRef(long RoomIdentifier);
 

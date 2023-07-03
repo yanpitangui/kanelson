@@ -1,7 +1,5 @@
 using System.Diagnostics;
 using System.Security.Claims;
-using IdGen;
-using IdGen.DependencyInjection;
 using Kanelson.Hubs;
 using Kanelson.Services;
 using Kanelson.Setup;
@@ -9,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.ResponseCompression;
 using MudBlazor.Services;
 using Serilog;
+using System.Text.Json;
 
 
 Activity.DefaultIdFormat = ActivityIdFormat.W3C;
@@ -71,8 +70,6 @@ builder.Services.AddAuthentication(o =>
     });
 
 
-const string dbName = "Kanelson";
-
 builder.Services.AddOptions();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor().AddHubOptions(o =>
@@ -80,23 +77,12 @@ builder.Services.AddServerSideBlazor().AddHubOptions(o =>
     o.ClientTimeoutInterval = TimeSpan.FromSeconds(60);
     o.HandshakeTimeout = TimeSpan.FromSeconds(30);
 });
-builder.Services.AddScoped<ITemplateService, TemplateService>();
-builder.Services.AddScoped<IQuestionService, QuestionService>();
-builder.Services.AddSingleton<IUserService, UserService>();
-builder.Services.AddScoped<IRoomService, RoomService>();
+
+builder.Services.AddApplicationServices();
 builder.Services.AddMudServices();
-builder.Services.AddHttpContextAccessor();
 builder.Services.AddLocalization();
 
-builder.Services.AddIdGen(0, () =>
-{
-    var epoch = new DateTimeOffset(new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-    var structure = new IdStructure(41, 10, 12);
-    var options = new IdGeneratorOptions(structure, new DefaultTimeSource(epoch));
-    return options;
-});
-
-builder.Host.AddAkkaSetup(dbName);
+builder.Host.AddAkkaSetup();
 
 builder.Host.AddOpenTelemetrySetup();
 
@@ -113,7 +99,6 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-
 
 app.UseHttpsRedirection();
 

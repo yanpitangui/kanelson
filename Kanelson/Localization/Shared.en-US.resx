@@ -159,4 +159,7 @@
     <data name="AnswerRejected" xml:space="preserve">
         <value>Invalid alternatives. Please try answering again.</value>
     </data>
+    <data name="ConnectedUsers" xml:space="preserve">
+        <value>Connected users</value>
+    </data>
 </root>

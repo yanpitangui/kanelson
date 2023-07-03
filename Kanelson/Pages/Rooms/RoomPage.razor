@@ -1,62 +1,42 @@
 ﻿@page "/room/{Id:long}"
-@using Kanelson.Services
-@using Kanelson.Models
-@inject IRoomService RoomService
-@inject IUserService UserService
-@inject IStringLocalizer<Shared> Loc
-@inject ISnackbar Snackbar
-@inject NavigationManager Navigation
+
 <MudCard>
+    <MudCardContent Class="room-header">
+        <span class="room-identifier">@Loc["Room"]: <b>@Id</b></span>
+    </MudCardContent>
     <MudCardContent>
-        @if (_summary is not null)
-        {
-            @if (_summary.Owner.Id == UserService.CurrentUser)
+        <div class="d-flex flex-row flex-grow-1 flex-wrap gap-3">
+            <MudPaper Class="d-flex flex-initial">
+               <ConnectedUsersComponent ConnectedUsers="_connectedUsers"/>
+            </MudPaper>
+            @if (_summary is not null)
             {
-                <Admin RoomId="@Id"></Admin>
+                @if (_summary.Owner.Id == UserService.CurrentUser)
+                {
+                    <Admin RoomId="@Id" HubConnection="_hubConnection"
+                           TimerConfiguration="_timerConfig" Class="d-flex flex-1 py-9"/>
+                }
+                else
+                {
+                    <Player RoomId="@Id" HubConnection="_hubConnection"
+                            TimerConfiguration="_timerConfig" Class="d-flex flex-1 py-9"/>
+                }
             }
             else
             {
-                <Player RoomId="@Id"></Player>
+                <div>@Loc["Loading"]...</div>
             }
-        }
-        else
-        {
-            <div>@Loc["Loading"]...</div>
-        }
+        </div>
+
     </MudCardContent>
-    <MudDivider/>
-    <MudCardContent Class="room-footer">
-        <span class="room-identifier">@Loc["Room"]: <b>@Id</b></span>
-    </MudCardContent>
+
 </MudCard>
 
 
 
 @code {
 
-    RoomSummary? _summary;
 
-    [Parameter]
-    public long Id { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            _summary = await RoomService.Get(Id);
-
-        }
-        catch (Exception)
-        {
-            Snackbar.Add(Loc["RoomNotFound"], Severity.Error, config =>
-            {
-                config.RequireInteraction = false;
-                config.CloseAfterNavigation = false;
-                config.ShowCloseIcon = false;
-            });
-            Navigation.NavigateTo("rooms");
-        }
-    }
 
 
 

@@ -141,6 +141,15 @@ namespace Kanelson.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Usuários conectados.
+        /// </summary>
+        internal static string ConnectedUsers {
+            get {
+                return ResourceManager.GetString("ConnectedUsers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Correto.
         /// </summary>
         internal static string Correct {

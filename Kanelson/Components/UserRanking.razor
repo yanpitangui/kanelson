@@ -1,4 +1,5 @@
 ﻿@using System.Collections.Immutable
+@inherits MudComponentBase
 @inject IStringLocalizer<Shared> Loc
 
 <MudTable Items="Ranking" Hover="true" Breakpoint="Breakpoint.Sm">
@@ -10,14 +11,14 @@
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Pos.">@(context.Rank?.ToString() ?? "--")</MudTd>
-        <MudTd DataLabel="Name">
+        <MudTd DataLabel="@Loc["Name"]">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                 <Avatar GithubId="@context.Id"/>
                 <span>@context.Name</span>
             </MudStack>
         </MudTd>
-        <MudTd DataLabel="Points">@context.Points</MudTd>
-        <MudTd DataLabel="Average Time">@context.AverageTime</MudTd>
+        <MudTd DataLabel="@Loc["Points"]">@context.Points</MudTd>
+        <MudTd DataLabel="@Loc["AverageTime"]">@context.AverageTime</MudTd>
     </RowTemplate>
 </MudTable>
 

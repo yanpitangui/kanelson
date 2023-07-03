@@ -1,16 +1,12 @@
 ﻿@using Kanelson.Components.progress
 @inherits BaseRoomPage
-
-<ConnectedUsersComponent ConnectedUsers="ConnectedUsers"/>
-
-
 @if (CurrentQuestion is not null && _playerStatus != PlayerStatus.Answered)
 {
-    @if (TimerConfig.Enabled)
+    @if (TimerConfiguration.Enabled)
     {
         <Progress Status="ProgressStatus.Active" Type="ProgressType.Circle"
                   TrailColor="#ff4d4f"
-                  Percent="@TimerConfig.Percentage" Format="TimerConfig.Format"></Progress>
+                  Percent="@TimerConfiguration.Percentage" Format="TimerConfiguration.Format"></Progress>
     }
 
     

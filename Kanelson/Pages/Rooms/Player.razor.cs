@@ -13,19 +13,22 @@ namespace Kanelson.Pages.Rooms;
 public partial class Player : BaseRoomPage
 {
 
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
+    
     private PlayerStatus _playerStatus = PlayerStatus.Answering;
     
     private async Task Answer(Guid alternativeId)
     {
-        TimerConfig.Stop();
+        TimerConfiguration.Stop();
         _playerStatus = PlayerStatus.Answered;
         await HubConnection!.SendAsync(SignalRMessages.Answer, RoomId,  alternativeId);
         await InvokeAsync(StateHasChanged);
     }
 
-    protected override void ConfigureSignalrEvents()
+    protected override void ConfigureExtraSignalrEvents()
     {
-        base.ConfigureSignalrEvents();
+        base.ConfigureExtraSignalrEvents();
 
         HubConnection.On<UserAnswerSummary>(SignalRMessages.RoundSummary, summary =>
         {

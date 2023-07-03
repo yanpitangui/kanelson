@@ -215,8 +215,7 @@ public class RoomActor : BaseWithSnapshotFrequencyActor, IWithTimers
 
     private void FillAnswersFromUsersThatHaveNotAnswered()
     {
-        var usersWithAnswers = _state.Answers.Select(x => x.Value)
-            .SelectMany(x => x)
+        var usersWithAnswers = _state.Answers[CurrentQuestion.Id]
             .Select(x => x.Key)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 

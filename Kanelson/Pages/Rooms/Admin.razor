@@ -4,17 +4,15 @@
 @inherits BaseRoomPage
 
 <MudStack>
-    <ConnectedUsersComponent ConnectedUsers="ConnectedUsers"/>
-
         
     @if (CurrentQuestion is not null && _roomStatus == RoomStatus.DisplayingQuestion)
     {
         
-        @if (TimerConfig.Enabled)
+        @if (TimerConfiguration.Enabled)
         {
             <Progress Status="ProgressStatus.Active" Type="ProgressType.Circle"
                       TrailColor="#ff4d4f"
-                      Percent="@TimerConfig.Percentage" Format="TimerConfig.Format"></Progress>
+                      Percent="@TimerConfiguration.Percentage" Format="TimerConfiguration.Format"></Progress>
         }
         
         
@@ -23,7 +21,7 @@
     
     else if (Rankings != null)
     {
-        <UserRanking Ranking="Rankings.Value"/>
+        <UserRanking Ranking="Rankings.Value" />
     }
 
     

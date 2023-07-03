@@ -1,15 +1,18 @@
 @using Kanelson.Actors.Rooms
+@inherits MudComponentBase
 <MudList>
+    <span class="host-identifier"><MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small"/> @Localizer["ConnectedUsers"]</span>
     @foreach (var user in ConnectedUsers)
     {
         <MudListItem>
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                 <Avatar GithubId="@user.Id"/>
-                <span>@user.Name</span>
                 @if (user.Owner)
                 {
                     <span class="host-identifier">[@Localizer["Host"]]</span>
                 }
+                <span class="text-wrap">@user.Name</span>
+
             </MudStack>
         </MudListItem>
     }

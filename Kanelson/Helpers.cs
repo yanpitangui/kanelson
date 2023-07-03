@@ -7,7 +7,7 @@ namespace Kanelson;
 public static class Helpers
 {
     public static HubConnection GetConnection(this IHttpContextAccessor httpContextAccessor,
-        NavigationManager navigation)
+        NavigationManager navigation, string hubName)
     {
         httpContextAccessor.HttpContext!.Request.Cookies.TryGetValue(".AspNetCore.Cookies", out var value);
         var container = new CookieContainer();
@@ -19,7 +19,7 @@ public static class Helpers
         
         });
         return new HubConnectionBuilder()
-            .WithUrl(navigation.ToAbsoluteUri("roomHub"), options =>
+            .WithUrl(navigation.ToAbsoluteUri(hubName), options =>
             {
                 options.Cookies = container;
             })

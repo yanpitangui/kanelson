@@ -35,20 +35,20 @@ public class BaseRoomPage : MudComponentBase
         ConfigureExtraSignalrEvents();
         await HubConnection.StartAsync();
 
-        await HubConnection.SendAsync(SignalRMessages.JoinRoom, RoomId);
+        await HubConnection.SendAsync(RoomHub.SignalRMessages.JoinRoom, RoomId);
 
         await AfterConnectedConfiguration();
     }
 
     protected virtual void ConfigureExtraSignalrEvents()
     {
-        HubConnection.On<ImmutableArray<UserRanking>>(SignalRMessages.RoomFinished, (ranking) =>
+        HubConnection.On<ImmutableArray<UserRanking>>(RoomHub.SignalRMessages.RoomFinished, (ranking) =>
         {
             Rankings = ranking;
             InvokeAsync(StateHasChanged);
         });
         
-        HubConnection.On<CurrentQuestionInfo>(SignalRMessages.NextQuestion, (question) =>
+        HubConnection.On<CurrentQuestionInfo>(RoomHub.SignalRMessages.NextQuestion, (question) =>
         {
             CurrentQuestion = question;
             TimerConfiguration.ResetAndStart(question.Question.TimeLimit);
@@ -57,7 +57,7 @@ public class BaseRoomPage : MudComponentBase
         });
         
         
-        HubConnection.On<bool>(SignalRMessages.RoundFinished, (_) =>
+        HubConnection.On<bool>(RoomHub.SignalRMessages.RoundFinished, (_) =>
         {
             TimerConfiguration.Stop();
             CurrentQuestion = null;

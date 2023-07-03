@@ -124,6 +124,7 @@ app.UseRouting();
 
 app.MapControllers();
 app.MapHub<RoomHub>("/roomHub");
+app.MapHub<RoomLobbyHub>("/roomLobbyHub");
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 app.UseAuthentication();

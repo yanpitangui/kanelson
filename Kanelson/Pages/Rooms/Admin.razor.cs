@@ -19,7 +19,7 @@ public partial class Admin : BaseRoomPage
     protected override void ConfigureExtraSignalrEvents()
     {
         base.ConfigureExtraSignalrEvents();
-        HubConnection.On<RoomStatus>(SignalRMessages.RoomStatusChanged, (state) =>
+        HubConnection.On<RoomStatus>(RoomHub.SignalRMessages.RoomStatusChanged, (state) =>
         {
             _roomStatus = state;
             InvokeAsync(StateHasChanged);

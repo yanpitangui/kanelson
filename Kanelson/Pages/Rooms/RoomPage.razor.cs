@@ -48,7 +48,7 @@ public sealed partial class RoomPage : ComponentBase, IAsyncDisposable
         {
             _summary = await RoomService.Get(Id);
             
-            _hubConnection = HttpAccessor.GetConnection(Navigation);
+            _hubConnection = HttpAccessor.GetConnection(Navigation, "roomHub");
             ConfigureCommonSignalrEvents();
 
         }
@@ -70,14 +70,14 @@ public sealed partial class RoomPage : ComponentBase, IAsyncDisposable
         _timerConfig.SetupAction(TimeElapsed);
 
         
-        _hubConnection.On<HashSet<RoomUser>>(SignalRMessages.CurrentUsersUpdated, (users) =>
+        _hubConnection.On<HashSet<RoomUser>>(RoomHub.SignalRMessages.CurrentUsersUpdated, (users) =>
         {
             _connectedUsers = users;
             InvokeAsync(StateHasChanged);
         });
         
         
-        _hubConnection.On<string>(SignalRMessages.UserAnswered, (userId) =>
+        _hubConnection.On<string>(RoomHub.SignalRMessages.UserAnswered, (userId) =>
         {
             var user = _connectedUsers.FirstOrDefault(x => string.Equals(x.Id, userId, StringComparison.OrdinalIgnoreCase));
             if (user != null)
@@ -86,7 +86,7 @@ public sealed partial class RoomPage : ComponentBase, IAsyncDisposable
             }
         });
 
-        _hubConnection.On<bool>(SignalRMessages.RoomDeleted, _ =>
+        _hubConnection.On<bool>(RoomHub.SignalRMessages.RoomDeleted, _ =>
         {
             Snackbar.Add(Loc["RoomDeleted"], Severity.Warning);
             Navigation.NavigateTo("rooms");

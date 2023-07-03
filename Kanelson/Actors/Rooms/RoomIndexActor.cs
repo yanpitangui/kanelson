@@ -15,15 +15,19 @@ public sealed class RoomIndexActor : BaseWithSnapshotFrequencyActor
 
     private RoomIndexState _state;
     private readonly Dictionary<long, IActorRef> _children;
-    private readonly IHubContext<RoomHub> _hubContext;
+    private readonly IHubContext<RoomHub> _roomContext;
     private readonly IUserService _userService;
     private readonly Dictionary<long, Dictionary<string, HubUser>> _roomUsers = new();
+    private readonly IActorRef _signalrActor;
 
 
-    public RoomIndexActor(string persistenceId, IHubContext<RoomHub> hubContext, IUserService userService)
+    public RoomIndexActor(string persistenceId, IHubContext<RoomHub> roomContext,
+        IHubContext<RoomLobbyHub> roomLobbyContext, IUserService userService)
     {
-        _hubContext = hubContext;
+        _roomContext = roomContext;
         _userService = userService;
+        _signalrActor = Context.ActorOf(SignalrActor.Props((IHubContext) roomLobbyContext));
+
         PersistenceId = persistenceId;
 
         _children = new();
@@ -132,7 +136,7 @@ public sealed class RoomIndexActor : BaseWithSnapshotFrequencyActor
         {
             var sender = Sender;
             
-            var tasks = _state.Items.Select(x => _children[x].Ask<RoomSummary>(GetSummary.Instance));
+            var tasks = _state.Items.Select(x => _children[x].Ask<RoomSummary>(GetSummary.Instance, TimeSpan.FromSeconds(3)));
             
             async Task<ImmutableArray<RoomSummary>> ExecuteWork()
             {
@@ -165,7 +169,7 @@ public sealed class RoomIndexActor : BaseWithSnapshotFrequencyActor
     {
         var roomActor = GetChildRoomActorRef(o.RoomIdentifier);
         roomActor.Tell(o.RoomBase);
-        _children.Add(o.RoomIdentifier, roomActor);
+        _children.TryAdd(o.RoomIdentifier, roomActor);
     }
 
     private void HandleUnregister(Unregister r)
@@ -177,19 +181,27 @@ public sealed class RoomIndexActor : BaseWithSnapshotFrequencyActor
         }
         _state.Items.Remove(r.RoomIdentifier);
         _children.Remove(r.RoomIdentifier);
+        GenerateChangedSignalRMessage().PipeTo(_signalrActor);
         SaveSnapshotIfPassedInterval(_state);
         
+    }
+
+    private async Task<SendSignalrGroupMessage> GenerateChangedSignalRMessage()
+    {
+        var summary = await Self.Ask<ImmutableArray<RoomSummary>>(GetAllSummaries.Instance);
+        return new SendSignalrGroupMessage(RoomLobbyHub.RoomsGroup, RoomLobbyHub.SignalRMessages.RoomsChanged, summary);
     }
 
     private void HandleRegister(Register r)
     {
         _state.Items.Add(r.RoomIdentifier);
+        GenerateChangedSignalRMessage().PipeTo(_signalrActor);
         SaveSnapshotIfPassedInterval(_state);
     }
 
     private IActorRef GetChildRoomActorRef(long roomIdentifier)
     {
-        return Context.ActorOf(RoomActor.Props(roomIdentifier, _hubContext, _userService), $"room-{roomIdentifier}");
+        return Context.ActorOf(RoomActor.Props(roomIdentifier, _roomContext, _userService), $"room-{roomIdentifier}");
     }
 }
 

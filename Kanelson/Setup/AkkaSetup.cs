@@ -44,6 +44,7 @@ public static class AkkaSetup
                         var roomIndex =
                             system.ActorOf(Props.Create<RoomIndexActor>("room-index",
                                     sp.GetService<IHubContext<RoomHub>>(),
+                                    sp.GetService<IHubContext<RoomLobbyHub>>(),
                                     sp.GetService<IUserService>()),
                                 "room-index");
 

@@ -91,13 +91,13 @@ public class RoomActor : BaseWithSnapshotFrequencyActor, IWithTimers
              {
                  Timers.Cancel(AnswerloopTimerName);
 
-                 _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifierString, SignalRMessages.RoundFinished, true));
+                 _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifierString, RoomHub.SignalRMessages.RoundFinished, true));
 
                  FillAnswersFromUsersThatHaveNotAnswered();
                  
                  foreach (var userId in Users.Select(x => x.Id))
                  {
-                     _signalrActor.Tell(new SendSignalrUserMessage(userId, SignalRMessages.RoundSummary, GetUserRoundSummary(userId)));
+                     _signalrActor.Tell(new SendSignalrUserMessage(userId, RoomHub.SignalRMessages.RoundSummary, GetUserRoundSummary(userId)));
                  }
 
                  if (_state.CurrentQuestionIdx < _state.MaxQuestionIdx)
@@ -107,7 +107,7 @@ public class RoomActor : BaseWithSnapshotFrequencyActor, IWithTimers
                  else
                  {
                      UpdateState(RoomStatus.Finished);
-                     _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifierString, SignalRMessages.RoomFinished,
+                     _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifierString, RoomHub.SignalRMessages.RoomFinished,
                          GetRanking()));
                  }
 
@@ -158,14 +158,14 @@ public class RoomActor : BaseWithSnapshotFrequencyActor, IWithTimers
             var possibleAlternatives = CurrentQuestion.Alternatives.Select(static x => x.Id);
             if (!o.AlternativeIds.All(x => possibleAlternatives.Contains(x)))
             {
-                _signalrActor.Tell(new SendSignalrUserMessage(o.UserId, SignalRMessages.AnswerRejected, RejectionReason.InvalidAlternatives));
+                _signalrActor.Tell(new SendSignalrUserMessage(o.UserId, RoomHub.SignalRMessages.AnswerRejected, RejectionReason.InvalidAlternatives));
                 return;
             }
 
             if (_state.CurrentState is not RoomStatus.DisplayingQuestion)
             {
                 _signalrActor.Tell(new SendSignalrUserMessage(o.UserId, 
-                    SignalRMessages.AnswerRejected,
+                    RoomHub.SignalRMessages.AnswerRejected,
                     RejectionReason.InvalidState));
                 return;
             }
@@ -174,20 +174,20 @@ public class RoomActor : BaseWithSnapshotFrequencyActor, IWithTimers
             questionAnswers!.TryAdd(o.UserId, alternativeInfo);
             var user = _state.CurrentUsers.FirstOrDefault(x => string.Equals(x.Id, o.UserId, StringComparison.OrdinalIgnoreCase));
             if (user != null) user.Answered = true;
-            _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifierString, SignalRMessages.UserAnswered, o.UserId));
+            _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifierString, RoomHub.SignalRMessages.UserAnswered, o.UserId));
         });
         
         Command<UserConnected>(o =>
         {
-            _signalrActor.Tell(new SendSignalrUserMessage(o.UserId, SignalRMessages.CurrentUsersUpdated, _state.CurrentUsers));
+            _signalrActor.Tell(new SendSignalrUserMessage(o.UserId, RoomHub.SignalRMessages.CurrentUsersUpdated, _state.CurrentUsers));
             if(_state.CurrentState == RoomStatus.Finished) 
-                _signalrActor.Tell(new SendSignalrUserMessage(o.UserId, SignalRMessages.RoomFinished, GetRanking()));
+                _signalrActor.Tell(new SendSignalrUserMessage(o.UserId, RoomHub.SignalRMessages.RoomFinished, GetRanking()));
         });
         
                 
         Command<ShutdownCommand>(_ =>
         {
-            _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifierString, SignalRMessages.RoomDeleted, true));
+            _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifierString, RoomHub.SignalRMessages.RoomDeleted, true));
             DeleteMessages(Int64.MaxValue);
             DeleteSnapshots(SnapshotSelectionCriteria.Latest);
         });
@@ -281,7 +281,7 @@ public class RoomActor : BaseWithSnapshotFrequencyActor, IWithTimers
         {
             user.Answered = false;
         }
-        _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifierString, SignalRMessages.NextQuestion,
+        _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifierString, RoomHub.SignalRMessages.NextQuestion,
             GetCurrentQuestionInfo()));
     }
     
@@ -307,7 +307,7 @@ public class RoomActor : BaseWithSnapshotFrequencyActor, IWithTimers
         {
             SaveSnapshotIfPassedInterval(_state);
         }
-        _signalrActor.Tell(new SendSignalrUserMessage(_state.OwnerId,SignalRMessages.RoomStatusChanged, _state.CurrentState));
+        _signalrActor.Tell(new SendSignalrUserMessage(_state.OwnerId,RoomHub.SignalRMessages.RoomStatusChanged, _state.CurrentState));
         
         
     }
@@ -370,7 +370,7 @@ public class RoomActor : BaseWithSnapshotFrequencyActor, IWithTimers
 
         if (!equal)
         {
-            _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifierString, SignalRMessages.CurrentUsersUpdated, _state.CurrentUsers));
+            _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifierString, RoomHub.SignalRMessages.CurrentUsersUpdated, _state.CurrentUsers));
         }
         SaveSnapshotIfPassedInterval(_state);
     }

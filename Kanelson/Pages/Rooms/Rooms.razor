@@ -1,12 +1,16 @@
 ﻿@page "/rooms"
 @using Kanelson.Services
 @using System.Collections.Immutable
+@using Kanelson.Hubs
 @using Kanelson.Models
+@using Microsoft.AspNetCore.SignalR.Client
 @inject IRoomService Service
 @inject IUserService UserService
 @inject NavigationManager Navigation
 @inject IStringLocalizer<Shared> Loc
-
+@inject IHttpContextAccessor HttpAccessor
+@inherits ComponentBase
+@implements IAsyncDisposable
 
 @if (_rooms is null)
 {
@@ -55,11 +59,23 @@ else
 @code {
 
     private ImmutableArray<RoomSummary>? _rooms;
+    private HubConnection _hubConnection = null!;
 
     protected override async Task OnInitializedAsync()
     {
+        
+        _hubConnection = HttpAccessor.GetConnection(Navigation, "roomLobbyHub");
+
+
+        _hubConnection.On<ImmutableArray<RoomSummary>>(RoomLobbyHub.SignalRMessages.RoomsChanged, (rooms) =>
+        {
+            _rooms = rooms;
+            InvokeAsync(StateHasChanged);
+        });
+        
         _rooms = await Service.GetAll();
-        await base.OnInitializedAsync();
+        await _hubConnection.StartAsync();
+
     }
 
     private void JoinRoom(long id)
@@ -70,8 +86,16 @@ else
     private async Task DeleteRoom(long id)
     {
         await Service.Delete(id);
-        _rooms = await Service.GetAll();
         await InvokeAsync(StateHasChanged);
     }
+
     
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection is IAsyncDisposable disposable)
+        {
+            await disposable.DisposeAsync();
+        }
+    }
+
 }

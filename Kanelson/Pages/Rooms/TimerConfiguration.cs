@@ -46,12 +46,9 @@ public sealed class TimerConfiguration : IDisposable
 
     public void Dispose(bool disposing)
     {
-        if (disposing)
+        if (disposing && _timerHandle is IDisposable disposable)
         {
-            if (_timerHandle is IDisposable disposable)
-            {
-                disposable.Dispose();
-            }
+            disposable.Dispose();
         }
     }
 }

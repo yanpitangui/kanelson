@@ -43,7 +43,7 @@ public class RoomService : IRoomService
     {
         var index = await _actorRegistry.GetAsync<RoomIndexActor>();
         var room = await GetRoomRef(roomId, index);
-        return await room.Ask<RoomStatus>(Actors.Rooms.GetCurrentState.Instance);
+        return await room.Ask<RoomStatus>(Actors.Rooms.GetCurrentState.Instance, TimeSpan.FromSeconds(3));
     }
 
     public void UserDisconnected(string userId, string connectionId)
@@ -65,7 +65,7 @@ public class RoomService : IRoomService
         
         var index = await _actorRegistry.GetAsync<RoomIndexActor>();
 
-        return await index.Ask<ImmutableArray<RoomSummary>>(GetAllSummaries.Instance);
+        return await index.Ask<ImmutableArray<RoomSummary>>(GetAllSummaries.Instance, TimeSpan.FromSeconds(3));
     }
 
     public async Task<RoomSummary> Get(long roomId)
@@ -74,7 +74,7 @@ public class RoomService : IRoomService
         var room = await GetRoomRef(roomId, index);
 
 
-        return await room.Ask<RoomSummary>(GetSummary.Instance);
+        return await room.Ask<RoomSummary>(GetSummary.Instance, TimeSpan.FromSeconds(3));
     }
     
     public async Task<CurrentQuestionInfo> GetCurrentQuestion(long roomId)
@@ -83,7 +83,7 @@ public class RoomService : IRoomService
         var room = await GetRoomRef(roomId, index);
 
 
-        return await room.Ask<CurrentQuestionInfo>(Actors.Rooms.GetCurrentQuestion.Instance);
+        return await room.Ask<CurrentQuestionInfo>(Actors.Rooms.GetCurrentQuestion.Instance, TimeSpan.FromSeconds(3));
     }
 
     public async Task NextQuestion(long roomId)
@@ -135,7 +135,7 @@ public class RoomService : IRoomService
 
     private static async Task<IActorRef> GetRoomRef(long roomId, IActorRef index)
     {
-        var room = await index.Ask<Option<IActorRef>>(new GetRef(roomId));
+        var room = await index.Ask<Option<IActorRef>>(new GetRef(roomId), TimeSpan.FromSeconds(3));
 
         if (room.IsEmpty) throw new ActorNotFoundException();
         return room.Value;

@@ -29,33 +29,33 @@ public class TemplateService : ITemplateService
     public async Task UpsertTemplate(Template template)
     {
         var index = GetOrCreateIndexRef();
-        var actor = await index.Ask<IActorRef>(new GetRef(template.Id));
+        var actor = await index.Ask<IActorRef>(new GetRef(template.Id), TimeSpan.FromSeconds(3));
         actor.Tell(new Upsert(template, _userService.CurrentUser));
     }
 
     public Task<ImmutableArray<TemplateSummary>> GetTemplates()
     {
         var index = GetOrCreateIndexRef();
-        return index.Ask<ImmutableArray<TemplateSummary>>(GetAllSummaries.Instance);
+        return index.Ask<ImmutableArray<TemplateSummary>>(GetAllSummaries.Instance, TimeSpan.FromSeconds(3));
     }
 
     public async Task<Template> GetTemplate(Guid id)
     {
         var index = GetOrCreateIndexRef();
-        var exists = await index.Ask<bool>(new Exists(id));
+        var exists = await index.Ask<bool>(new Exists(id), TimeSpan.FromSeconds(3));
         if (!exists)
         {
             throw new KeyNotFoundException();
         }
 
-        var actorRef = await index.Ask<IActorRef>(new GetRef(id));
-        return await actorRef.Ask<Template>(Actors.Templates.GetTemplate.Instance);
+        var actorRef = await index.Ask<IActorRef>(new GetRef(id), TimeSpan.FromSeconds(3));
+        return await actorRef.Ask<Template>(Actors.Templates.GetTemplate.Instance, TimeSpan.FromSeconds(3));
     }
 
     public async Task DeleteTemplate(Guid id)
     {
         var index = GetOrCreateIndexRef();
-        var exists = await index.Ask<bool>(new Exists(id));
+        var exists = await index.Ask<bool>(new Exists(id), TimeSpan.FromSeconds(3));
         if (!exists)
         {
             throw new KeyNotFoundException();

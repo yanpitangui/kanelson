@@ -3,6 +3,7 @@ using Kanelson.Models;
 using Kanelson.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using System.Globalization;
 
 namespace Kanelson.Hubs;
 
@@ -18,7 +19,7 @@ public class RoomHub : Hub
 
     public async Task JoinRoom(long roomId)
     {
-        await Groups.AddToGroupAsync(Context.ConnectionId, roomId.ToString());
+        await Groups.AddToGroupAsync(Context.ConnectionId, roomId.ToString(NumberFormatInfo.InvariantInfo));
 
         var userId = Context.GetUserId();
         var connectionId = Context.ConnectionId;

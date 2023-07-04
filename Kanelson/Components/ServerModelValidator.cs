@@ -37,6 +37,7 @@ public class ServerModelValidator : ComponentBase
     public void DisplayError(string field, string validationMessage)
     {
         var dictionary = new Dictionary<string, List<string>>
+(StringComparer.OrdinalIgnoreCase)
         {
             { field, new List<string> { validationMessage } }
         };

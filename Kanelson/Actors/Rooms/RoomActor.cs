@@ -5,6 +5,7 @@ using Kanelson.Hubs;
 using Kanelson.Models;
 using Kanelson.Services;
 using Microsoft.AspNetCore.SignalR;
+using System.Globalization;
 
 namespace Kanelson.Actors.Rooms;
 
@@ -32,7 +33,7 @@ public class RoomActor : BaseWithSnapshotFrequencyActor, IWithTimers
     public RoomActor(long roomIdentifier, IHubContext<RoomHub> hubContext, IUserService userService)
     {
         _roomIdentifier = roomIdentifier;
-        _roomIdentifierString = _roomIdentifier.ToString();
+        _roomIdentifierString = _roomIdentifier.ToString(NumberFormatInfo.InvariantInfo);
         PersistenceId = $"room-{roomIdentifier}";
         
         _signalrActor = Context.ActorOf(SignalrActor.Props((IHubContext) hubContext));
@@ -156,7 +157,7 @@ public class RoomActor : BaseWithSnapshotFrequencyActor, IWithTimers
         Command<SendUserAnswer>(o =>
         {
             var possibleAlternatives = CurrentQuestion.Alternatives.Select(static x => x.Id);
-            if (!o.AlternativeIds.All(x => possibleAlternatives.Contains(x)))
+            if (!Array.TrueForAll(o.AlternativeIds, x => possibleAlternatives.Contains(x)))
             {
                 _signalrActor.Tell(new SendSignalrUserMessage(o.UserId, RoomHub.SignalRMessages.AnswerRejected, RejectionReason.InvalidAlternatives));
                 return;

@@ -22,7 +22,7 @@ public class QuestionListValidator : AbstractValidator<HashSet<Question>?>
 }
 
 
-file class QuestionValidator : AbstractValidator<Question>
+sealed file class QuestionValidator : AbstractValidator<Question>
 {
     public QuestionValidator()
     {
@@ -67,7 +67,7 @@ file class QuestionValidator : AbstractValidator<Question>
     }
 }
 
-file class AlternativeValidator : AbstractValidator<Alternative>
+sealed file class AlternativeValidator : AbstractValidator<Alternative>
 {
     public AlternativeValidator()
     {

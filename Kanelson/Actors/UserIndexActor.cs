@@ -22,9 +22,9 @@ public sealed class UserIndexActor : BaseWithSnapshotFrequencyActor
         {
             Persist(o, HandleUpsert);
         });
-        Command<GetUserInfos>(o =>
+        Command<GetUserInfo>(o =>
         {
-            var users = _state.Users.Where(x => o.Ids.Contains(x.Id, StringComparer.OrdinalIgnoreCase)).ToImmutableArray();
+            var users = _state.Users.Where(x => x.Id.Equals(o.Id, StringComparison.OrdinalIgnoreCase)).ToImmutableArray();
             Sender.Tell(users);
         });
         
@@ -51,4 +51,4 @@ public sealed class UserIndexActor : BaseWithSnapshotFrequencyActor
 
 public record UpsertUser(string Id, string Name);
 
-public record GetUserInfos(params string[] Ids);
+public record GetUserInfo(string Id);

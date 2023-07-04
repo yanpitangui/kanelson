@@ -9,6 +9,5 @@ public interface IUserService
     
     public void Upsert(string id, string name);
 
-    public Task<ImmutableArray<UserInfo>> GetUsersInfo(params string[] ids);
     Task<UserInfo> GetUserInfo(string id);
 }

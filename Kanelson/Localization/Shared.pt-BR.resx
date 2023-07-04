@@ -162,4 +162,13 @@
     <data name="ConnectedUsers" xml:space="preserve">
         <value>Usuários conectados</value>
     </data>
+    <data name="DownloadQuestions" xml:space="preserve">
+        <value>Baixar questões</value>
+    </data>
+    <data name="UploadQuestions" xml:space="preserve">
+        <value>Importar questões</value>
+    </data>
+    <data name="QuestionUploadSuccess" xml:space="preserve">
+        <value>Questões importadas com sucesso.</value>
+    </data>
 </root>

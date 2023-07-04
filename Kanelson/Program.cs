@@ -82,6 +82,7 @@ builder.Services.AddApplicationServices();
 builder.Services.AddMudServices();
 builder.Services.AddLocalization();
 
+
 builder.Host.AddAkkaSetup();
 
 builder.Host.AddOpenTelemetrySetup();

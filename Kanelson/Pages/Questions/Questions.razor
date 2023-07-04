@@ -1,9 +1,12 @@
 ﻿@page "/questions"
 @using Kanelson.Services
 @using Kanelson.Models
+@using System.Text.Json
 @inject IQuestionService Service
 @inject NavigationManager Navigation
 @inject IStringLocalizer<Shared> Loc
+@inject IJSRuntime JsRuntime
+@inject ISnackbar Snackbar
 
 
 @if (_questions is null)
@@ -13,13 +16,35 @@
 else
 {
     <MudCard>
-        <MudTable Elevation="25" Items="_questions" >
-         <ToolBarContent>
+        <MudTable Elevation="25" Items="_questions" MultiSelection="true" @bind-SelectedItems="_selectedItems">
+         <ToolBarContent class="d-flex">
              <MudText Typo="Typo.h6">@Loc["Questions"]</MudText>
-             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>EditQuestion(null))"
-                        Class="ml-auto">
-                 @Loc["CreateQuestionButton"]
+             <MudButton Variant="Variant.Filled" Color="Color.Secondary"
+                        Class="ml-auto"
+                        Disabled="@(_selectedItems.Count == 0)" 
+                        StartIcon="@Icons.Material.Filled.CloudDownload"
+                        OnClick="DownloadQuestions">
+                 @Loc["DownloadQuestions"]
              </MudButton>
+             <MudFileUpload Accept=".json" FilesChanged="UploadFiles" Class="mt-0"
+                            T="IBrowserFile" 
+                            SuppressOnChangeWhenInvalid="true">
+                 <ButtonTemplate>
+                     <MudButton HtmlTag="label"
+                                Variant="Variant.Filled"
+                                Color="Color.Info"
+                                Class="ml-3"
+                                StartIcon="@Icons.Material.Filled.CloudUpload"
+                                for="@context">
+                         @Loc["UploadQuestions"]
+                     </MudButton>
+                 </ButtonTemplate>
+             </MudFileUpload>
+             <MudButton StartIcon="@Icons.Material.Filled.Add" 
+                        Variant="Variant.Filled" Class="ml-3"
+                        Color="Color.Primary" OnClick="@(()=>EditQuestion(null))">
+                  @Loc["CreateQuestionButton"]
+              </MudButton>
          </ToolBarContent>
         <HeaderContent>
             <MudTh>@Loc["Name"]</MudTh>
@@ -45,11 +70,26 @@ else
 @code {
 
     private IEnumerable<QuestionSummary>? _questions;
+    private HashSet<QuestionSummary> _selectedItems = new();
+
 
     protected override async Task OnInitializedAsync()
     {
         _questions = await Service.GetQuestionsSummary();
         await base.OnInitializedAsync();
+
+    }
+
+    private async Task DownloadQuestions()
+    {
+        var selectedIds = _selectedItems.Select(x => x.Id).ToHashSet();
+        var selectedQuestions = await Service.GetQuestions(selectedIds);
+        await JsRuntime.InvokeVoidAsync("BlazorDownloadFile", 
+            "questions.json",
+            "application/json", 
+            JsonSerializer.SerializeToUtf8Bytes(selectedQuestions));
+        _selectedItems.Clear();
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task RemoveQuestion(Guid id)
@@ -62,6 +102,35 @@ else
     private void EditQuestion(Guid? id)
     {
         Navigation.NavigateTo($"question/{id}");
+    }
+
+    private async Task UploadFiles(IBrowserFile file)
+    {
+        var result = await Service.UploadQuestions(file);
+        if (!result.IsValid)
+        {
+            foreach (var error in result.Errors)
+            {
+                Snackbar.Add(error.ErrorMessage, Severity.Error, config =>
+                {
+                    config.CloseAfterNavigation = false;
+                    config.RequireInteraction = false;
+                    config.DuplicatesBehavior = SnackbarDuplicatesBehavior.Allow;
+                });
+            }
+
+        }
+        else
+        {
+            Snackbar.Add(@Loc["QuestionUploadSuccess"], Severity.Success, config =>
+            {
+                config.CloseAfterNavigation = false;
+                config.RequireInteraction = false;
+
+            });
+        }
+        _questions = await Service.GetQuestionsSummary();
+        await InvokeAsync(StateHasChanged);
     }
 
 }

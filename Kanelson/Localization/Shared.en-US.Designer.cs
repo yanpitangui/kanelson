@@ -195,6 +195,15 @@ namespace Kanelson.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Download questions.
+        /// </summary>
+        internal static string DownloadQuestions {
+            get {
+                return ResourceManager.GetString("DownloadQuestions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Edit/Delete.
         /// </summary>
         internal static string Edit_Delete {
@@ -366,6 +375,15 @@ namespace Kanelson.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Questions uploaded successfully..
+        /// </summary>
+        internal static string QuestionUploadSuccess {
+            get {
+                return ResourceManager.GetString("QuestionUploadSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Room.
         /// </summary>
         internal static string Room {
@@ -488,6 +506,15 @@ namespace Kanelson.Localization {
         internal static string Type {
             get {
                 return ResourceManager.GetString("Type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upload questions.
+        /// </summary>
+        internal static string UploadQuestions {
+            get {
+                return ResourceManager.GetString("UploadQuestions", resourceCulture);
             }
         }
     }

@@ -19,6 +19,7 @@
       <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Keys" />
       <PackageReference Include="Azure.Identity" />
       <PackageReference Include="FluentValidation" />
+      <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
       <PackageReference Include="IdGen" />
       <PackageReference Include="IdGen.DependencyInjection" />
       <PackageReference Include="Meziantou.Analyzer">

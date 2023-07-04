@@ -1,6 +1,8 @@
+using FluentValidation;
 using IdGen;
 using IdGen.DependencyInjection;
 using Kanelson.Services;
+using Kanelson.Validators;
 
 namespace Kanelson.Setup;
 
@@ -13,7 +15,7 @@ public static class ApplicationSetup
         services.AddSingleton<IUserService, UserService>();
         services.AddScoped<IRoomService, RoomService>();
         services.AddHttpContextAccessor();
-        
+        services.AddValidatorsFromAssemblyContaining<FileUploadValidator>(ServiceLifetime.Singleton);
         
         services.AddIdGen(0, () =>
         {

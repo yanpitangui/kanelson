@@ -162,4 +162,13 @@
     <data name="ConnectedUsers" xml:space="preserve">
         <value>Connected users</value>
     </data>
+    <data name="DownloadQuestions" xml:space="preserve">
+        <value>Download questions</value>
+    </data>
+    <data name="UploadQuestions" xml:space="preserve">
+        <value>Upload questions</value>
+    </data>
+    <data name="QuestionUploadSuccess" xml:space="preserve">
+        <value>Questions uploaded successfully.</value>
+    </data>
 </root>

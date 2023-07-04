@@ -25,17 +25,11 @@ public class UserService : IUserService
         var actor = _actorRegistry.Get<UserIndexActor>();
         actor.Tell(new UpsertUser(id, name));
     }
-
-    public async Task<ImmutableArray<UserInfo>> GetUsersInfo(params string[] ids)
-    {
-        var actor = await _actorRegistry.GetAsync<UserIndexActor>();
-        return await actor.Ask<ImmutableArray<UserInfo>>(new GetUserInfos(ids));
-    }
     
     public async Task<UserInfo> GetUserInfo(string id)
     {
         var actor = await _actorRegistry.GetAsync<UserIndexActor>();
-        var result = await actor.Ask<ImmutableArray<UserInfo>>(new GetUserInfos(id));
+        var result = await actor.Ask<ImmutableArray<UserInfo>>(new GetUserInfo(id));
         return result.First();
     }
 }

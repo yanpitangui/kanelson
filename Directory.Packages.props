@@ -35,6 +35,6 @@
     <PackageVersion Include="Serilog.Sinks.Console" Version="4.1.0" />
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="9.4.0.72892" />
     <PackageVersion Include="xunit" Version="2.4.2" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="2.4.5" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.0" />
   </ItemGroup>
 </Project>

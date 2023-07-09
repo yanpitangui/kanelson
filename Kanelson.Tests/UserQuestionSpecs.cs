@@ -16,9 +16,7 @@ public class UserQuestionSpecs : PersistenceTestKit
      private readonly TestActorRef<UserQuestions> _testActor;
      public UserQuestionSpecs()
      {
-
-         var props = Props.Create<UserQuestions>(UserId);
-         _testActor = new TestActorRef<UserQuestions>(Sys, props);
+         _testActor = new TestActorRef<UserQuestions>(Sys, UserQuestions.Props(UserId), name: UserId);
          
      }
 
@@ -45,7 +43,11 @@ public class UserQuestionSpecs : PersistenceTestKit
      public async Task Getting_existing_questionId_should_return_correct_question()
      {
          // arrange
-         var question = new Question {Name = "new question", Points = 1000,};
+         var question = new Question {Name = "new question", Points = 1000, Alternatives = new List<Alternative>(2)
+         {
+             new() { Correct = true, Description = "False"},
+             new() { Correct = false, Description = "True"}
+         }};
          _testActor.Tell(new UpsertQuestion(question));
          
          // act

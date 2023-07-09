@@ -2,5 +2,17 @@
   Id: Guid_1,
   Name: new question,
   TimeLimit: 5,
-  Points: 1000
+  Points: 1000,
+  Alternatives: [
+    {
+      Id: Guid_2,
+      Description: False,
+      Correct: true
+    },
+    {
+      Id: Guid_3,
+      Description: True,
+      Correct: false
+    }
+  ]
 }

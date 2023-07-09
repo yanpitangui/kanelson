@@ -32,7 +32,7 @@ public record Question
     
     [Required]
     [ValidateComplexType]
-    public List<Alternative> Alternatives { get; init; } = new();
+    public List<Alternative> Alternatives { get; init; } = new(2);
     
     [Required]
     public QuestionType Type { get; set; }

@@ -1,0 +1,6 @@
+﻿{
+  Id: Guid_1,
+  Name: new question,
+  TimeLimit: 5,
+  Points: 1000
+}

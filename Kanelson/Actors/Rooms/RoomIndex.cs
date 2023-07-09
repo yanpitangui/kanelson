@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Kanelson.Actors.Rooms;
 
-public sealed class RoomIndexActor : BaseWithSnapshotFrequencyActor
+public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
 {
     public override string PersistenceId { get; }
 
@@ -21,7 +21,7 @@ public sealed class RoomIndexActor : BaseWithSnapshotFrequencyActor
     private readonly IActorRef _signalrActor;
 
 
-    public RoomIndexActor(string persistenceId, IHubContext<RoomHub> roomContext,
+    public RoomIndex(string persistenceId, IHubContext<RoomHub> roomContext,
         IHubContext<RoomLobbyHub> roomLobbyContext, IUserService userService)
     {
         _roomContext = roomContext;
@@ -199,7 +199,7 @@ public sealed class RoomIndexActor : BaseWithSnapshotFrequencyActor
 
     private IActorRef GetChildRoomActorRef(long roomIdentifier)
     {
-        return Context.ActorOf(RoomActor.Props(roomIdentifier, _roomContext, _userService), $"room-{roomIdentifier}");
+        return Context.ActorOf(Room.Props(roomIdentifier, _roomContext, _userService), $"room-{roomIdentifier}");
     }
 }
 

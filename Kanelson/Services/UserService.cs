@@ -22,13 +22,13 @@ public class UserService : IUserService
     
     public void Upsert(string id, string name)
     {
-        var actor = _actorRegistry.Get<UserIndexActor>();
+        var actor = _actorRegistry.Get<UserIndex>();
         actor.Tell(new UpsertUser(id, name));
     }
     
     public async Task<UserInfo> GetUserInfo(string id)
     {
-        var actor = await _actorRegistry.GetAsync<UserIndexActor>();
+        var actor = await _actorRegistry.GetAsync<UserIndex>();
         var result = await actor.Ask<ImmutableArray<UserInfo>>(new GetUserInfo(id));
         return result.First();
     }

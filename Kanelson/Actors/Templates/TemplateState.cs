@@ -6,5 +6,5 @@ public record TemplateState
 {
     public string OwnerId { get; set; } = null!;
     
-    public Template Template { get; set; } = null!;
+    public Models.Template Template { get; set; } = null!;
 }

@@ -31,7 +31,7 @@ public class RoomService : IRoomService
     public async Task<long> CreateRoom(Guid templateId, string roomName)
     {
         var roomId = _idGenerator.CreateId();
-        var index = await _actorRegistry.GetAsync<RoomIndexActor>();
+        var index = await _actorRegistry.GetAsync<RoomIndex>();
         var template = await _templateService.GetTemplate(templateId);
 
         index.Tell(new Register(roomId, new SetBase(roomName, _userService.CurrentUser, template)));
@@ -41,21 +41,21 @@ public class RoomService : IRoomService
 
     public async Task<RoomStatus> GetCurrentState(long roomId)
     {
-        var index = await _actorRegistry.GetAsync<RoomIndexActor>();
+        var index = await _actorRegistry.GetAsync<RoomIndex>();
         var room = await GetRoomRef(roomId, index);
         return await room.Ask<RoomStatus>(Actors.Rooms.GetCurrentState.Instance, TimeSpan.FromSeconds(3));
     }
 
     public void UserDisconnected(string userId, string connectionId)
     {
-        var index = _actorRegistry.Get<RoomIndexActor>();
+        var index = _actorRegistry.Get<RoomIndex>();
 
         index.Tell(new UserDisconnected(userId, connectionId));
     }
 
     public void UserConnected(long roomId, string userId, string connectionId)
     {
-        var index = _actorRegistry.Get<RoomIndexActor>();
+        var index = _actorRegistry.Get<RoomIndex>();
         index.Tell(new UserConnected(roomId, userId, connectionId));
 
     }
@@ -63,14 +63,14 @@ public class RoomService : IRoomService
     public async Task<ImmutableArray<RoomSummary>> GetAll()
     {
         
-        var index = await _actorRegistry.GetAsync<RoomIndexActor>();
+        var index = await _actorRegistry.GetAsync<RoomIndex>();
 
         return await index.Ask<ImmutableArray<RoomSummary>>(GetAllSummaries.Instance, TimeSpan.FromSeconds(3));
     }
 
     public async Task<RoomSummary> Get(long roomId)
     {
-        var index = await _actorRegistry.GetAsync<RoomIndexActor>();
+        var index = await _actorRegistry.GetAsync<RoomIndex>();
         var room = await GetRoomRef(roomId, index);
 
 
@@ -79,7 +79,7 @@ public class RoomService : IRoomService
     
     public async Task<CurrentQuestionInfo> GetCurrentQuestion(long roomId)
     {
-        var index = await _actorRegistry.GetAsync<RoomIndexActor>();
+        var index = await _actorRegistry.GetAsync<RoomIndex>();
         var room = await GetRoomRef(roomId, index);
 
 
@@ -88,7 +88,7 @@ public class RoomService : IRoomService
 
     public async Task NextQuestion(long roomId)
     {
-        var index = await _actorRegistry.GetAsync<RoomIndexActor>();
+        var index = await _actorRegistry.GetAsync<RoomIndex>();
         var room = await GetRoomRef(roomId, index);
 
 
@@ -97,7 +97,7 @@ public class RoomService : IRoomService
 
     public async Task Start(long roomId)
     {
-        var index = await _actorRegistry.GetAsync<RoomIndexActor>();
+        var index = await _actorRegistry.GetAsync<RoomIndex>();
         var room = await GetRoomRef(roomId, index);
 
 
@@ -106,14 +106,14 @@ public class RoomService : IRoomService
 
     public async Task<string> GetOwner(long roomId)
     {
-        var index = await _actorRegistry.GetAsync<RoomIndexActor>();
+        var index = await _actorRegistry.GetAsync<RoomIndex>();
         var room = await GetRoomRef(roomId, index);
         return await room.Ask<string>(Actors.Rooms.GetOwner.Instance);
     }
 
     public async Task Delete(long roomId)
     {
-        var index = await _actorRegistry.GetAsync<RoomIndexActor>();
+        var index = await _actorRegistry.GetAsync<RoomIndex>();
         var room = await GetRoomRef(roomId, index);
 
 
@@ -127,7 +127,7 @@ public class RoomService : IRoomService
 
     public async Task Answer(long roomId, Guid alternativeId)
     {
-        var index = await _actorRegistry.GetAsync<RoomIndexActor>();
+        var index = await _actorRegistry.GetAsync<RoomIndex>();
         var room = await GetRoomRef(roomId, index);
 
         room.Tell(new SendUserAnswer(_userService.CurrentUser, new []{ alternativeId }));

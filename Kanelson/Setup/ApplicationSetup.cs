@@ -10,10 +10,10 @@ public static class ApplicationSetup
 {
     public static void AddApplicationServices(this IServiceCollection services)
     {
-        services.AddScoped<ITemplateService, TemplateService>();
-        services.AddScoped<IQuestionService, QuestionService>();
+        services.AddSingleton<ITemplateService, TemplateService>();
+        services.AddSingleton<IQuestionService, QuestionService>();
         services.AddSingleton<IUserService, UserService>();
-        services.AddScoped<IRoomService, RoomService>();
+        services.AddSingleton<IRoomService, RoomService>();
         services.AddHttpContextAccessor();
         services.AddValidatorsFromAssemblyContaining<FileUploadValidator>(ServiceLifetime.Singleton);
         

@@ -6,7 +6,7 @@ using Kanelson.Models;
 
 namespace Kanelson.Actors.Templates;
 
-public class TemplateIndexActor : BaseWithSnapshotFrequencyActor
+public class TemplateIndex : BaseWithSnapshotFrequencyActor
 {
     public override string PersistenceId { get; }
 
@@ -14,7 +14,7 @@ public class TemplateIndexActor : BaseWithSnapshotFrequencyActor
 
     private TemplateIndexState _state;
 
-    public TemplateIndexActor(string userId)
+    public TemplateIndex(string userId)
     {
         PersistenceId = $"template-index-{userId}";
         _state = new TemplateIndexState();
@@ -118,13 +118,13 @@ public class TemplateIndexActor : BaseWithSnapshotFrequencyActor
 
     private static IActorRef GetChildTemplateActorRef(Guid id)
     {
-        return Context.ActorOf(TemplateActor.Props(id), $"template-{id}");
+        return Context.ActorOf(Template.Props(id), $"template-{id}");
     }
 
 
     public static Props Props(string userId)
     {
-        return Akka.Actor.Props.Create<TemplateIndexActor>(userId);
+        return Akka.Actor.Props.Create<TemplateIndex>(userId);
     }
 
     private sealed record Register(Guid Id);

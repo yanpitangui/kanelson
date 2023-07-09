@@ -1,80 +1,61 @@
-﻿using System.Buffers;
-using System.Collections.Concurrent;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using Akka.Actor;
+using Akka.Cluster.Sharding;
+using Akka.Hosting;
 using Kanelson.Actors.Templates;
 using Kanelson.Models;
+using Template = Kanelson.Models.Template;
 
 namespace Kanelson.Services;
 
 public class TemplateService : ITemplateService
 {
-    private readonly ActorSystem _actorSystem;
     private readonly IUserService _userService;
+    private readonly IActorRef _index;
+    
 
-
-    private static readonly ConcurrentDictionary<string, IActorRef> Indexes;
-
-    static TemplateService()
+    public TemplateService(ActorRegistry actorRegistry, IUserService userService)
     {
-        Indexes = new ConcurrentDictionary<string, IActorRef>(StringComparer.OrdinalIgnoreCase);
-    }
-
-    public TemplateService(ActorSystem actorSystem, IUserService userService)
-    {
-        _actorSystem = actorSystem;
         _userService = userService;
+        _index = actorRegistry.Get<TemplateIndex>();
+
     }
 
     public async Task UpsertTemplate(Template template)
     {
-        var index = GetOrCreateIndexRef();
-        var actor = await index.Ask<IActorRef>(new GetRef(template.Id), TimeSpan.FromSeconds(3));
-        actor.Tell(new Upsert(template, _userService.CurrentUser));
+        var actor = await _index.Ask<IActorRef>(MessageEnvelope(new GetRef(template.Id)), TimeSpan.FromSeconds(3));
+        actor.Tell(MessageEnvelope(new Upsert(template, _userService.CurrentUser)));
     }
 
     public Task<ImmutableArray<TemplateSummary>> GetTemplates()
     {
-        var index = GetOrCreateIndexRef();
-        return index.Ask<ImmutableArray<TemplateSummary>>(GetAllSummaries.Instance, TimeSpan.FromSeconds(3));
+        return _index.Ask<ImmutableArray<TemplateSummary>>(MessageEnvelope(GetAllSummaries.Instance), TimeSpan.FromSeconds(3));
     }
 
     public async Task<Template> GetTemplate(Guid id)
     {
-        var index = GetOrCreateIndexRef();
-        var exists = await index.Ask<bool>(new Exists(id), TimeSpan.FromSeconds(3));
+        var exists = await _index.Ask<bool>(MessageEnvelope(new Exists(id)), TimeSpan.FromSeconds(3));
         if (!exists)
         {
             throw new KeyNotFoundException();
         }
 
-        var actorRef = await index.Ask<IActorRef>(new GetRef(id), TimeSpan.FromSeconds(3));
-        return await actorRef.Ask<Template>(Actors.Templates.GetTemplate.Instance, TimeSpan.FromSeconds(3));
+        var actorRef = await _index.Ask<IActorRef>(MessageEnvelope(new GetRef(id)), TimeSpan.FromSeconds(3));
+        return await actorRef.Ask<Template>(MessageEnvelope(Actors.Templates.GetTemplate.Instance), TimeSpan.FromSeconds(3));
     }
 
     public async Task DeleteTemplate(Guid id)
     {
-        var index = GetOrCreateIndexRef();
-        var exists = await index.Ask<bool>(new Exists(id), TimeSpan.FromSeconds(3));
+        var exists = await _index.Ask<bool>(MessageEnvelope(new Exists(id)), TimeSpan.FromSeconds(3));
         if (!exists)
         {
             throw new KeyNotFoundException();
         }
-        index.Tell(new Unregister(id));
+        _index.Tell(MessageEnvelope(new Unregister(id)));
     }
 
-    private IActorRef GetOrCreateIndexRef()
+    private ShardingEnvelope MessageEnvelope<T>(T message) where T: class
     {
-        var exists = Indexes.TryGetValue(_userService.CurrentUser, out var actorRef);
-        if (Equals(actorRef, ActorRefs.Nobody) || !exists)
-        {
-            actorRef = _actorSystem.ActorOf(TemplateIndexActor.Props(_userService.CurrentUser), $"template-index-{_userService.CurrentUser}");
-        }
-
-        Indexes.AddOrUpdate(_userService.CurrentUser, _ => actorRef!, 
-            (_, _) => actorRef!);
-
-        return actorRef!;
-
+        return new ShardingEnvelope(_userService.CurrentUser, message);
     }
 }

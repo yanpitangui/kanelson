@@ -4,7 +4,7 @@ using Kanelson.Models;
 
 namespace Kanelson.Actors.Templates;
 
-public class TemplateActor : BaseWithSnapshotFrequencyActor
+public class Template : BaseWithSnapshotFrequencyActor
 {
 
     public override string PersistenceId { get; }
@@ -12,7 +12,7 @@ public class TemplateActor : BaseWithSnapshotFrequencyActor
     private TemplateState _state;
     private readonly Guid _id;
     
-    public TemplateActor(Guid templateId)
+    public Template(Guid templateId)
     {
         PersistenceId = $"template-{templateId}";
         _state = new TemplateState();
@@ -57,7 +57,7 @@ public class TemplateActor : BaseWithSnapshotFrequencyActor
 
     public static Props Props(Guid templateId)
     {
-        return Akka.Actor.Props.Create<TemplateActor>(templateId);
+        return Akka.Actor.Props.Create<Template>(templateId);
     }
 
 }
@@ -80,4 +80,4 @@ public record GetTemplate
     public static GetTemplate Instance { get; } = new();
 }
 
-public record Upsert(Template Template, string OwnerId);
+public record Upsert(Models.Template Template, string OwnerId);

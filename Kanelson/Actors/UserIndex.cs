@@ -7,11 +7,11 @@ namespace Kanelson.Actors;
 
 
 
-public sealed class UserIndexActor : BaseWithSnapshotFrequencyActor
+public sealed class UserIndex : BaseWithSnapshotFrequencyActor
 {
    
     private UserIndexState _state;
-    public UserIndexActor(string persistenceId)
+    public UserIndex(string persistenceId)
     {
         PersistenceId = persistenceId;
         _state = new UserIndexState();

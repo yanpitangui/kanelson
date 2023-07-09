@@ -1,3 +1,4 @@
+using Akka.Hosting;
 using System.Diagnostics;
 using System.Security.Claims;
 using Kanelson.Hubs;
@@ -83,7 +84,7 @@ builder.Services.AddMudServices();
 builder.Services.AddLocalization();
 
 
-builder.Host.AddAkkaSetup();
+builder.Host.AddAkkaSetup(logger);
 
 builder.Host.AddOpenTelemetrySetup();
 
@@ -124,5 +125,7 @@ var localizationOptions = new RequestLocalizationOptions()
     .AddSupportedUICultures(supportedCultures);
 
 app.UseRequestLocalization(localizationOptions);
+
+app.Services.GetRequiredService<IActorRegistry>();
 
 await app.RunAsync();

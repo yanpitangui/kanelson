@@ -9,7 +9,7 @@ using System.Globalization;
 
 namespace Kanelson.Actors.Rooms;
 
-public class RoomActor : BaseWithSnapshotFrequencyActor, IWithTimers
+public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
 {
     
     public override string PersistenceId { get; }
@@ -30,7 +30,7 @@ public class RoomActor : BaseWithSnapshotFrequencyActor, IWithTimers
     private IEnumerable<RoomUser> Users => _state.CurrentUsers.Where(x => !x.Owner);
 
 
-    public RoomActor(long roomIdentifier, IHubContext<RoomHub> hubContext, IUserService userService)
+    public Room(long roomIdentifier, IHubContext<RoomHub> hubContext, IUserService userService)
     {
         _roomIdentifier = roomIdentifier;
         _roomIdentifierString = _roomIdentifier.ToString(NumberFormatInfo.InvariantInfo);
@@ -410,7 +410,7 @@ public class RoomActor : BaseWithSnapshotFrequencyActor, IWithTimers
 
     public static Props Props(long roomIdentifier, IHubContext<RoomHub> hubContext, IUserService userService)
     {
-        return Akka.Actor.Props.Create<RoomActor>(roomIdentifier, hubContext, userService);
+        return Akka.Actor.Props.Create<Room>(roomIdentifier, hubContext, userService);
     }
     
     

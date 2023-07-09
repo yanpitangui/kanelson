@@ -5,6 +5,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Akka.Cluster.Hosting" Version="1.5.8" />
+    <PackageVersion Include="Akka.Discovery.KubernetesApi" Version="1.5.7" />
+    <PackageVersion Include="Akka.HealthCheck.Hosting" Version="1.5.2" />
     <PackageVersion Include="Akka.Management" Version="1.5.7" />
     <PackageVersion Include="Akka.Persistence.Azure.Hosting" Version="1.5.1" />
     <PackageVersion Include="Akka.Persistence.TestKit.Xunit2" Version="1.5.8" />

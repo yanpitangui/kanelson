@@ -9,5 +9,5 @@ public interface ITemplateService
     Task<ImmutableArray<TemplateSummary>> GetTemplates();
     
     Task<Template> GetTemplate(Guid id);
-    Task DeleteTemplate(Guid id);
+    void DeleteTemplate(Guid id);
 }

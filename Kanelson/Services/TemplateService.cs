@@ -11,47 +11,42 @@ namespace Kanelson.Services;
 public class TemplateService : ITemplateService
 {
     private readonly IUserService _userService;
-    private readonly IActorRef _index;
+    private readonly IActorRef _shardRegion;
     
 
     public TemplateService(ActorRegistry actorRegistry, IUserService userService)
     {
         _userService = userService;
-        _index = actorRegistry.Get<TemplateIndex>();
+        _shardRegion = actorRegistry.Get<TemplateIndex>();
 
     }
 
     public async Task UpsertTemplate(Template template)
     {
-        var actor = await _index.Ask<IActorRef>(MessageEnvelope(new GetRef(template.Id)), TimeSpan.FromSeconds(3));
-        actor.Tell(MessageEnvelope(new Upsert(template, _userService.CurrentUser)));
+        var actor = await _shardRegion.Ask<IActorRef>(MessageEnvelope(new GetRef(template.Id)), TimeSpan.FromSeconds(3));
+        actor.Tell(new Upsert(template, _userService.CurrentUser));
     }
 
     public Task<ImmutableArray<TemplateSummary>> GetTemplates()
     {
-        return _index.Ask<ImmutableArray<TemplateSummary>>(MessageEnvelope(GetAllSummaries.Instance), TimeSpan.FromSeconds(3));
+        return _shardRegion.Ask<ImmutableArray<TemplateSummary>>(MessageEnvelope(GetAllSummaries.Instance), TimeSpan.FromSeconds(3));
     }
 
     public async Task<Template> GetTemplate(Guid id)
     {
-        var exists = await _index.Ask<bool>(MessageEnvelope(new Exists(id)), TimeSpan.FromSeconds(3));
+        var exists = await _shardRegion.Ask<bool>(MessageEnvelope(new Exists(id)), TimeSpan.FromSeconds(3));
         if (!exists)
         {
             throw new KeyNotFoundException();
         }
 
-        var actorRef = await _index.Ask<IActorRef>(MessageEnvelope(new GetRef(id)), TimeSpan.FromSeconds(3));
-        return await actorRef.Ask<Template>(MessageEnvelope(Actors.Templates.GetTemplate.Instance), TimeSpan.FromSeconds(3));
+        var actorRef = await _shardRegion.Ask<IActorRef>(MessageEnvelope(new GetRef(id)), TimeSpan.FromSeconds(3));
+        return await actorRef.Ask<Template>(Actors.Templates.GetTemplate.Instance, TimeSpan.FromSeconds(3));
     }
 
-    public async Task DeleteTemplate(Guid id)
+    public void DeleteTemplate(Guid id)
     {
-        var exists = await _index.Ask<bool>(MessageEnvelope(new Exists(id)), TimeSpan.FromSeconds(3));
-        if (!exists)
-        {
-            throw new KeyNotFoundException();
-        }
-        _index.Tell(MessageEnvelope(new Unregister(id)));
+        _shardRegion.Tell(MessageEnvelope(new Unregister(id)));
     }
 
     private ShardingEnvelope MessageEnvelope<T>(T message) where T: class

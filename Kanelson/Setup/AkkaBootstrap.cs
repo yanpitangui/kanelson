@@ -145,7 +145,7 @@ public static class AkkaBootstrap
                 remoteOptions.HostName = hostIp;
                 remoteOptions.PublicHostName = hostIp;
                 managementOptions.HostName = string.Empty;
-                bootstrapOptions.ContactPointDiscovery.RequiredContactPointsNr = 2;
+                bootstrapOptions.ContactPointDiscovery.RequiredContactPointsNr = 1;
                 builder
                     .WithKubernetesDiscovery(opt =>
                     {

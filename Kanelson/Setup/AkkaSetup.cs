@@ -27,6 +27,14 @@ public static class AkkaSetup
             
             var extractor = new MessageExtractor(100);
 
+            var defaultShardOptions = new ShardOptions()
+            {
+                Role = actorSystemName,
+                PassivateIdleEntityAfter = TimeSpan.FromMinutes(1),
+                ShouldPassivateIdleEntities = true,
+                RememberEntities = false,
+            };
+
             services.AddAkka(actorSystemName, (akkaBuilder) =>
             {
                 akkaBuilder
@@ -36,32 +44,22 @@ public static class AkkaSetup
                         setup.AddLoggerFactory();
                     })
                     .BootstrapNetwork(ctx.Configuration, actorSystemName, logger)
+                    .WithShardRegion<User>(nameof(User),
+                        User.Props,
+                        extractor,
+                        defaultShardOptions
+                        )
                     .WithShardRegion<UserQuestions>(nameof(UserQuestions), 
                         UserQuestions.Props, 
                         extractor,
-                        new ShardOptions()
-                        {
-                            Role = actorSystemName,
-                            PassivateIdleEntityAfter = TimeSpan.FromMinutes(1),
-                            ShouldPassivateIdleEntities = true,
-                        })
+                        defaultShardOptions)
                     .WithShardRegion<TemplateIndex>(nameof(TemplateIndex), 
                         TemplateIndex.Props, 
                         extractor,
-                        new ShardOptions()
-                        {
-                            Role = actorSystemName,
-                            PassivateIdleEntityAfter = TimeSpan.FromMinutes(1),
-                            ShouldPassivateIdleEntities = true,
-
-                        })
+                        defaultShardOptions)
                     //.WithShardRegion<>()
                     .WithActors((system, registry, sp) =>
                     {
-                        var userIndexActor = system.ActorOf(Props.Create<UserIndex>("user-index"),
-                            "user-index");
-                        registry.Register<UserIndex>(userIndexActor);
-
                         var roomIndex =
                             system.ActorOf(Props.Create<RoomIndex>("room-index",
                                     sp.GetService<IHubContext<RoomHub>>(),

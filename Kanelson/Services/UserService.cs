@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Security.Claims;
 using Akka.Actor;
+using Akka.Cluster.Sharding;
 using Akka.Hosting;
 using Kanelson.Actors;
 using Kanelson.Models;
@@ -22,14 +23,18 @@ public class UserService : IUserService
     
     public void Upsert(string id, string name)
     {
-        var actor = _actorRegistry.Get<UserIndex>();
-        actor.Tell(new UpsertUser(id, name));
+        var actor = _actorRegistry.Get<User>();
+        actor.Tell(MessageEnvelope(id, new UpsertUser(name)));
     }
     
-    public async Task<UserInfo> GetUserInfo(string id)
+    public Task<UserInfo> GetUserInfo(string id)
     {
-        var actor = await _actorRegistry.GetAsync<UserIndex>();
-        var result = await actor.Ask<ImmutableArray<UserInfo>>(new GetUserInfo(id));
-        return result.First();
+        var actor = _actorRegistry.Get<User>();
+        return actor.Ask<UserInfo>(MessageEnvelope(id, Actors.GetUserInfo.Instance), TimeSpan.FromSeconds(3));
+    }
+
+    private ShardingEnvelope MessageEnvelope<T>(string id, T message) where T: class
+    {
+        return new ShardingEnvelope(id, message);
     }
 }

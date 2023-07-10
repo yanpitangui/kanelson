@@ -74,7 +74,7 @@ public class QuestionService : IQuestionService
         
         foreach (var question in questionList!) // Validação garante que não está nulo 
         {
-            _userQuestions.Tell(MessageEnvelope(MessageEnvelope(new UpsertQuestion(question))));
+            _userQuestions.Tell(MessageEnvelope(new UpsertQuestion(question)));
         }
 
         return new ValidationResult();

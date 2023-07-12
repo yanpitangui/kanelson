@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using Akka.Actor;
+using Akka.Cluster.Sharding;
 using Akka.Persistence;
-using Akka.Util;
 using Kanelson.Hubs;
 using Kanelson.Models;
 using Kanelson.Services;
@@ -14,35 +14,26 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
     public override string PersistenceId { get; }
 
     private RoomIndexState _state;
-    private readonly Dictionary<long, IActorRef> _children;
-    private readonly IHubContext<RoomHub> _roomContext;
     private readonly IUserService _userService;
-    private readonly Dictionary<long, Dictionary<string, HubUser>> _roomUsers = new();
+    private readonly Dictionary<string, Dictionary<string, HubUser>> _roomUsers = new();
     private readonly IActorRef _signalrActor;
 
 
-    public RoomIndex(string persistenceId, IHubContext<RoomHub> roomContext,
+    public RoomIndex(string persistenceId, IActorRef roomShard,
         IHubContext<RoomLobbyHub> roomLobbyContext, IUserService userService)
     {
-        _roomContext = roomContext;
         _userService = userService;
         _signalrActor = Context.ActorOf(SignalrActor.Props((IHubContext) roomLobbyContext));
 
         PersistenceId = persistenceId;
 
-        _children = new();
 
         _state = new RoomIndexState();
         
-        Recover<Register>(o =>
-        {
-            AddToChildren(o);
-            HandleRegister(o);
-        });
+        Recover<Register>(HandleRegister);
         
         Command<Register>(o =>
         {
-            AddToChildren(o);
             Persist(o, HandleRegister);
         });
         
@@ -55,12 +46,12 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
 
         Command<GetRef>(o =>
         {
-            var exists = _children.TryGetValue(o.RoomIdentifier, out var actorRef);
-            if (Equals(actorRef, ActorRefs.Nobody) || !exists)
-            {
-                Sender.Tell(Option<IActorRef>.Create(null!));
-            }
-            Sender.Tell(Option<IActorRef>.Create(actorRef!));
+            // var exists = _children.TryGetValue(o.RoomId, out var actorRef);
+            // if (Equals(actorRef, ActorRefs.Nobody) || !exists)
+            // {
+            //     Sender.Tell(Option<IActorRef>.Create(null!));
+            // }
+            // Sender.Tell(Option<IActorRef>.Create(actorRef!));
             
         });
 
@@ -83,18 +74,14 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
             }
 
             user.Connections.Add(o.ConnectionId);
-            var exists = _children.TryGetValue(o.RoomId, out var actorRef);
-            if (Equals(actorRef, ActorRefs.Nobody) || !exists)
-            {
-                throw new ActorNotFoundException();
-            }
+
             
-            actorRef.Tell(o);
+            roomShard.Tell(MessageEnvelope(o.RoomId, o));
             
             if (!userAdded) return;
 
             var users = roomConnections.Values.Cast<UserInfo>().ToHashSet();
-            actorRef.Tell(new UpdateCurrentUsers(users));
+            roomShard.Tell(MessageEnvelope(o.RoomId, new UpdateCurrentUsers(users)));
         });
 
         Command<UserDisconnected>(o =>
@@ -119,13 +106,7 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
                 
                 if (!userDisconnected) continue;
                 var users = room.Room.Value.Values.Cast<UserInfo>().ToHashSet();
-                var exists = _children.TryGetValue(room.Room.Key, out var actorRef);
-                if (Equals(actorRef, ActorRefs.Nobody) || !exists)
-                {
-                    continue;
-                }
-                
-                actorRef.Tell(new UpdateCurrentUsers(users));
+                roomShard.Tell(MessageEnvelope(room.Room.Key, new UpdateCurrentUsers(users)));
                 
             }
         });
@@ -134,7 +115,7 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
         {
             var sender = Sender;
             
-            var tasks = _state.Items.Select(x => _children[x].Ask<RoomSummary>(GetSummary.Instance, TimeSpan.FromSeconds(3)));
+            var tasks = _state.Items.Select(id => roomShard.Ask<RoomSummary>(MessageEnvelope(id, GetSummary.Instance), TimeSpan.FromSeconds(3)));
             
             async Task<ImmutableArray<RoomSummary>> ExecuteWork()
             {
@@ -154,31 +135,14 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
             if (o.Snapshot is RoomIndexState state)
             {
                 _state = state;
-                foreach (var item in _state.Items)
-                {
-                    _children[item] = GetChildRoomActorRef(item);
-                }
             }
         });
 
     }
 
-    private void AddToChildren(Register o)
-    {
-        var roomActor = GetChildRoomActorRef(o.RoomIdentifier);
-        roomActor.Tell(o.RoomBase);
-        _children.TryAdd(o.RoomIdentifier, roomActor);
-    }
-
     private void HandleUnregister(Unregister r)
     {
-        var exists = _children.TryGetValue(r.RoomIdentifier, out var child);
-        if (exists || !Equals(child, ActorRefs.Nobody))
-        {
-            child.Tell(ShutdownCommand.Instance);
-        }
-        _state.Items.Remove(r.RoomIdentifier);
-        _children.Remove(r.RoomIdentifier);
+        _state.Items.Remove(r.RoomId);
         GenerateChangedSignalRMessage().PipeTo(_signalrActor);
         SaveSnapshotIfPassedInterval(_state);
         
@@ -192,19 +156,27 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
 
     private void HandleRegister(Register r)
     {
-        _state.Items.Add(r.RoomIdentifier);
+        _state.Items.Add(r.RoomId);
         GenerateChangedSignalRMessage().PipeTo(_signalrActor);
         SaveSnapshotIfPassedInterval(_state);
     }
 
-    private IActorRef GetChildRoomActorRef(long roomIdentifier)
+    private static ShardingEnvelope MessageEnvelope<T>(string id, T message)
     {
-        return Context.ActorOf(Room.Props(roomIdentifier, _roomContext, _userService), $"room-{roomIdentifier}");
+        return new ShardingEnvelope(id, message);
+    }
+
+
+    public static Props Props(string persistenceId, IActorRef roomShard,
+        IHubContext<RoomLobbyHub> roomLobbyContext, IUserService userService)
+    {
+        return Akka.Actor.Props.Create<RoomIndex>(persistenceId, roomShard, roomLobbyContext, userService);
+
     }
 }
 
 
-public record UserConnected(long RoomId, string UserId, string ConnectionId);
+public record UserConnected(string RoomId, string UserId, string ConnectionId);
 
 public record UserDisconnected(string UserId, string ConnectionId);
 
@@ -217,9 +189,9 @@ public record GetAllSummaries
     public static GetAllSummaries Instance { get; } = new();
 }
 
-public record Register(long RoomIdentifier, SetBase RoomBase);
+public record Register(string RoomId, SetBase RoomBase);
 
-public record GetRef(long RoomIdentifier);
+public record GetRef(string RoomId);
 
 
-public record Unregister(long RoomIdentifier);
+public record Unregister(string RoomId);

@@ -14,7 +14,7 @@ public sealed partial class RoomPage : ComponentBase, IAsyncDisposable
 {
 
     [Parameter]
-    public long Id { get; set; }
+    public string Id { get; set; }
         
     [Inject] 
     private NavigationManager Navigation { get; set; } = null!;

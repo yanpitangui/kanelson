@@ -78,12 +78,12 @@ else
 
     }
 
-    private void JoinRoom(long id)
+    private void JoinRoom(string id)
     { 
         Navigation.NavigateTo($"/room/{id}");
     }
 
-    private async Task DeleteRoom(long id)
+    private async Task DeleteRoom(string id)
     {
         await Service.Delete(id);
         await InvokeAsync(StateHasChanged);

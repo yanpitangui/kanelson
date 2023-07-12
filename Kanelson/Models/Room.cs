@@ -1,6 +1,6 @@
 ﻿namespace Kanelson.Models;
 
-public record RoomSummary(long Id, string Name, UserInfo Owner);
+public record RoomSummary(string Id, string Name, UserInfo Owner);
 
 public enum RoomStatus
 {

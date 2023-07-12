@@ -57,9 +57,16 @@ public static class AkkaSetup
                         TemplateIndex.Props,
                         extractor,
                         defaultShardOptions)
-                    .WithSingleton<RoomIndex>("room-index", (_,_,sp) =>
-                         Props.Create<RoomIndex>("room-index",
-                            sp.GetService<IHubContext<RoomHub>>(),
+                    .WithShardRegion<Room>(nameof(Room),
+                        (_, _, sp) =>
+                            (identifier) => 
+                                Room.Props(identifier, sp.GetService<IHubContext<RoomHub>>(),
+                                    sp.GetService<IUserService>()),
+                        extractor,
+                        defaultShardOptions)
+                    .WithSingleton<RoomIndex>("room-index", (_,ar,sp) =>
+                        RoomIndex.Props("room-index",
+                            ar.Get<Room>(),
                             sp.GetService<IHubContext<RoomLobbyHub>>(),
                             sp.GetService<IUserService>()), new ClusterSingletonOptions
                     {

@@ -48,26 +48,22 @@ public static class AkkaSetup
                         User.Props,
                         extractor,
                         defaultShardOptions
-                        )
-                    .WithShardRegion<UserQuestions>(nameof(UserQuestions), 
-                        UserQuestions.Props, 
+                    )
+                    .WithShardRegion<UserQuestions>(nameof(UserQuestions),
+                        UserQuestions.Props,
                         extractor,
                         defaultShardOptions)
-                    .WithShardRegion<TemplateIndex>(nameof(TemplateIndex), 
-                        TemplateIndex.Props, 
+                    .WithShardRegion<TemplateIndex>(nameof(TemplateIndex),
+                        TemplateIndex.Props,
                         extractor,
                         defaultShardOptions)
-                    //.WithShardRegion<>()
-                    .WithActors((system, registry, sp) =>
+                    .WithSingleton<RoomIndex>("room-index", (_,_,sp) =>
+                         Props.Create<RoomIndex>("room-index",
+                            sp.GetService<IHubContext<RoomHub>>(),
+                            sp.GetService<IHubContext<RoomLobbyHub>>(),
+                            sp.GetService<IUserService>()), new ClusterSingletonOptions
                     {
-                        var roomIndex =
-                            system.ActorOf(Props.Create<RoomIndex>("room-index",
-                                    sp.GetService<IHubContext<RoomHub>>(),
-                                    sp.GetService<IHubContext<RoomLobbyHub>>(),
-                                    sp.GetService<IUserService>()),
-                                "room-index");
-
-                        registry.Register<RoomIndex>(roomIndex);
+                        Role = actorSystemName,
                     });
 
                 if (ctx.HostingEnvironment.IsDevelopment())

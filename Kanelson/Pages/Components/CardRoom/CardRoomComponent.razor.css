@@ -1,0 +1,47 @@
+.card-room {
+    display: flex;
+    border: 1px solid #e6e6e6;
+    border-radius: 4px;
+    box-shadow: 0 0 6px -4px rgba(0,0,0,0.75);
+    width: 400px;
+}
+
+.card-room__image {
+    background-image: url("https://uploads.jovemnerd.com.br/wp-content/uploads/2023/04/coringa_2_lady_gaga_beija_mulher_video__lg48x6pv-1210x544.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    width: 180px;
+    background-position: center;
+    border-bottom-left-radius: 4px;
+    border-top-left-radius: 4px;
+}
+
+.card-room_info {
+    background-color: #faf7f7;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.card-room__id {
+    margin: 8px;
+}
+
+.room-name {
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis;
+}
+
+.card-room__enter {
+    background-color: #c7c2f0;
+    border-bottom-right-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.host-name {
+    margin-left: 8px;
+}

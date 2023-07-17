@@ -1,0 +1,18 @@
+@using Components.CardRoom;
+
+<div class="card-room">
+    <div class="card-room__image"></div>
+    <div class="card-room_info">
+        <div class="card-room__id">
+            <h6 class="room-name">@RoomName</h6>
+            <span>#@Id</span>
+        </div>
+        <div class="card-room__enter">
+            <span class="host-name">@HostName</span> 
+            <MudButton Style="background: #594ae2; border-bottom-left-radius: 0; border-top-left-radius: 0; color: white"
+                       @onclick="HandleButtonClick">
+                Entrar
+            </MudButton>
+        </div>
+    </div>
+</div>

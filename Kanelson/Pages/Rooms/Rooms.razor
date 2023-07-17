@@ -4,6 +4,7 @@
 @using Kanelson.Hubs
 @using Kanelson.Models
 @using Microsoft.AspNetCore.SignalR.Client
+@using Kanelson.Pages.Components.CardRoom;
 @inject IRoomService Service
 @inject IUserService UserService
 @inject NavigationManager Navigation
@@ -12,17 +13,31 @@
 @inherits ComponentBase
 @implements IAsyncDisposable
 
+
 @if (_rooms is null)
 {
     <h2>@Loc["Loading"]...</h2>
 }
 else
 {
-    <MudCard>
-        <MudTable Elevation="25" Items="_rooms" T="RoomSummary" >
-         <ToolBarContent>
-             <MudText Typo="Typo.h6">@Loc["Rooms"]</MudText>
-         </ToolBarContent>
+    <MudText Style="text-transform: uppercase" Typo="Typo.h4">@Loc["Rooms"]</MudText>
+    <div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap">
+        @foreach (var room in _rooms)
+        {
+            <CardRoomComponent
+                Id="@room.Id"
+                HostName="@room.Owner.Name"
+                RoomName="@room.Name"
+                EnterRoomClick="@(() => JoinRoom(room.Id))">
+            </CardRoomComponent>
+        }
+    </div>
+
+    /*<MudCard>
+        <MudTable Elevation="25" Items="_rooms" T="RoomSummary">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">@Loc["Rooms"]</MudText>
+            </ToolBarContent>
             <HeaderContent>
                 <MudTh>@Loc["Join"]</MudTh>
                 <MudTh>@Loc["Id"]</MudTh>
@@ -33,9 +48,9 @@ else
             </HeaderContent>
             <RowTemplate>
                 <MudTd>
-                   <MudFab @onclick="@(() => JoinRoom(context.Id))"
-                        Color="Color.Info" Icon="@Icons.Material.Filled.Outbound"
-                        Size="Size.Small" IconSize="Size.Small"/>
+                    <MudFab @onclick="@(() => JoinRoom(context.Id))"
+                            Color="Color.Info" Icon="@Icons.Material.Filled.Outbound"
+                            Size="Size.Small" IconSize="Size.Small"/>
                 </MudTd>
                 <MudTd DataLabel="@Loc["Id"]">@context.Id</MudTd>
                 <MudTd DataLabel="@Loc["Name"]">@context.Name</MudTd>
@@ -49,12 +64,9 @@ else
                 </MudTd>
 
             </RowTemplate>
-     </MudTable>
-    </MudCard>
-
-
+        </MudTable>
+    </MudCard>*/
 }
-
 
 @code {
 
@@ -63,7 +75,6 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        
         _hubConnection = HttpAccessor.GetConnection(Navigation, "roomLobbyHub");
 
 
@@ -72,14 +83,13 @@ else
             _rooms = rooms;
             InvokeAsync(StateHasChanged);
         });
-        
+
         _rooms = await Service.GetAll();
         await _hubConnection.StartAsync();
-
     }
 
     private void JoinRoom(long id)
-    { 
+    {
         Navigation.NavigateTo($"/room/{id}");
     }
 
@@ -89,7 +99,7 @@ else
         await InvokeAsync(StateHasChanged);
     }
 
-    
+
     public async ValueTask DisposeAsync()
     {
         if (_hubConnection is IAsyncDisposable disposable)

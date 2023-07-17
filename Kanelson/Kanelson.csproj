@@ -75,5 +75,11 @@
         <DependentUpon>Shared.en-US.resx</DependentUpon>
       </Compile>
     </ItemGroup>
+    
+    <ItemGroup>
+      <None Update="Pages\Components\CardRoom\CardRoomComponent.razor.css">
+        <DependentUpon>CardRoomComponent.razor</DependentUpon>
+      </None>
+    </ItemGroup>
 
 </Project>

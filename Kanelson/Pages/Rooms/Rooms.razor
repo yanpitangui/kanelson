@@ -13,10 +13,12 @@
 @inherits ComponentBase
 @implements IAsyncDisposable
 
-
 @if (_rooms is null)
 {
-    <h2>@Loc["Loading"]...</h2>
+    <MudContainer Style="align-items: center; display: flex; flex-direction: column">
+        <h2>@Loc["Ainda não existem salas abertas"]...</h2>
+        <MudButton Style="background: #594ae2; color: white">Cria sala</MudButton>
+    </MudContainer>
 }
 else
 {

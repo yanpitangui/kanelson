@@ -81,5 +81,11 @@
         <DependentUpon>CardRoomComponent.razor</DependentUpon>
       </None>
     </ItemGroup>
+    
+    <ItemGroup>
+      <Content Update="Pages\Rooms\Rooms.razor.css">
+        <DependentUpon>Rooms.razor</DependentUpon>
+      </Content>
+    </ItemGroup>
 
 </Project>

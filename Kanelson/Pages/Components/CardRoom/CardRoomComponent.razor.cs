@@ -14,11 +14,22 @@ public partial class CardRoomComponent : ComponentBase
     public string HostName { get; set; } = null!;
     
     [Parameter]
-    public EventCallback EnterRoomClick { get; set; }
-
+    public bool RoomOwner { get; set; }
     
-    private async Task HandleButtonClick()
+    [Parameter]
+    public EventCallback EnterRoomClick { get; set; }
+    
+    [Parameter]
+    public EventCallback DeleteRoomClick { get; set; }
+    
+    
+    private async Task HandleEnterRoomClick()
     {
         await EnterRoomClick.InvokeAsync();
+    }
+    
+    private async Task HandleDeleteRoomClick()
+    {
+        await DeleteRoomClick.InvokeAsync();
     }
 }

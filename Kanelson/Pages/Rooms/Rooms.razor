@@ -15,9 +15,9 @@
 
 @if (_rooms is null)
 {
-    <MudContainer Style="align-items: center; display: flex; flex-direction: column">
+    <MudContainer class="empty-rooms">
         <h2>@Loc["Ainda não existem salas abertas"]...</h2>
-        <MudButton Style="background: #594ae2; color: white">Cria sala</MudButton>
+        <MudButton class="empty-rooms__btn-sala">@Loc["Criar sala"]</MudButton>
     </MudContainer>
 }
 else
@@ -30,7 +30,9 @@ else
                 Id="@room.Id"
                 HostName="@room.Owner.Name"
                 RoomName="@room.Name"
-                EnterRoomClick="@(() => JoinRoom(room.Id))">
+                RoomOwner="@(UserService.CurrentUser == room.Owner.Id)"
+                EnterRoomClick="@(() => JoinRoom(room.Id))"
+                DeleteRoomClick="@(() => DeleteRoom(room.Id))">
             </CardRoomComponent>
         }
     </div>

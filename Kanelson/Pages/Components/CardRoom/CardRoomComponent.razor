@@ -4,15 +4,20 @@
     <div class="card-room__image"></div>
     <div class="card-room_info">
         <div class="card-room__id">
-            <h6 class="room-name">@RoomName</h6>
+            <div class="card-room__name">
+                <h6 class="room-name">@RoomName</h6>
+                @if (RoomOwner)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Cancel"
+                             Size="Size.Small" style="cursor: pointer"
+                             @onclick="HandleDeleteRoomClick"></MudIcon>
+                }
+            </div>
             <span>#@Id</span>
         </div>
         <div class="card-room__enter">
             <span class="host-name">@HostName</span> 
-            <MudButton Style="background: #594ae2; border-bottom-left-radius: 0; border-top-left-radius: 0; color: white"
-                       @onclick="HandleButtonClick">
-                Entrar
-            </MudButton>
+            <button class="card-room__btn-enter" @onclick="HandleEnterRoomClick">Entrar</button>
         </div>
     </div>
 </div>

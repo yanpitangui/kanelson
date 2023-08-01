@@ -35,15 +35,6 @@
     <PackageVersion Include="Serilog.Sinks.Console" Version="4.1.0" />
     <PackageVersion Include="Verify.Xunit" Version="20.6.0" />
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="9.6.0.74858" />
-    <PackageVersion Include="Akka.Cluster.Hosting" Version="1.5.8" />
-    <PackageVersion Include="Akka.Discovery.KubernetesApi" Version="1.5.7" />
-    <PackageVersion Include="Akka.HealthCheck.Hosting" Version="1.5.2" />
-    <PackageVersion Include="Akka.Cluster.Hosting" Version="1.5.8.1" />
-    <PackageVersion Include="Akka.Persistence.TestKit.Xunit2" Version="1.5.11" />
-    <PackageVersion Include="Bogus" Version="34.0.2" />
-    <PackageVersion Include="Meziantou.Analyzer" Version="2.0.79" />
-    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.9" />
-    <PackageVersion Include="MudBlazor" Version="6.7.0" />
     <PackageVersion Include="xunit" Version="2.5.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.0" />
   </ItemGroup>

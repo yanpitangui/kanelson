@@ -155,7 +155,7 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
         SaveSnapshotIfPassedInterval(_state);
     }
 
-    private static ShardingEnvelope MessageEnvelope<T>(string id, T message)
+    private static ShardingEnvelope MessageEnvelope<T>(string id, T message) where T: class
     {
         return new ShardingEnvelope(id, message);
     }

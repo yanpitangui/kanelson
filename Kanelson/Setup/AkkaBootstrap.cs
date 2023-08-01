@@ -106,53 +106,14 @@ public static class AkkaBootstrap
         switch (options.StartupMethod)
         {
             case StartupMethod.SeedNodes:
-                // No need to setup seed based cluster
-                logger.Information("From environment: Forming cluster using seed nodes");
-                return builder
-                    .AddHocon(configuration.GetSection("Akka"), HoconAddMode.Prepend)
-                    .WithRemoting(remoteOptions)
-                    .WithClustering(clusterOptions);
+                return SeedNodes(builder, configuration, logger, remoteOptions, clusterOptions);
                 
             case StartupMethod.ConfigDiscovery:
-                logger.Information("From environment: Forming cluster using Akka.Discovery.Config");
-                
-                if (options.Discovery.ConfigEndpoints is null)
-                    throw new ConfigurationException(
-                        "Cluster start up is set to configuration discovery but discovery endpoints is null");
-                
-                var endpoints = string.Join(",", options.Discovery.ConfigEndpoints.Select(s => s.ToHocon()));
-                logger.Information("From environment: Using config based discovery endpoints: [{Endpoints}]", endpoints);
-                
-                builder.WithConfigDiscovery(new ConfigServiceDiscoveryOptions
-                {
-                    Services = new List<Service>
-                    {
-                        new()
-                        {
-                            Name = options.Discovery.ServiceName,
-                            Endpoints = options.Discovery.ConfigEndpoints.ToArray()
-                        }
-                    }
-                });
+                ConfigDiscovery(builder, logger, options);
                 break;
                 
             case StartupMethod.KubernetesDiscovery:
-                logger.Information("From environment: Forming cluster using Akka.Discovery.KubernetesApi");
-
-                var hostName = Dns.GetHostName();
-                var hostIp = Dns.GetHostAddresses(hostName, AddressFamily.InterNetwork).First().ToString();
-                
-                remoteOptions.HostName = hostIp;
-                remoteOptions.PublicHostName = hostIp;
-                managementOptions.HostName = string.Empty;
-                bootstrapOptions.ContactPointDiscovery.RequiredContactPointsNr = 1;
-                builder
-                    .WithKubernetesDiscovery(opt =>
-                    {
-                        opt.PodNamespace = options.Discovery.ServiceName;
-                        opt.PodLabelSelector = options.Discovery.LabelSelector;
-                    })
-                    .AddHocon(KubernetesDiscovery.DefaultConfiguration(), HoconAddMode.Append);
+                KubernetesDiscovery(builder, logger, remoteOptions, managementOptions, bootstrapOptions, options);
                 break;
                 
             default:
@@ -176,7 +137,63 @@ public static class AkkaBootstrap
         
         return builder;
     }
-    
+
+    private static AkkaConfigurationBuilder SeedNodes(AkkaConfigurationBuilder builder, IConfiguration configuration,
+        Logger logger, RemoteOptions remoteOptions, Akka.Cluster.Hosting.ClusterOptions clusterOptions)
+    {
+        // No need to setup seed based cluster
+        logger.Information("From environment: Forming cluster using seed nodes");
+        return builder
+            .AddHocon(configuration.GetSection("Akka"), HoconAddMode.Prepend)
+            .WithRemoting(remoteOptions)
+            .WithClustering(clusterOptions);
+    }
+
+    private static void ConfigDiscovery(AkkaConfigurationBuilder builder, Logger logger, ClusterOptions options)
+    {
+        logger.Information("From environment: Forming cluster using Akka.Discovery.Config");
+
+        if (options.Discovery.ConfigEndpoints is null)
+            throw new ConfigurationException(
+                "Cluster start up is set to configuration discovery but discovery endpoints is null");
+
+        var endpoints = string.Join(',', options.Discovery.ConfigEndpoints.Select(s => s.ToHocon()));
+        logger.Information("From environment: Using config based discovery endpoints: [{Endpoints}]", endpoints);
+
+        builder.WithConfigDiscovery(new ConfigServiceDiscoveryOptions
+        {
+            Services = new List<Service>
+            {
+                new()
+                {
+                    Name = options.Discovery.ServiceName,
+                    Endpoints = options.Discovery.ConfigEndpoints.ToArray()
+                }
+            }
+        });
+    }
+
+    private static void KubernetesDiscovery(AkkaConfigurationBuilder builder, Logger logger, RemoteOptions remoteOptions,
+        AkkaManagementOptions managementOptions, ClusterBootstrapOptions bootstrapOptions, ClusterOptions options)
+    {
+        logger.Information("From environment: Forming cluster using Akka.Discovery.KubernetesApi");
+
+        var hostName = Dns.GetHostName();
+        var hostIp = Dns.GetHostAddresses(hostName, AddressFamily.InterNetwork)[0].ToString();
+
+        remoteOptions.HostName = hostIp;
+        remoteOptions.PublicHostName = hostIp;
+        managementOptions.HostName = string.Empty;
+        bootstrapOptions.ContactPointDiscovery.RequiredContactPointsNr = 1;
+        builder
+            .WithKubernetesDiscovery(opt =>
+            {
+                opt.PodNamespace = options.Discovery.ServiceName;
+                opt.PodLabelSelector = options.Discovery.LabelSelector;
+            })
+            .AddHocon(Akka.Discovery.KubernetesApi.KubernetesDiscovery.DefaultConfiguration(), HoconAddMode.Append);
+    }
+
     private static ClusterOptions GetEnvironmentVariables(IConfiguration configuration, Logger logger)
     {
         var section = configuration.GetSection("Cluster");

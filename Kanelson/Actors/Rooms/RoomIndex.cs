@@ -48,7 +48,7 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
 
         Command<Exists>(o =>
         {
-            Sender.Tell(_state.Items.Contains(o.RoomId));
+            Sender.Tell(_state.Items.Keys.Contains(o.RoomId, StringComparer.OrdinalIgnoreCase));
         });
 
         CommandAsync<UserConnected>(async o =>
@@ -107,20 +107,9 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
             }
         });
 
-        Command<GetAllSummaries>(_ =>
+        Command<GetRoomsBasicInfo>(_ =>
         {
-            var sender = Sender;
-            
-            var tasks = _state.Items.Select(id => roomShard.Ask<RoomSummary>(MessageEnvelope(id, GetSummary.Instance), TimeSpan.FromSeconds(3)));
-            
-            async Task<ImmutableArray<RoomSummary>> ExecuteWork()
-            {
-                var result = await Task.WhenAll(tasks);
-                return result.ToImmutableArray();
-            }
-
-
-            ExecuteWork().PipeTo(sender);
+            Sender.Tell(_state.Items.Values.ToImmutableArray());
         });
         
         Command<SaveSnapshotSuccess>(_ => { });
@@ -146,14 +135,14 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
 
     private async Task<SendSignalrGroupMessage> GenerateChangedSignalRMessage()
     {
-        var summary = await Self.Ask<ImmutableArray<RoomSummary>>(GetAllSummaries.Instance);
+        var summary = await Self.Ask<ImmutableArray<BasicRoomInfo>>(GetRoomsBasicInfo.Instance);
         return new SendSignalrGroupMessage(RoomLobbyHub.RoomsGroup, RoomLobbyHub.SignalRMessages.RoomsChanged, summary);
     }
 
     private void HandleRegister(Register r)
     {
         _roomShard.Tell(MessageEnvelope(r.RoomId, r.RoomBase));
-        _state.Items.Add(r.RoomId);
+        _state.Items.Add(r.RoomId, new BasicRoomInfo(r.RoomId, r.RoomBase.RoomName, r.RoomBase.OwnerId));
         GenerateChangedSignalRMessage().PipeTo(_signalrActor);
         SaveSnapshotIfPassedInterval(_state);
     }
@@ -177,13 +166,13 @@ public record UserConnected(string RoomId, string UserId, string ConnectionId);
 
 public record UserDisconnected(string UserId, string ConnectionId);
 
-public record GetAllSummaries
+public record GetRoomsBasicInfo
 {
-    private GetAllSummaries()
+    private GetRoomsBasicInfo()
     {
     }
 
-    public static GetAllSummaries Instance { get; } = new();
+    public static GetRoomsBasicInfo Instance { get; } = new();
 }
 
 public record Register(string RoomId, SetBase RoomBase);

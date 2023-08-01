@@ -60,12 +60,12 @@ public class RoomService : IRoomService
 
     }
 
-    public async Task<ImmutableArray<RoomSummary>> GetAll()
+    public async Task<ImmutableArray<BasicRoomInfo>> GetAll()
     {
         
         var index = await _actorRegistry.GetAsync<RoomIndex>();
 
-        return await index.Ask<ImmutableArray<RoomSummary>>(GetAllSummaries.Instance, TimeSpan.FromSeconds(3));
+        return await index.Ask<ImmutableArray<BasicRoomInfo>>(GetRoomsBasicInfo.Instance, TimeSpan.FromSeconds(3));
     }
 
     public async Task<RoomSummary> Get(string roomId)

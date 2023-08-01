@@ -44,15 +44,9 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
             Persist(o, HandleUnregister);
         });
 
-        Command<GetRef>(o =>
+        Command<Exists>(o =>
         {
-            // var exists = _children.TryGetValue(o.RoomId, out var actorRef);
-            // if (Equals(actorRef, ActorRefs.Nobody) || !exists)
-            // {
-            //     Sender.Tell(Option<IActorRef>.Create(null!));
-            // }
-            // Sender.Tell(Option<IActorRef>.Create(actorRef!));
-            
+            Sender.Tell(_state.Items.Contains(o.RoomId));
         });
 
         CommandAsync<UserConnected>(async o =>
@@ -191,7 +185,6 @@ public record GetAllSummaries
 
 public record Register(string RoomId, SetBase RoomBase);
 
-public record GetRef(string RoomId);
-
+public record Exists(string RoomId);
 
 public record Unregister(string RoomId);

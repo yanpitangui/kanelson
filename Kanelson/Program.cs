@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.ResponseCompression;
 using MudBlazor.Services;
 using Serilog;
-using System.Text.Json;
 
 
 Activity.DefaultIdFormat = ActivityIdFormat.W3C;
@@ -85,8 +84,6 @@ builder.Services.AddLocalization();
 
 
 builder.Host.AddAkkaSetup(logger);
-
-builder.Host.AddOpenTelemetrySetup();
 
 builder.Host.AddDataProtectionSetup();
 

@@ -35,9 +35,6 @@
       <PackageReference Include="MudBlazor" />
       <PackageReference Include="Npgsql" />
       <PackageReference Include="OneOf" />
-      <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
-      <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
-      <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
       <PackageReference Include="Serilog" />
       <PackageReference Include="Serilog.AspNetCore" />
       <PackageReference Include="Serilog.Exceptions" />

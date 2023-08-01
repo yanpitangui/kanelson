@@ -21,7 +21,7 @@ public sealed class User : BaseWithSnapshotFrequencyActor
         {
             Persist(o, HandleUpsert);
         });
-        Command<GetUserInfo>(o =>
+        Command<GetUserInfo>(_ =>
         {
             Sender.Tell(_state);
         });
@@ -39,7 +39,6 @@ public sealed class User : BaseWithSnapshotFrequencyActor
 
     private void HandleUpsert(UpsertUser user)
     {
-        
         _state.Name = user.Name;
         SaveSnapshotIfPassedInterval(_state);
     }

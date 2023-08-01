@@ -25,14 +25,13 @@ public static class AkkaSetup
         hostBuilder.ConfigureServices((ctx, services) =>
         {
             
-            var extractor = new MessageExtractor(100);
+            var extractor = new MessageExtractor(1000);
 
             var defaultShardOptions = new ShardOptions()
             {
                 Role = actorSystemName,
                 PassivateIdleEntityAfter = TimeSpan.FromMinutes(1),
                 ShouldPassivateIdleEntities = true,
-                RememberEntities = false,
             };
 
             services.AddAkka(actorSystemName, (akkaBuilder) =>

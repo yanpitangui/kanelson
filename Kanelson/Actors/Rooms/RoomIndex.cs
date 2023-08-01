@@ -14,6 +14,7 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
     public override string PersistenceId { get; }
 
     private RoomIndexState _state;
+    private readonly IActorRef _roomShard;
     private readonly IUserService _userService;
     private readonly Dictionary<string, Dictionary<string, HubUser>> _roomUsers = new();
     private readonly IActorRef _signalrActor;
@@ -22,6 +23,7 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
     public RoomIndex(string persistenceId, IActorRef roomShard,
         IHubContext<RoomLobbyHub> roomLobbyContext, IUserService userService)
     {
+        _roomShard = roomShard;
         _userService = userService;
         _signalrActor = Context.ActorOf(SignalrActor.Props((IHubContext) roomLobbyContext));
 
@@ -150,6 +152,7 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
 
     private void HandleRegister(Register r)
     {
+        _roomShard.Tell(MessageEnvelope(r.RoomId, r.RoomBase));
         _state.Items.Add(r.RoomId);
         GenerateChangedSignalRMessage().PipeTo(_signalrActor);
         SaveSnapshotIfPassedInterval(_state);

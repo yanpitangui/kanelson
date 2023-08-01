@@ -19,7 +19,7 @@ public class RoomHub : Hub
 
     public async Task JoinRoom(string roomId)
     {
-        await Groups.AddToGroupAsync(Context.ConnectionId, roomId.ToString(NumberFormatInfo.InvariantInfo));
+        await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
 
         var userId = Context.GetUserId();
         var connectionId = Context.ConnectionId;

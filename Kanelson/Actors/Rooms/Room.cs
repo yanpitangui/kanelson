@@ -86,11 +86,11 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
             var everyoneAnswered = CheckEveryoneAnswered();
              
              // Finaliza o round e espera a próxima pergunta (se tiver)
-             if (DateTime.Now - time >= TimeSpan.FromSeconds(currentQuestion.TimeLimit) || everyoneAnswered)
+             if (DateTime.UtcNow - time >= TimeSpan.FromSeconds(currentQuestion.TimeLimit) || everyoneAnswered)
              {
                  Timers.Cancel(AnswerloopTimerName);
 
-                 _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifier, RoomHub.SignalRMessages.RoundFinished, true));
+                 _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifier, RoomHub.SignalRMessages.RoundFinished, Data: true));
 
                  FillAnswersFromUsersThatHaveNotAnswered();
                  
@@ -146,7 +146,7 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
         {
             if (_state.CurrentQuestionIdx + 1 > _state.MaxQuestionIdx || _state.CurrentState == RoomStatus.DisplayingQuestion) return; 
             _state.CurrentQuestionIdx+= 1;
-            SendNextQuestion(true);
+            SendNextQuestion(incrementedQuestionIdx: true);
             SetTimeHandler();
         });
         
@@ -186,7 +186,7 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
                 
         Command<ShutdownCommand>(_ =>
         {
-            _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifier, RoomHub.SignalRMessages.RoomDeleted, true));
+            _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifier, RoomHub.SignalRMessages.RoomDeleted, Data: true));
             DeleteMessages(Int64.MaxValue);
             DeleteSnapshots(SnapshotSelectionCriteria.Latest);
         });
@@ -286,7 +286,7 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
     
     private void SetTimeHandler()
     {
-        _currentQuestionStartTime = DateTime.Now;
+        _currentQuestionStartTime = DateTime.UtcNow;
         Timers.StartPeriodicTimer(AnswerloopTimerName, HandleAnswerLoop.Instance
              , TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
     }
@@ -313,7 +313,7 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
      
      private RoomAnswer CalculatePoints(Guid[] alternativeIds)
      {
-         var timeToAnswer = DateTime.Now - _currentQuestionStartTime;
+         var timeToAnswer = DateTime.UtcNow - _currentQuestionStartTime;
          
          var correctAlternatives = CurrentQuestion
              .Alternatives
@@ -362,7 +362,7 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
         {
             Id = x.Id,
             Name = x.Name,
-            Owner = x.Id.Equals(_state.OwnerId)
+            Owner = x.Id.Equals(_state.OwnerId, StringComparison.OrdinalIgnoreCase)
         })
             .OrderByDescending(x => x.Owner)
             .ToHashSet();

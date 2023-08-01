@@ -33,7 +33,7 @@ public class UserService : IUserService
         return actor.Ask<UserInfo>(MessageEnvelope(id, Actors.GetUserInfo.Instance), TimeSpan.FromSeconds(3));
     }
 
-    private ShardingEnvelope MessageEnvelope<T>(string id, T message) where T: class
+    private static ShardingEnvelope MessageEnvelope<T>(string id, T message) where T: class
     {
         return new ShardingEnvelope(id, message);
     }

@@ -16,7 +16,7 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
     private RoomIndexState _state;
     private readonly IActorRef _roomShard;
     private readonly IUserService _userService;
-    private readonly Dictionary<string, Dictionary<string, HubUser>> _roomUsers = new();
+    private readonly Dictionary<string, Dictionary<string, HubUser>> _roomUsers = new(StringComparer.OrdinalIgnoreCase);
     private readonly IActorRef _signalrActor;
 
 

@@ -80,7 +80,6 @@ public class QuestionService : IQuestionService
         return new ValidationResult();
     }
     
-    // TODO: Substituir por interface que contem o id do usuário
     private ShardingEnvelope MessageEnvelope<T>(T message) where T: class
     {
         return new ShardingEnvelope(_userService.CurrentUser, message);

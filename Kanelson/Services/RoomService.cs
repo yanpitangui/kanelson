@@ -135,7 +135,7 @@ public class RoomService : IRoomService
         return await _actorRegistry.GetAsync<Room>();
     }
     
-    private ShardingEnvelope MessageEnvelope<T>(string roomId, T message) where T: class
+    private static ShardingEnvelope MessageEnvelope<T>(string roomId, T message) where T: class
     {
         return new ShardingEnvelope(roomId, message);
     }

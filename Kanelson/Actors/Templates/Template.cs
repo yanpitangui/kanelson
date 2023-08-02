@@ -51,7 +51,6 @@ public class Template : BaseWithSnapshotFrequencyActor
     private void HandleUpsert(Upsert o)
     {
         _state.Template = o.Template;
-        _state.OwnerId = o.OwnerId;
         SaveSnapshotIfPassedInterval(_state);
     }
 
@@ -80,4 +79,4 @@ public record GetTemplate
     public static GetTemplate Instance { get; } = new();
 }
 
-public record Upsert(Models.Template Template, string OwnerId);
+public record Upsert(Models.Template Template);

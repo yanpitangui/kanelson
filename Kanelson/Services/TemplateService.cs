@@ -24,7 +24,7 @@ public class TemplateService : ITemplateService
     public async Task UpsertTemplate(Template template)
     {
         var actor = await _shardRegion.Ask<IActorRef>(MessageEnvelope(new GetRef(template.Id)), TimeSpan.FromSeconds(3));
-        actor.Tell(new Upsert(template, _userService.CurrentUser));
+        actor.Tell(new Upsert(template));
     }
 
     public Task<ImmutableArray<TemplateSummary>> GetTemplates()

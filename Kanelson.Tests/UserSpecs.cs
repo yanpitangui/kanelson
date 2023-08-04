@@ -65,6 +65,7 @@ public class UserSpecs : PersistenceTestKit
         var recoveringActor = new TestActorRef<User>(Sys, User.Props(UserId), name: UserId);
         var userInfoAfterRecovery = await GetUserInfo(recoveringActor);
 
+        // assert
         userSnapshot.Should().BeEquivalentTo(userInfoAfterRecovery);
 
     }

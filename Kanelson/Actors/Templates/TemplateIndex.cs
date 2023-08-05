@@ -25,7 +25,7 @@ public class TemplateIndex : BaseWithSnapshotFrequencyActor
         {
             HandleUnregister(unregister);
             var exists = _children.TryGetValue(unregister.Id, out var actorRef);
-            if (!Equals(actorRef, ActorRefs.Nobody) && exists)
+            if (!actorRef.IsNobody() && exists)
             {
                 actorRef.Tell(ShutdownCommand.Instance);
             }
@@ -34,7 +34,7 @@ public class TemplateIndex : BaseWithSnapshotFrequencyActor
         Command<Unregister>(o =>
         {
             var exists = _children.TryGetValue(o.Id, out var actorRef);
-            if (!Equals(actorRef, ActorRefs.Nobody) && exists)
+            if (!actorRef.IsNobody() && exists)
             {
                 actorRef.Tell(ShutdownCommand.Instance);
             }
@@ -48,7 +48,7 @@ public class TemplateIndex : BaseWithSnapshotFrequencyActor
         {
             
             var exists = _children.TryGetValue(o.Id, out var actorRef);
-            if (Equals(actorRef, ActorRefs.Nobody) || !exists)
+            if (actorRef.IsNobody() || !exists)
             {
                 actorRef = GetChildTemplateActorRef(o.Id);
                 _children[o.Id] = actorRef;

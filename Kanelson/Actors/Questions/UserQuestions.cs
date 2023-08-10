@@ -3,17 +3,16 @@ using Akka.Actor;
 using Akka.Persistence;
 using Akka.Util;
 using Kanelson.Models;
-using OneOf.Types;
 
 namespace Kanelson.Actors.Questions;
 
-public class UserQuestionsActor : BaseWithSnapshotFrequencyActor
+public class UserQuestions : BaseWithSnapshotFrequencyActor
 {
 
     private UserQuestionsState _state;
     public override string PersistenceId { get; }
     
-    public UserQuestionsActor(string userId)
+    public UserQuestions(string userId)
     {
         PersistenceId = $"question-index-{userId}";
         _state = new UserQuestionsState();
@@ -86,7 +85,7 @@ public class UserQuestionsActor : BaseWithSnapshotFrequencyActor
 
     public static Props Props(string userId)
     {
-        return Akka.Actor.Props.Create<UserQuestionsActor>(userId);
+        return Akka.Actor.Props.Create<UserQuestions>(userId);
     }
 }
 

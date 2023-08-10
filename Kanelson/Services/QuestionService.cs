@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using Akka.Actor;
+using Akka.Cluster.Sharding;
 using Akka.Hosting;
 using Akka.Util;
 using FluentValidation;
@@ -13,41 +14,36 @@ namespace Kanelson.Services;
 
 public class QuestionService : IQuestionService
 {
-    private readonly ActorRegistry _actorRegistry;
     private readonly IUserService _userService;
     private readonly IValidator<HashSet<Question>?> _questionValidator;
     private readonly IValidator<IBrowserFile> _fileValidator;
+    private readonly IActorRef _userQuestions;
 
-    public QuestionService(IUserService userService, ActorRegistry actorRegistry, 
+    public QuestionService(IUserService userService, 
         IValidator<IBrowserFile> fileValidator,
-        IValidator<HashSet<Question>?> questionValidator)
+        IValidator<HashSet<Question>?> questionValidator,
+        IActorRegistry actorRegistry)
     {
         _userService = userService;
-        _actorRegistry = actorRegistry;
+        _userQuestions = actorRegistry.Get<UserQuestions>();
         _fileValidator = fileValidator;
         _questionValidator = questionValidator;
     }
 
-    public async Task<ValidationResult> SaveQuestion(Question question)
+    public ValidationResult SaveQuestion(Question question)
     {
-        var index = await _actorRegistry.GetAsync<QuestionIndexActor>();
-        var userQuestionsActor = await index.Ask<IActorRef>(new GetRef(_userService.CurrentUser));
-        userQuestionsActor.Tell(new UpsertQuestion(question));
+        _userQuestions.Tell(MessageEnvelope(new UpsertQuestion(question)));
         return new ValidationResult();
     }
 
-    public async Task RemoveQuestion(Guid id)
+    public void RemoveQuestion(Guid id)
     {
-        var index = await _actorRegistry.GetAsync<QuestionIndexActor>();
-        var userQuestionsActor = await index.Ask<IActorRef>(new GetRef(_userService.CurrentUser));
-        userQuestionsActor.Tell(new RemoveQuestion(id));
+        _userQuestions.Tell(MessageEnvelope(new RemoveQuestion(id)));
     }
 
     public async Task<Question> GetQuestion(Guid id)
     {
-        var index = await _actorRegistry.GetAsync<QuestionIndexActor>();
-        var userQuestionsActor = await index.Ask<IActorRef>(new GetRef(_userService.CurrentUser));
-        var result = await userQuestionsActor.Ask<Option<Question>>(new GetQuestion(id));
+        var result = await _userQuestions.Ask<Option<Question>>(MessageEnvelope(new GetQuestion(id)));
         if (result.HasValue)
         {
             return result.Value;
@@ -55,18 +51,14 @@ public class QuestionService : IQuestionService
         throw new KeyNotFoundException();
     }
 
-    public async Task<ImmutableArray<QuestionSummary>> GetQuestionsSummary()
+    public Task<ImmutableArray<QuestionSummary>> GetQuestionsSummary()
     {
-        var index = await _actorRegistry.GetAsync<QuestionIndexActor>();
-        var userQuestionsActor = await index.Ask<IActorRef>(new GetRef(_userService.CurrentUser));
-        return await userQuestionsActor.Ask<ImmutableArray<QuestionSummary>>(Actors.Questions.GetQuestionsSummary.Instance);
+        return _userQuestions.Ask<ImmutableArray<QuestionSummary>>(MessageEnvelope(Actors.Questions.GetQuestionsSummary.Instance));
     }
 
     public async Task<ImmutableArray<Question>> GetQuestions(HashSet<Guid> ids)
     {
-        var index = await _actorRegistry.GetAsync<QuestionIndexActor>();
-        var userQuestionsActor = await index.Ask<IActorRef>(new GetRef(_userService.CurrentUser));
-        return await userQuestionsActor.Ask<ImmutableArray<Question>>(new GetQuestions(ids.ToArray()));
+        return await _userQuestions.Ask<ImmutableArray<Question>>(MessageEnvelope(new GetQuestions(ids.ToArray())));
     }
 
     public async Task<ValidationResult> UploadQuestions(IBrowserFile file)
@@ -80,14 +72,16 @@ public class QuestionService : IQuestionService
         result = await _questionValidator.ValidateAsync(questionList);
         if (!result.IsValid) return result;
         
-        var index = await _actorRegistry.GetAsync<QuestionIndexActor>();
-        var userQuestionsActor = await index.Ask<IActorRef>(new GetRef(_userService.CurrentUser));
-
         foreach (var question in questionList!) // Validação garante que não está nulo 
         {
-            userQuestionsActor.Tell(new UpsertQuestion(question));
+            _userQuestions.Tell(MessageEnvelope(new UpsertQuestion(question)));
         }
 
         return new ValidationResult();
+    }
+    
+    private ShardingEnvelope MessageEnvelope<T>(T message) where T: class
+    {
+        return new ShardingEnvelope(_userService.CurrentUser, message);
     }
 }

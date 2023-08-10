@@ -1,27 +1,39 @@
 using Akka.Actor;
+using Akka.Cluster.Hosting;
+using Akka.Cluster.Sharding;
 using Akka.Hosting;
 using Akka.Persistence.Azure.Hosting;
-using Akka.Remote.Hosting;
 using Azure.Identity;
 using Kanelson.Actors;
 using Kanelson.Actors.Questions;
 using Kanelson.Actors.Rooms;
+using Kanelson.Actors.Templates;
 using Kanelson.Hubs;
 using Kanelson.Services;
 using Microsoft.AspNetCore.SignalR;
+using Serilog.Core;
 
 
 namespace Kanelson.Setup;
 
 public static class AkkaSetup
 {
-    public static IHostBuilder AddAkkaSetup(this IHostBuilder hostBuilder)
+    public static void AddAkkaSetup(this IHostBuilder hostBuilder, Logger logger)
     {
         const string actorSystemName = "Kanelson";
 
         hostBuilder.ConfigureServices((ctx, services) =>
         {
             
+            var extractor = new MessageExtractor(1000);
+
+            var defaultShardOptions = new ShardOptions()
+            {
+                Role = actorSystemName,
+                PassivateIdleEntityAfter = TimeSpan.FromMinutes(1),
+                ShouldPassivateIdleEntities = true,
+            };
+
             services.AddAkka(actorSystemName, (akkaBuilder) =>
             {
                 akkaBuilder
@@ -30,32 +42,39 @@ public static class AkkaSetup
                         setup.ClearLoggers();
                         setup.AddLoggerFactory();
                     })
-                    .WithActors((system, registry, sp) =>
-                    {
-                        var userIndexActor = system.ActorOf(Props.Create<UserIndexActor>("user-index"),
-                            "user-index");
-                        registry.Register<UserIndexActor>(userIndexActor);
-
-
-                        var userQuestionIndex =
-                            system.ActorOf(Props.Create<QuestionIndexActor>("user-question-index"),
-                                "user-question-index");
-
-                        registry.Register<QuestionIndexActor>(userQuestionIndex);
-
-                        var roomIndex =
-                            system.ActorOf(Props.Create<RoomIndexActor>("room-index",
-                                    sp.GetService<IHubContext<RoomHub>>(),
-                                    sp.GetService<IHubContext<RoomLobbyHub>>(),
+                    .BootstrapNetwork(ctx.Configuration, actorSystemName, logger)
+                    .WithShardRegion<User>(nameof(User),
+                        User.Props,
+                        extractor,
+                        defaultShardOptions
+                    )
+                    .WithShardRegion<UserQuestions>(nameof(UserQuestions),
+                        UserQuestions.Props,
+                        extractor,
+                        defaultShardOptions)
+                    .WithShardRegion<TemplateIndex>(nameof(TemplateIndex),
+                        TemplateIndex.Props,
+                        extractor,
+                        defaultShardOptions)
+                    .WithShardRegion<Room>(nameof(Room),
+                        (_, _, sp) =>
+                            (identifier) => 
+                                Room.Props(identifier, sp.GetService<IHubContext<RoomHub>>(),
                                     sp.GetService<IUserService>()),
-                                "room-index");
-
-                        registry.Register<RoomIndexActor>(roomIndex);
+                        extractor,
+                        defaultShardOptions)
+                    .WithSingleton<RoomIndex>("room-index", (_,ar,sp) =>
+                        RoomIndex.Props("room-index",
+                            ar.Get<Room>(),
+                            sp.GetService<IHubContext<RoomLobbyHub>>(),
+                            sp.GetService<IUserService>()), new ClusterSingletonOptions
+                    {
+                        Role = actorSystemName,
                     });
 
                 if (ctx.HostingEnvironment.IsDevelopment())
                 {
-                    akkaBuilder.WithRemoting("localhost", 7918)
+                    akkaBuilder
                         .WithAzureTableJournal(ctx.Configuration.GetConnectionString("TableStorage")!)
                         .WithAzureBlobsSnapshotStore(ctx.Configuration.GetConnectionString("BlobStorage")!);
                     
@@ -74,8 +93,5 @@ public static class AkkaSetup
 
             });
         });
-
-
-        return hostBuilder;
     }
 }

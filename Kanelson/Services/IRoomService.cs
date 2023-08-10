@@ -1,3 +1,4 @@
+using Kanelson.Actors.Rooms;
 using System.Collections.Immutable;
 using Kanelson.Models;
 
@@ -5,16 +6,15 @@ namespace Kanelson.Services;
 
 public interface IRoomService
 {
-    Task<long> CreateRoom(Guid templateId, string roomName);
-    Task<ImmutableArray<RoomSummary>> GetAll();
-    Task<RoomSummary> Get(long roomId);
-    Task<CurrentQuestionInfo> GetCurrentQuestion(long roomId);
-    Task NextQuestion(long roomId);
-    Task Start(long roomId);
-    Task<string> GetOwner(long roomId);
-    Task Delete(long roomId);
-    Task Answer(long roomId, Guid alternativeId);
-    Task<RoomStatus> GetCurrentState(long roomId);
+    Task<string> CreateRoom(Guid templateId, string roomName, CancellationToken ct = default);
+    Task<ImmutableArray<BasicRoomInfo>> GetAll(CancellationToken ct = default);
+    Task<RoomSummary> Get(string roomId, CancellationToken ct = default);
+    Task<CurrentQuestionInfo> GetCurrentQuestion(string roomId, CancellationToken ct = default);
+    Task NextQuestion(string roomId, CancellationToken ct = default);
+    Task Start(string roomId, CancellationToken ct = default);
+    Task Delete(string roomId, CancellationToken ct = default);
+    Task Answer(string roomId, Guid alternativeId, CancellationToken ct = default);
+    Task<RoomStatus> GetCurrentState(string roomId, CancellationToken ct = default);
     void UserDisconnected(string userId, string connectionId);
-    void UserConnected(long roomId, string userId, string connectionId);
+    void UserConnected(string roomId, string userId, string connectionId);
 }

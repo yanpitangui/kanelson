@@ -13,7 +13,7 @@ public class BaseRoomPage : MudComponentBase
 {
     
     [Parameter]
-    public long RoomId { get; set; }
+    public string RoomId { get; set; } = null!;
 
     
     [Parameter]

@@ -1,6 +1,7 @@
 ﻿@page "/rooms"
 @using Kanelson.Services
 @using System.Collections.Immutable
+@using Kanelson.Actors.Rooms
 @using Kanelson.Hubs
 @using Kanelson.Models
 @using Microsoft.AspNetCore.SignalR.Client
@@ -19,7 +20,7 @@
 else
 {
     <MudCard>
-        <MudTable Elevation="25" Items="_rooms" T="RoomSummary" >
+        <MudTable Elevation="25" Items="_rooms" T="BasicRoomInfo" >
          <ToolBarContent>
              <MudText Typo="Typo.h6">@Loc["Rooms"]</MudText>
          </ToolBarContent>
@@ -40,11 +41,11 @@ else
                 <MudTd DataLabel="@Loc["Id"]">@context.Id</MudTd>
                 <MudTd DataLabel="@Loc["Name"]">@context.Name</MudTd>
                 <MudTd DataLabel="@Loc["Host"]">
-                    <Avatar GithubId="@context.Owner.Id"/>
+                    <Avatar GithubId="@context.OwnerId"/>
                 </MudTd>
                 <MudTd>
                     <MudFab @onclick="@(() => DeleteRoom(@context.Id))" Color="Color.Secondary"
-                            Disabled="@(UserService.CurrentUser != context.Owner.Id)"
+                            Disabled="@(UserService.CurrentUser != context.OwnerId)"
                             Icon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small"/>
                 </MudTd>
 
@@ -58,7 +59,7 @@ else
 
 @code {
 
-    private ImmutableArray<RoomSummary>? _rooms;
+    private ImmutableArray<BasicRoomInfo>? _rooms;
     private HubConnection _hubConnection = null!;
 
     protected override async Task OnInitializedAsync()
@@ -67,7 +68,7 @@ else
         _hubConnection = HttpAccessor.GetConnection(Navigation, "roomLobbyHub");
 
 
-        _hubConnection.On<ImmutableArray<RoomSummary>>(RoomLobbyHub.SignalRMessages.RoomsChanged, (rooms) =>
+        _hubConnection.On<ImmutableArray<BasicRoomInfo>>(RoomLobbyHub.SignalRMessages.RoomsChanged, (rooms) =>
         {
             _rooms = rooms;
             InvokeAsync(StateHasChanged);
@@ -78,12 +79,12 @@ else
 
     }
 
-    private void JoinRoom(long id)
+    private void JoinRoom(string id)
     { 
         Navigation.NavigateTo($"/room/{id}");
     }
 
-    private async Task DeleteRoom(long id)
+    private async Task DeleteRoom(string id)
     {
         await Service.Delete(id);
         await InvokeAsync(StateHasChanged);

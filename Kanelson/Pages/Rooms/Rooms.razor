@@ -1,6 +1,7 @@
 ﻿@page "/rooms"
 @using Kanelson.Services
 @using System.Collections.Immutable
+@using Kanelson.Actors.Rooms
 @using Kanelson.Hubs
 @using Kanelson.Models
 @using Microsoft.AspNetCore.SignalR.Client
@@ -28,9 +29,9 @@ else
         {
             <CardRoomComponent
                 Id="@room.Id"
-                HostName="@room.Owner.Name"
+                HostName="@room.Name"
                 RoomName="@room.Name"
-                RoomOwner="@(UserService.CurrentUser == room.Owner.Id)"
+                RoomOwner="@(UserService.CurrentUser == room.OwnerId)"
                 EnterRoomClick="@(() => JoinRoom(room.Id))"
                 DeleteRoomClick="@(() => DeleteRoom(room.Id))">
             </CardRoomComponent>
@@ -74,7 +75,7 @@ else
 
 @code {
 
-    private ImmutableArray<RoomSummary>? _rooms;
+    private ImmutableArray<BasicRoomInfo>? _rooms;
     private HubConnection _hubConnection = null!;
 
     protected override async Task OnInitializedAsync()
@@ -82,7 +83,7 @@ else
         _hubConnection = HttpAccessor.GetConnection(Navigation, "roomLobbyHub");
 
 
-        _hubConnection.On<ImmutableArray<RoomSummary>>(RoomLobbyHub.SignalRMessages.RoomsChanged, (rooms) =>
+        _hubConnection.On<ImmutableArray<BasicRoomInfo>>(RoomLobbyHub.SignalRMessages.RoomsChanged, (rooms) =>
         {
             _rooms = rooms;
             InvokeAsync(StateHasChanged);
@@ -92,12 +93,12 @@ else
         await _hubConnection.StartAsync();
     }
 
-    private void JoinRoom(long id)
-    {
+    private void JoinRoom(string id)
+    { 
         Navigation.NavigateTo($"/room/{id}");
     }
 
-    private async Task DeleteRoom(long id)
+    private async Task DeleteRoom(string id)
     {
         await Service.Delete(id);
         await InvokeAsync(StateHasChanged);

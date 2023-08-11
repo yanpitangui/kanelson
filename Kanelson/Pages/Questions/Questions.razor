@@ -94,7 +94,7 @@ else
 
     private async Task RemoveQuestion(Guid id)
     {
-        await Service.RemoveQuestion(id);
+        Service.RemoveQuestion(id);
         _questions = await Service.GetQuestionsSummary();
 
     }

@@ -9,5 +9,5 @@ public interface IUserService
     
     public void Upsert(string id, string name);
 
-    Task<UserInfo> GetUserInfo(string id);
+    Task<UserInfo> GetUserInfo(string id, CancellationToken ct = default);
 }

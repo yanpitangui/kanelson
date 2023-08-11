@@ -6,12 +6,15 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <UserSecretsId>bea11c16-52b7-466d-8fbe-82cebdcaaa9d</UserSecretsId>
-        <LangVersion>11</LangVersion>
+        <LangVersion>11</LangVersion>    
+        <ServerGarbageCollection>true</ServerGarbageCollection>
         <TieredPGO>true</TieredPGO>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="Akka.Cluster.Hosting" />
+      <PackageReference Include="Akka.Discovery.KubernetesApi" />
+      <PackageReference Include="Akka.HealthCheck.Hosting" />
       <PackageReference Include="Akka.Management" />
       <PackageReference Include="Akka.Persistence.Azure.Hosting" />
       <PackageReference Include="AspNet.Security.OAuth.GitHub" />
@@ -32,9 +35,6 @@
       <PackageReference Include="MudBlazor" />
       <PackageReference Include="Npgsql" />
       <PackageReference Include="OneOf" />
-      <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
-      <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
-      <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
       <PackageReference Include="Serilog" />
       <PackageReference Include="Serilog.AspNetCore" />
       <PackageReference Include="Serilog.Exceptions" />

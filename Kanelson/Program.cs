@@ -1,3 +1,4 @@
+using Akka.Hosting;
 using System.Diagnostics;
 using System.Security.Claims;
 using Kanelson.Hubs;
@@ -7,7 +8,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.ResponseCompression;
 using MudBlazor.Services;
 using Serilog;
-using System.Text.Json;
 
 
 Activity.DefaultIdFormat = ActivityIdFormat.W3C;
@@ -83,9 +83,7 @@ builder.Services.AddMudServices();
 builder.Services.AddLocalization();
 
 
-builder.Host.AddAkkaSetup();
-
-builder.Host.AddOpenTelemetrySetup();
+builder.Host.AddAkkaSetup(logger);
 
 builder.Host.AddDataProtectionSetup();
 
@@ -124,5 +122,7 @@ var localizationOptions = new RequestLocalizationOptions()
     .AddSupportedUICultures(supportedCultures);
 
 app.UseRequestLocalization(localizationOptions);
+
+app.Services.GetRequiredService<IActorRegistry>();
 
 await app.RunAsync();

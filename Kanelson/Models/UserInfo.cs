@@ -6,13 +6,11 @@ public record UserInfo
     {
         
     }
-    public UserInfo(string id, string name)
+    public UserInfo(string id)
     {
-        this.Id = id;
-        this.Name = name;
+        Id = id;
     }
-
     public string Id { get; init; } = null!;
     
-    public string Name { get; init; } = null!;
+    public string Name { get; set; } = null!;
 }

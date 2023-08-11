@@ -182,9 +182,9 @@
         }
     }
 
-    private async Task SaveQuestion()
+    private void SaveQuestion()
     {
-        await _service.SaveQuestion(_question!);
+        _service.SaveQuestion(_question!);
         snackBar.Add(Loc["QuestionSavedSuccess"], Severity.Success);
         Navigation.NavigateTo("questions");
     }

@@ -17,26 +17,16 @@ public class RoomHub : Hub
         _roomService = roomService;
     }
 
-    public async Task JoinRoom(long roomId)
+    public async Task JoinRoom(string roomId)
     {
-        await Groups.AddToGroupAsync(Context.ConnectionId, roomId.ToString(NumberFormatInfo.InvariantInfo));
+        await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
 
         var userId = Context.GetUserId();
         var connectionId = Context.ConnectionId;
         _roomService.UserConnected(roomId, userId, connectionId);
     }
 
-    public async Task Start(long roomId)
-    {
-        var owner = await _roomService.GetOwner(roomId);
-        var userId = Context.GetUserId();
-        if (string.Equals(owner, userId, StringComparison.OrdinalIgnoreCase))
-        {
-            await _roomService.Start(roomId);
-        }
-    }
-
-    public async Task Answer(long roomId, Guid alternativeId)
+    public async Task Answer(string roomId, Guid alternativeId)
     {
         await _roomService.Answer(roomId, alternativeId);
     }

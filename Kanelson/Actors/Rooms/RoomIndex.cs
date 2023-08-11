@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using Akka.Actor;
+using Akka.Cluster.Sharding;
 using Akka.Persistence;
-using Akka.Util;
 using Kanelson.Hubs;
 using Kanelson.Models;
 using Kanelson.Services;
@@ -9,40 +9,33 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Kanelson.Actors.Rooms;
 
-public sealed class RoomIndexActor : BaseWithSnapshotFrequencyActor
+public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
 {
     public override string PersistenceId { get; }
 
     private RoomIndexState _state;
-    private readonly Dictionary<long, IActorRef> _children;
-    private readonly IHubContext<RoomHub> _roomContext;
+    private readonly IActorRef _roomShard;
     private readonly IUserService _userService;
-    private readonly Dictionary<long, Dictionary<string, HubUser>> _roomUsers = new();
+    private readonly Dictionary<string, Dictionary<string, HubUser>> _roomUsers = new(StringComparer.OrdinalIgnoreCase);
     private readonly IActorRef _signalrActor;
 
 
-    public RoomIndexActor(string persistenceId, IHubContext<RoomHub> roomContext,
+    public RoomIndex(string persistenceId, IActorRef roomShard,
         IHubContext<RoomLobbyHub> roomLobbyContext, IUserService userService)
     {
-        _roomContext = roomContext;
+        _roomShard = roomShard;
         _userService = userService;
         _signalrActor = Context.ActorOf(SignalrActor.Props((IHubContext) roomLobbyContext));
 
         PersistenceId = persistenceId;
 
-        _children = new();
 
         _state = new RoomIndexState();
         
-        Recover<Register>(o =>
-        {
-            AddToChildren(o);
-            HandleRegister(o);
-        });
+        Recover<Register>(HandleRegister);
         
         Command<Register>(o =>
         {
-            AddToChildren(o);
             Persist(o, HandleRegister);
         });
         
@@ -53,15 +46,9 @@ public sealed class RoomIndexActor : BaseWithSnapshotFrequencyActor
             Persist(o, HandleUnregister);
         });
 
-        Command<GetRef>(o =>
+        Command<Exists>(o =>
         {
-            var exists = _children.TryGetValue(o.RoomIdentifier, out var actorRef);
-            if (Equals(actorRef, ActorRefs.Nobody) || !exists)
-            {
-                Sender.Tell(Option<IActorRef>.Create(null!));
-            }
-            Sender.Tell(Option<IActorRef>.Create(actorRef!));
-            
+            Sender.Tell(_state.Items.Keys.Contains(o.RoomId, StringComparer.OrdinalIgnoreCase));
         });
 
         CommandAsync<UserConnected>(async o =>
@@ -83,18 +70,14 @@ public sealed class RoomIndexActor : BaseWithSnapshotFrequencyActor
             }
 
             user.Connections.Add(o.ConnectionId);
-            var exists = _children.TryGetValue(o.RoomId, out var actorRef);
-            if (Equals(actorRef, ActorRefs.Nobody) || !exists)
-            {
-                throw new ActorNotFoundException();
-            }
+
             
-            actorRef.Tell(o);
+            roomShard.Tell(MessageEnvelope(o.RoomId, o));
             
             if (!userAdded) return;
 
             var users = roomConnections.Values.Cast<UserInfo>().ToHashSet();
-            actorRef.Tell(new UpdateCurrentUsers(users));
+            roomShard.Tell(MessageEnvelope(o.RoomId, new UpdateCurrentUsers(users)));
         });
 
         Command<UserDisconnected>(o =>
@@ -119,31 +102,14 @@ public sealed class RoomIndexActor : BaseWithSnapshotFrequencyActor
                 
                 if (!userDisconnected) continue;
                 var users = room.Room.Value.Values.Cast<UserInfo>().ToHashSet();
-                var exists = _children.TryGetValue(room.Room.Key, out var actorRef);
-                if (Equals(actorRef, ActorRefs.Nobody) || !exists)
-                {
-                    continue;
-                }
-                
-                actorRef.Tell(new UpdateCurrentUsers(users));
+                roomShard.Tell(MessageEnvelope(room.Room.Key, new UpdateCurrentUsers(users)));
                 
             }
         });
 
-        Command<GetAllSummaries>(_ =>
+        Command<GetRoomsBasicInfo>(_ =>
         {
-            var sender = Sender;
-            
-            var tasks = _state.Items.Select(x => _children[x].Ask<RoomSummary>(GetSummary.Instance, TimeSpan.FromSeconds(3)));
-            
-            async Task<ImmutableArray<RoomSummary>> ExecuteWork()
-            {
-                var result = await Task.WhenAll(tasks);
-                return result.ToImmutableArray();
-            }
-
-
-            ExecuteWork().PipeTo(sender);
+            Sender.Tell(_state.Items.Values.ToImmutableArray());
         });
         
         Command<SaveSnapshotSuccess>(_ => { });
@@ -154,31 +120,14 @@ public sealed class RoomIndexActor : BaseWithSnapshotFrequencyActor
             if (o.Snapshot is RoomIndexState state)
             {
                 _state = state;
-                foreach (var item in _state.Items)
-                {
-                    _children[item] = GetChildRoomActorRef(item);
-                }
             }
         });
 
     }
 
-    private void AddToChildren(Register o)
-    {
-        var roomActor = GetChildRoomActorRef(o.RoomIdentifier);
-        roomActor.Tell(o.RoomBase);
-        _children.TryAdd(o.RoomIdentifier, roomActor);
-    }
-
     private void HandleUnregister(Unregister r)
     {
-        var exists = _children.TryGetValue(r.RoomIdentifier, out var child);
-        if (exists || !Equals(child, ActorRefs.Nobody))
-        {
-            child.Tell(ShutdownCommand.Instance);
-        }
-        _state.Items.Remove(r.RoomIdentifier);
-        _children.Remove(r.RoomIdentifier);
+        _state.Items.Remove(r.RoomId);
         GenerateChangedSignalRMessage().PipeTo(_signalrActor);
         SaveSnapshotIfPassedInterval(_state);
         
@@ -186,40 +135,48 @@ public sealed class RoomIndexActor : BaseWithSnapshotFrequencyActor
 
     private async Task<SendSignalrGroupMessage> GenerateChangedSignalRMessage()
     {
-        var summary = await Self.Ask<ImmutableArray<RoomSummary>>(GetAllSummaries.Instance);
+        var summary = await Self.Ask<ImmutableArray<BasicRoomInfo>>(GetRoomsBasicInfo.Instance);
         return new SendSignalrGroupMessage(RoomLobbyHub.RoomsGroup, RoomLobbyHub.SignalRMessages.RoomsChanged, summary);
     }
 
     private void HandleRegister(Register r)
     {
-        _state.Items.Add(r.RoomIdentifier);
+        _roomShard.Tell(MessageEnvelope(r.RoomId, r.RoomBase));
+        _state.Items.Add(r.RoomId, new BasicRoomInfo(r.RoomId, r.RoomBase.RoomName, r.RoomBase.OwnerId));
         GenerateChangedSignalRMessage().PipeTo(_signalrActor);
         SaveSnapshotIfPassedInterval(_state);
     }
 
-    private IActorRef GetChildRoomActorRef(long roomIdentifier)
+    private static ShardingEnvelope MessageEnvelope<T>(string id, T message) where T: class
     {
-        return Context.ActorOf(RoomActor.Props(roomIdentifier, _roomContext, _userService), $"room-{roomIdentifier}");
+        return new ShardingEnvelope(id, message);
+    }
+
+
+    public static Props Props(string persistenceId, IActorRef roomShard,
+        IHubContext<RoomLobbyHub> roomLobbyContext, IUserService userService)
+    {
+        return Akka.Actor.Props.Create<RoomIndex>(persistenceId, roomShard, roomLobbyContext, userService);
+
     }
 }
 
 
-public record UserConnected(long RoomId, string UserId, string ConnectionId);
+public record UserConnected(string RoomId, string UserId, string ConnectionId);
 
 public record UserDisconnected(string UserId, string ConnectionId);
 
-public record GetAllSummaries
+public record GetRoomsBasicInfo
 {
-    private GetAllSummaries()
+    private GetRoomsBasicInfo()
     {
     }
 
-    public static GetAllSummaries Instance { get; } = new();
+    public static GetRoomsBasicInfo Instance { get; } = new();
 }
 
-public record Register(long RoomIdentifier, SetBase RoomBase);
+public record Register(string RoomId, SetBase RoomBase);
 
-public record GetRef(long RoomIdentifier);
+public record Exists(string RoomId);
 
-
-public record Unregister(long RoomIdentifier);
+public record Unregister(string RoomId);

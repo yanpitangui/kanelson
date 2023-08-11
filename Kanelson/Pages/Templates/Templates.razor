@@ -60,7 +60,7 @@ else
 
     private async Task DeleteTemplate(Guid id)
     {
-        await Service.DeleteTemplate(id);
+        Service.DeleteTemplate(id);
         _templates = await Service.GetTemplates();
 
     }

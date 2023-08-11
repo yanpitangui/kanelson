@@ -8,7 +8,7 @@ public partial class CardRoomComponent : ComponentBase
     public string RoomName { get; set; } = null!;
      
     [Parameter]
-    public long Id { get; set; }
+    public string Id { get; set; } = null!;
 
     [Parameter]
     public string HostName { get; set; } = null!;

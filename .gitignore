@@ -481,3 +481,7 @@ $RECYCLE.BIN/
 **/snapshots/*
 
 tools/*
+
+
+## Verify
+*.received.txt

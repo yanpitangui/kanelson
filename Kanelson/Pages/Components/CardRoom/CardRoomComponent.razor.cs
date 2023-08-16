@@ -11,7 +11,7 @@ public partial class CardRoomComponent : ComponentBase
     public string Id { get; set; } = null!;
 
     [Parameter]
-    public string HostName { get; set; } = null!;
+    public string HostId { get; set; } = null!;
     
     [Parameter]
     public bool RoomOwner { get; set; }

@@ -7,7 +7,6 @@
 }
 
 .card-room__image {
-    background-image: url("https://uploads.jovemnerd.com.br/wp-content/uploads/2023/04/coringa_2_lady_gaga_beija_mulher_video__lg48x6pv-1210x544.jpg");
     background-size: cover;
     background-repeat: no-repeat;
     width: 180px;
@@ -38,7 +37,8 @@
     background-color: #c7c2f0;
     border-bottom-right-radius: 4px;
     display: flex;
-    align-items: center;
+    align-items: end;
+    align-self: end;
     justify-content: space-between;
 }
 

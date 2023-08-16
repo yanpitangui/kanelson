@@ -2,7 +2,7 @@
 
 <!-- Voltar aqui, exception user conectado - usar mud? -->
 <div class="card-room">
-    <div class="card-room__image"></div>
+    <div class="card-room__image" style="background-image: url(@Avatar.GetUrlFromId(HostId))"></div>
     <div class="card-room_info">
         <div class="card-room__id">
             <div class="card-room__name">
@@ -17,7 +17,6 @@
             <span>#@Id</span>
         </div>
         <div class="card-room__enter">
-            <span class="host-name">@HostName</span> 
             <button class="card-room__btn-enter" @onclick="HandleEnterRoomClick">Entrar</button>
         </div>
     </div>

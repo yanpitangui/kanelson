@@ -29,8 +29,8 @@ else
         {
             <CardRoomComponent
                 Id="@room.Id"
-                HostName="@room.Name"
                 RoomName="@room.Name"
+                HostId="@room.OwnerId"
                 RoomOwner="@(UserService.CurrentUser == room.OwnerId)"
                 EnterRoomClick="@(() => JoinRoom(room.Id))"
                 DeleteRoomClick="@(() => DeleteRoom(room.Id))">

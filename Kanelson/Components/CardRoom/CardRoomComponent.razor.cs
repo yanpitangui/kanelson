@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components;
 
-namespace Kanelson.Pages.Components.CardRoom;
+namespace Kanelson.Components.CardRoom;
 
 public partial class CardRoomComponent : ComponentBase
 {

@@ -38,39 +38,6 @@ else
         }
     </div>
 
-    /*<MudCard>
-        <MudTable Elevation="25" Items="_rooms" T="RoomSummary">
-            <ToolBarContent>
-                <MudText Typo="Typo.h6">@Loc["Rooms"]</MudText>
-            </ToolBarContent>
-            <HeaderContent>
-                <MudTh>@Loc["Join"]</MudTh>
-                <MudTh>@Loc["Id"]</MudTh>
-                <MudTh>@Loc["Name"]</MudTh>
-                <MudTh>@Loc["Host"]</MudTh>
-                <MudTh>@Loc["Actions"]</MudTh>
-
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd>
-                    <MudFab @onclick="@(() => JoinRoom(context.Id))"
-                            Color="Color.Info" Icon="@Icons.Material.Filled.Outbound"
-                            Size="Size.Small" IconSize="Size.Small"/>
-                </MudTd>
-                <MudTd DataLabel="@Loc["Id"]">@context.Id</MudTd>
-                <MudTd DataLabel="@Loc["Name"]">@context.Name</MudTd>
-                <MudTd DataLabel="@Loc["Host"]">
-                    <Avatar GithubId="@context.Owner.Id"/>
-                </MudTd>
-                <MudTd>
-                    <MudFab @onclick="@(() => DeleteRoom(@context.Id))" Color="Color.Secondary"
-                            Disabled="@(UserService.CurrentUser != context.Owner.Id)"
-                            Icon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small"/>
-                </MudTd>
-
-            </RowTemplate>
-        </MudTable>
-    </MudCard>*/
 }
 
 @code {

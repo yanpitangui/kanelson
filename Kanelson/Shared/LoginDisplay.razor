@@ -9,7 +9,7 @@
             <Avatar GithubId="@context.User.FindFirstValue(ClaimTypes.NameIdentifier)"/>
             <span>@context.User.Identity?.Name</span>
                     <form method="post" action="signout">
-                        <MudButton ButtonType="ButtonType.Submit">Logout</MudButton>
+                        <MudButton ButtonType="ButtonType.Submit" Color="Color.Default" Style="color: white">Logout</MudButton>
                     </form>
         </MudStack>
 
@@ -19,7 +19,9 @@
             <input type="hidden" name="Provider" value="GitHub"/>
             <input type="hidden" name="RedirectUri" value="@NavigationManager.Uri"/>
             <MudFab ButtonType="ButtonType.Submit"
-                    StartIcon="@Icons.Custom.Brands.GitHub" Label="@Loc["LoginButton"]" />
+                    StartIcon="@Icons.Custom.Brands.GitHub" Label="@Loc["LoginButton"]"
+                     IconColor="Color.Default" Color="Color.Primary"
+                    />
         </form>
     </NotAuthorized>
 </AuthorizeView>

@@ -1,0 +1,10 @@
+.empty-rooms {
+  align-items: center; 
+  display: flex; 
+  flex-direction: column;
+}
+
+.empty-rooms__btn-sala {
+  background: #594ae2; 
+  color: white
+}

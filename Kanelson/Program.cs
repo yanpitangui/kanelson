@@ -1,4 +1,6 @@
 using Akka.Hosting;
+using Kanelson;
+using Kanelson.Endpoints;
 using System.Diagnostics;
 using System.Security.Claims;
 using Kanelson.Hubs;
@@ -33,7 +35,6 @@ builder.Logging.AddSerilog(logger);
 builder.Host.AddKeyVaultConfigurationSetup();
 
 builder.Services.AddHealthChecks();
-
 
 builder.Services.Configure<CookiePolicyOptions>(options =>
 {
@@ -71,6 +72,7 @@ builder.Services.AddAuthentication(o =>
 
 
 builder.Services.AddOptions();
+builder.Services.AddRazorComponents();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor().AddHubOptions(o =>
 {
@@ -104,9 +106,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseCookiePolicy();
-app.UseRouting();
-
-app.MapControllers();
+app.MapAuthentication();
+app.MapCulture();
 app.MapHub<RoomHub>("/roomHub");
 app.MapHub<RoomLobbyHub>("/roomLobbyHub");
 app.MapBlazorHub();
@@ -122,7 +123,5 @@ var localizationOptions = new RequestLocalizationOptions()
     .AddSupportedUICultures(supportedCultures);
 
 app.UseRequestLocalization(localizationOptions);
-
-app.Services.GetRequiredService<IActorRegistry>();
 
 await app.RunAsync();

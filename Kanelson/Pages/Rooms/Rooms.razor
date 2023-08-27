@@ -2,6 +2,7 @@
 @using Kanelson.Services
 @using System.Collections.Immutable
 @using Kanelson.Actors.Rooms
+@using Kanelson.Components.CardRoom
 @using Kanelson.Hubs
 @using Kanelson.Models
 @using Microsoft.AspNetCore.SignalR.Client
@@ -15,47 +16,29 @@
 
 @if (_rooms is null)
 {
-    <h2>@Loc["Loading"]...</h2>
+    <MudContainer class="empty-rooms">
+        <h2>@Loc["Ainda não existem salas abertas"]...</h2>
+        <MudButton class="empty-rooms__btn-sala">@Loc["Criar sala"]</MudButton>
+    </MudContainer>
 }
 else
 {
-    <MudCard>
-        <MudTable Elevation="25" Items="_rooms" T="BasicRoomInfo" >
-         <ToolBarContent>
-             <MudText Typo="Typo.h6">@Loc["Rooms"]</MudText>
-         </ToolBarContent>
-            <HeaderContent>
-                <MudTh>@Loc["Join"]</MudTh>
-                <MudTh>@Loc["Id"]</MudTh>
-                <MudTh>@Loc["Name"]</MudTh>
-                <MudTh>@Loc["Host"]</MudTh>
-                <MudTh>@Loc["Actions"]</MudTh>
-
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd>
-                   <MudFab @onclick="@(() => JoinRoom(context.Id))"
-                        Color="Color.Info" Icon="@Icons.Material.Filled.Outbound"
-                        Size="Size.Small" IconSize="Size.Small"/>
-                </MudTd>
-                <MudTd DataLabel="@Loc["Id"]">@context.Id</MudTd>
-                <MudTd DataLabel="@Loc["Name"]">@context.Name</MudTd>
-                <MudTd DataLabel="@Loc["Host"]">
-                    <Avatar GithubId="@context.OwnerId"/>
-                </MudTd>
-                <MudTd>
-                    <MudFab @onclick="@(() => DeleteRoom(@context.Id))" Color="Color.Secondary"
-                            Disabled="@(UserService.CurrentUser != context.OwnerId)"
-                            Icon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small"/>
-                </MudTd>
-
-            </RowTemplate>
-     </MudTable>
-    </MudCard>
-
+    <MudText Style="text-transform: uppercase" Typo="Typo.h4">@Loc["Rooms"]</MudText>
+    <div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap">
+        @foreach (var room in _rooms)
+        {
+            <CardRoomComponent
+                Id="@room.Id"
+                RoomName="@room.Name"
+                HostId="@room.OwnerId"
+                RoomOwner="@(UserService.CurrentUser == room.OwnerId)"
+                EnterRoomClick="@(() => JoinRoom(room.Id))"
+                DeleteRoomClick="@(() => DeleteRoom(room.Id))">
+            </CardRoomComponent>
+        }
+    </div>
 
 }
-
 
 @code {
 
@@ -64,7 +47,6 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        
         _hubConnection = HttpAccessor.GetConnection(Navigation, "roomLobbyHub");
 
 
@@ -73,10 +55,9 @@ else
             _rooms = rooms;
             InvokeAsync(StateHasChanged);
         });
-        
+
         _rooms = await Service.GetAll();
         await _hubConnection.StartAsync();
-
     }
 
     private void JoinRoom(string id)
@@ -90,7 +71,7 @@ else
         await InvokeAsync(StateHasChanged);
     }
 
-    
+
     public async ValueTask DisposeAsync()
     {
         if (_hubConnection is IAsyncDisposable disposable)

@@ -1,17 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <UserSecretsId>bea11c16-52b7-466d-8fbe-82cebdcaaa9d</UserSecretsId>
-        <LangVersion>11</LangVersion>    
+        <LangVersion>default</LangVersion>    
         <ServerGarbageCollection>true</ServerGarbageCollection>
         <TieredPGO>true</TieredPGO>
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Akka" />
       <PackageReference Include="Akka.Cluster.Hosting" />
       <PackageReference Include="Akka.Discovery.KubernetesApi" />
       <PackageReference Include="Akka.HealthCheck.Hosting" />
@@ -74,6 +75,18 @@
         <AutoGen>True</AutoGen>
         <DependentUpon>Shared.en-US.resx</DependentUpon>
       </Compile>
+    </ItemGroup>
+    
+    <ItemGroup>
+      <None Update="Pages\Components\CardRoom\CardRoomComponent.razor.css">
+        <DependentUpon>CardRoomComponent.razor</DependentUpon>
+      </None>
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Content Update="Pages\Rooms\Rooms.razor.css">
+        <DependentUpon>Rooms.razor</DependentUpon>
+      </Content>
     </ItemGroup>
 
 </Project>

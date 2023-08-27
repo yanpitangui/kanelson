@@ -74,6 +74,9 @@ public static class AkkaSetup
 
                 if (ctx.HostingEnvironment.IsDevelopment())
                 {
+                    logger.Information("TABLE: {Table}", ctx.Configuration.GetConnectionString("TableStorage"));
+                    logger.Information("BLOB: {Table}", ctx.Configuration.GetConnectionString("BlobStorage"));
+
                     akkaBuilder
                         .WithAzureTableJournal(ctx.Configuration.GetConnectionString("TableStorage")!)
                         .WithAzureBlobsSnapshotStore(ctx.Configuration.GetConnectionString("BlobStorage")!);

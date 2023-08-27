@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Pipeline", "Pipeline", "{0D
 		.github\dependabot.yml = .github\dependabot.yml
 		.github\workflows\kanelson-AutoDeployTrigger-21688402-bb4d-4ba5-aad6-3bd17e5efeb7.yml = .github\workflows\kanelson-AutoDeployTrigger-21688402-bb4d-4ba5-aad6-3bd17e5efeb7.yml
 		.github\workflows\build.yml = .github\workflows\build.yml
+		Dockerfile = Dockerfile
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFolder", "SolutionFolder", "{50FCAFC4-0891-4F2E-9AF3-B120BC8C6B18}"

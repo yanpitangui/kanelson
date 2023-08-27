@@ -485,3 +485,5 @@ tools/*
 
 ## Verify
 *.received.txt
+
+azurite/*

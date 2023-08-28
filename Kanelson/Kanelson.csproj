@@ -34,7 +34,6 @@
       <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
       <PackageReference Include="Microsoft.Azure.AppConfiguration.AspNetCore" />
       <PackageReference Include="MudBlazor" />
-      <PackageReference Include="Npgsql" />
       <PackageReference Include="OneOf" />
       <PackageReference Include="Serilog" />
       <PackageReference Include="Serilog.AspNetCore" />

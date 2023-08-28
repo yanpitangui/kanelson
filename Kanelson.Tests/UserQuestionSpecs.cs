@@ -17,7 +17,7 @@ public class UserQuestionSpecs : PersistenceTestKit
 
     public UserQuestionSpecs()
     {
-        _testActor = new TestActorRef<UserQuestions>(Sys, UserQuestions.Props(UserId), name: UserId);
+        _testActor = new TestActorRef<UserQuestions>(Sys, UserQuestions.Props(UserId));
 
     }
 
@@ -158,7 +158,7 @@ public class UserQuestionSpecs : PersistenceTestKit
         // act
         await _testActor.GracefulStop(TimeSpan.FromSeconds(3));
         
-        var recoveringActor =  new TestActorRef<UserQuestions>(Sys, UserQuestions.Props(UserId), name: UserId);
+        var recoveringActor =  new TestActorRef<UserQuestions>(Sys, UserQuestions.Props(UserId));
         var questionsAfterRecovery = await GetSummary(recoveringActor);
 
         questionsSnapshot.Should().BeEquivalentTo(questionsAfterRecovery);

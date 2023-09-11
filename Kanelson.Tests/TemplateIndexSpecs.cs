@@ -35,10 +35,10 @@ public class TemplateIndexSpecs : PersistenceTestKit
     {
         // arrange
         var id = Guid.NewGuid();
-        var actor1 = await _testActor.Ask<IActorRef>(new GetRef(id));
+        var actor1 = await _testActor.Ask<IActorRef>(new GetRef(UserId, id));
         
         // act
-        var actor2 = await _testActor.Ask<IActorRef>(new GetRef(id));
+        var actor2 = await _testActor.Ask<IActorRef>(new GetRef(UserId, id));
 
         actor1.IsNobody().Should().BeFalse();
         actor2.IsNobody().Should().BeFalse();
@@ -51,7 +51,7 @@ public class TemplateIndexSpecs : PersistenceTestKit
     {
         // arrange
         var id = Guid.NewGuid();
-        var actor1 = await _testActor.Ask<IActorRef>(new GetRef(id));
+        var actor1 = await _testActor.Ask<IActorRef>(new GetRef(UserId, id));
         actor1.Tell(new Upsert(new Models.Template
         {
             Id = id,
@@ -69,7 +69,7 @@ public class TemplateIndexSpecs : PersistenceTestKit
     {
         // arrange
         var id = Guid.NewGuid();
-        var actor1 = await _testActor.Ask<IActorRef>(new GetRef(id));
+        var actor1 = await _testActor.Ask<IActorRef>(new GetRef(UserId, id));
         actor1.Tell(new Upsert(new Models.Template
         {
             Id = id,
@@ -77,7 +77,7 @@ public class TemplateIndexSpecs : PersistenceTestKit
         }));
         
         // act
-        _testActor.Tell(new Unregister(id));
+        _testActor.Tell(new Unregister(UserId, id));
         var summaries = await GetSummaries();
         summaries.Select(x => x.Id).Should().NotContain(id);
 
@@ -90,19 +90,19 @@ public class TemplateIndexSpecs : PersistenceTestKit
         var ids = Enumerable.Range(1, 5).Select(x => Guid.NewGuid()).ToArray();
         foreach (var id in ids)
         {
-            var actor = await _testActor.Ask<IActorRef>(new GetRef(id));
+            var actor = await _testActor.Ask<IActorRef>(new GetRef(UserId, id));
             actor.Tell(new Upsert(new Models.Template
             {
                 Id = id,
                 Name = $"Template {id}",
             }));
         }
-        _testActor.Tell(new Unregister(ids.First()));
+        _testActor.Tell(new Unregister(UserId, ids.First()));
         var summary = await GetSummaries();
         // act
         await _testActor.GracefulStop(TimeSpan.FromSeconds(3));
         var recoveringActor = new TestActorRef<TemplateIndex>(Sys, TemplateIndex.Props(UserId));
-        var recoveredSummary = await recoveringActor.Ask<ImmutableArray<TemplateSummary>>(GetAllSummaries.Instance);
+        var recoveredSummary = await recoveringActor.Ask<ImmutableArray<TemplateSummary>>(new GetAllSummaries(UserId));
         
         // assert
         recoveredSummary.Should().BeEquivalentTo(summary);
@@ -112,7 +112,7 @@ public class TemplateIndexSpecs : PersistenceTestKit
     
     private async Task<ImmutableArray<TemplateSummary>> GetSummaries()
     {
-        var summaries = await _testActor.Ask<ImmutableArray<TemplateSummary>>(GetAllSummaries.Instance);
+        var summaries = await _testActor.Ask<ImmutableArray<TemplateSummary>>(new GetAllSummaries(UserId));
         return summaries;
     }
 

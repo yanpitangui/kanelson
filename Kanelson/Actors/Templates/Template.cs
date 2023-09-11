@@ -79,4 +79,4 @@ public record GetTemplate
     public static GetTemplate Instance { get; } = new();
 }
 
-public record Upsert(Models.Template Template);
+public sealed record Upsert(Models.Template Template);

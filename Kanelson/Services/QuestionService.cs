@@ -32,18 +32,18 @@ public class QuestionService : IQuestionService
 
     public ValidationResult SaveQuestion(Question question)
     {
-        _userQuestions.Tell(MessageEnvelope(new UpsertQuestion(question)));
+        _userQuestions.Tell(new UpsertQuestion(_userService.CurrentUser, question));
         return new ValidationResult();
     }
 
     public void RemoveQuestion(Guid id)
     {
-        _userQuestions.Tell(MessageEnvelope(new RemoveQuestion(id)));
+        _userQuestions.Tell(new RemoveQuestion(_userService.CurrentUser, id));
     }
 
     public async Task<Question> GetQuestion(Guid id)
     {
-        var result = await _userQuestions.Ask<Option<Question>>(MessageEnvelope(new GetQuestion(id)));
+        var result = await _userQuestions.Ask<Option<Question>>(new GetQuestion(_userService.CurrentUser, id));
         if (result.HasValue)
         {
             return result.Value;
@@ -53,12 +53,12 @@ public class QuestionService : IQuestionService
 
     public Task<ImmutableArray<QuestionSummary>> GetQuestionsSummary()
     {
-        return _userQuestions.Ask<ImmutableArray<QuestionSummary>>(MessageEnvelope(Actors.Questions.GetQuestionsSummary.Instance));
+        return _userQuestions.Ask<ImmutableArray<QuestionSummary>>(new Actors.Questions.GetQuestionsSummary(_userService.CurrentUser));
     }
 
     public async Task<ImmutableArray<Question>> GetQuestions(HashSet<Guid> ids)
     {
-        return await _userQuestions.Ask<ImmutableArray<Question>>(MessageEnvelope(new GetQuestions(ids.ToArray())));
+        return await _userQuestions.Ask<ImmutableArray<Question>>(new GetQuestions(_userService.CurrentUser, ids.ToArray()));
     }
 
     public async Task<ValidationResult> UploadQuestions(IBrowserFile file)
@@ -74,14 +74,9 @@ public class QuestionService : IQuestionService
         
         foreach (var question in questionList!) // Validação garante que não está nulo 
         {
-            _userQuestions.Tell(MessageEnvelope(new UpsertQuestion(question)));
+            _userQuestions.Tell(new UpsertQuestion(_userService.CurrentUser, question));
         }
 
         return new ValidationResult();
-    }
-    
-    private ShardingEnvelope MessageEnvelope<T>(T message) where T: class
-    {
-        return new ShardingEnvelope(_userService.CurrentUser, message);
     }
 }

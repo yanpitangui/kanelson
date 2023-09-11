@@ -90,7 +90,7 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
              {
                  Timers.Cancel(AnswerloopTimerName);
 
-                 _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifier, RoomHub.SignalRMessages.RoundFinished, Data: true));
+                 _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifier, RoomHub.SignalRMessages.RoundFinished, Data: currentQuestion));
 
                  FillAnswersFromUsersThatHaveNotAnswered();
                  
@@ -427,66 +427,27 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
 
 
 }
+public sealed record SetBase(string RoomId, string RoomName, string OwnerId, Template Template) : IWithRoomId;
 
-public record SetBase(string RoomName, string OwnerId, Template Template);
+public sealed record GetCurrentState(string RoomId) : IWithRoomId;
 
-public record GetCurrentState
-{
-    private GetCurrentState()
-    {
-    }
 
-    public static GetCurrentState Instance { get; } = new();
-}
+public sealed record GetSummary(string RoomId) : IWithRoomId;
 
-public record GetSummary
-{
-    private GetSummary()
-    {
-    }
 
-    public static GetSummary Instance { get; } = new();
-}
+public sealed record UpdateCurrentUsers(string RoomId, HashSet<UserInfo> Users) : IWithRoomId;
 
-public record UpdateCurrentUsers(HashSet<UserInfo> Users);
+public sealed record GetCurrentQuestion(string RoomId) : IWithRoomId;
 
-public record GetCurrentQuestion
-{
-    private GetCurrentQuestion()
-    {
-    }
 
-    public static GetCurrentQuestion Instance { get; } = new();
-}
+public sealed record Start(string RoomId) : IWithRoomId;
 
-public record Start
-{
-    private Start()
-    {
-    }
 
-    public static Start Instance { get; } = new();
-}
+public sealed record NextQuestion(string RoomId) : IWithRoomId;
 
-public record NextQuestion
-{
-    private NextQuestion()
-    {
-    }
+public sealed record GetOwner(string RoomId) : IWithRoomId;
 
-    public static NextQuestion Instance { get; } = new();
-}
-
-public record GetOwner
-{
-    private GetOwner()
-    {
-    }
-
-    public static GetOwner Instance { get; } = new();
-}
-
-public record SendUserAnswer(string UserId, Guid[] AlternativeIds);
+public sealed record SendUserAnswer(string RoomId, string UserId, Guid[] AlternativeIds) : IWithRoomId;
 
 public enum RejectionReason
 {

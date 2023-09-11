@@ -72,12 +72,12 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
             user.Connections.Add(o.ConnectionId);
 
             
-            roomShard.Tell(MessageEnvelope(o.RoomId, o));
+            roomShard.Tell(o);
             
             if (!userAdded) return;
 
             var users = roomConnections.Values.Cast<UserInfo>().ToHashSet();
-            roomShard.Tell(MessageEnvelope(o.RoomId, new UpdateCurrentUsers(users)));
+            roomShard.Tell(new UpdateCurrentUsers(o.RoomId, users));
         });
 
         Command<UserDisconnected>(o =>
@@ -102,7 +102,7 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
                 
                 if (!userDisconnected) continue;
                 var users = room.Room.Value.Values.Cast<UserInfo>().ToHashSet();
-                roomShard.Tell(MessageEnvelope(room.Room.Key, new UpdateCurrentUsers(users)));
+                roomShard.Tell( new UpdateCurrentUsers(room.Room.Key, users));
                 
             }
         });
@@ -141,15 +141,10 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
 
     private void HandleRegister(Register r)
     {
-        _roomShard.Tell(MessageEnvelope(r.RoomId, r.RoomBase));
-        _state.Items.Add(r.RoomId, new BasicRoomInfo(r.RoomId, r.RoomBase.RoomName, r.RoomBase.OwnerId));
+        _roomShard.Tell(r.RoomBase);
+        _state.Items.Add(r.RoomBase.RoomId, new BasicRoomInfo(r.RoomBase.RoomId, r.RoomBase.RoomName, r.RoomBase.OwnerId));
         GenerateChangedSignalRMessage().PipeTo(_signalrActor);
         SaveSnapshotIfPassedInterval(_state);
-    }
-
-    private static ShardingEnvelope MessageEnvelope<T>(string id, T message) where T: class
-    {
-        return new ShardingEnvelope(id, message);
     }
 
 
@@ -162,7 +157,7 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
 }
 
 
-public record UserConnected(string RoomId, string UserId, string ConnectionId);
+public record UserConnected(string RoomId, string UserId, string ConnectionId) : IWithRoomId;
 
 public record UserDisconnected(string UserId, string ConnectionId);
 
@@ -175,7 +170,7 @@ public record GetRoomsBasicInfo
     public static GetRoomsBasicInfo Instance { get; } = new();
 }
 
-public record Register(string RoomId, SetBase RoomBase);
+public record Register(SetBase RoomBase);
 
 public record Exists(string RoomId);
 

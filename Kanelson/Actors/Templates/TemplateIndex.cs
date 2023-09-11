@@ -132,17 +132,10 @@ public class TemplateIndex : BaseWithSnapshotFrequencyActor
 }
 
 
-public record GetAllSummaries
-{
-    private GetAllSummaries()
-    {
-    }
+public record GetAllSummaries(string UserId) : IWithUserId;
 
-    public static GetAllSummaries Instance { get; } = new();
-}
+public record Exists(string UserId, Guid Id) : IWithUserId;
 
-public record Exists(Guid Id);
+public record GetRef(string UserId, Guid Id) : IWithUserId;
 
-public record GetRef(Guid Id);
-
-public record Unregister(Guid Id);
+public record Unregister(string UserId, Guid Id) : IWithUserId;

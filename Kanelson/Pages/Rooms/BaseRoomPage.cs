@@ -57,8 +57,9 @@ public class BaseRoomPage : MudComponentBase
         });
         
         
-        HubConnection.On<bool>(RoomHub.SignalRMessages.RoundFinished, (_) =>
+        HubConnection.On<TemplateQuestion>(RoomHub.SignalRMessages.RoundFinished, (questionWithCorrectAnswers) =>
         {
+            // TODO: Mostrar qual era a opção correta de alguma maneira
             TimerConfiguration.Stop();
             CurrentQuestion = null;
             InvokeAsync(StateHasChanged);

@@ -90,19 +90,12 @@ public class UserQuestions : BaseWithSnapshotFrequencyActor
 }
 
 
-public record UpsertQuestion(Question Question);
+public sealed record UpsertQuestion(string UserId, Question Question) : IWithUserId;
 
-public record RemoveQuestion(Guid Id);
+public sealed record RemoveQuestion(string UserId, Guid Id): IWithUserId;
 
-public record GetQuestions(params Guid[] Ids);
+public sealed record GetQuestions(string UserId, params Guid[] Ids): IWithUserId;
 
-public record GetQuestion(Guid Id);
+public sealed record GetQuestion(string UserId, Guid Id) : IWithUserId;
 
-public record GetQuestionsSummary
-{
-    private GetQuestionsSummary()
-    {
-    }
-
-    public static GetQuestionsSummary Instance { get; } = new();
-}
+public sealed record GetQuestionsSummary(string UserId) : IWithUserId;

@@ -34,7 +34,7 @@ public class RoomService : IRoomService
         var index = await _actorRegistry.GetAsync<RoomIndex>(ct);
         var template = await _templateService.GetTemplate(templateId);
 
-        index.Tell(new Register(roomId, new SetBase(roomName, _userService.CurrentUser, template)));
+        index.Tell(new Register(new SetBase(roomId, roomName, _userService.CurrentUser, template)));
 
         return roomId;
     }
@@ -43,7 +43,7 @@ public class RoomService : IRoomService
     {
         var index = await _actorRegistry.GetAsync<RoomIndex>(ct);
         var roomShardingRef = await GetRoomShardingRef(roomId, index, ct);
-        return await roomShardingRef.Ask<RoomStatus>(MessageEnvelope(roomId, Actors.Rooms.GetCurrentState.Instance), ct);
+        return await roomShardingRef.Ask<RoomStatus>(new GetCurrentState(roomId), ct);
     }
 
     public void UserDisconnected(string userId, string connectionId)
@@ -74,7 +74,7 @@ public class RoomService : IRoomService
         var roomShardingRef = await GetRoomShardingRef(roomId, index, ct);
 
 
-        return await roomShardingRef.Ask<RoomSummary>(MessageEnvelope(roomId, GetSummary.Instance), ct);
+        return await roomShardingRef.Ask<RoomSummary>(new GetSummary(roomId), ct);
     }
     
     public async Task<CurrentQuestionInfo> GetCurrentQuestion(string roomId, CancellationToken ct = default)
@@ -83,7 +83,7 @@ public class RoomService : IRoomService
         var roomShardingRef = await GetRoomShardingRef(roomId, index, ct);
 
 
-        return await roomShardingRef.Ask<CurrentQuestionInfo>(MessageEnvelope(roomId, Actors.Rooms.GetCurrentQuestion.Instance), ct);
+        return await roomShardingRef.Ask<CurrentQuestionInfo>(new GetCurrentQuestion(roomId), ct);
     }
 
     public async Task NextQuestion(string roomId, CancellationToken ct = default)
@@ -92,7 +92,7 @@ public class RoomService : IRoomService
         var roomShardingRef = await GetRoomShardingRef(roomId, index, ct);
 
 
-        roomShardingRef.Tell(MessageEnvelope(roomId, Actors.Rooms.NextQuestion.Instance));
+        roomShardingRef.Tell(new NextQuestion(roomId));
     }
 
     public async Task Start(string roomId, CancellationToken ct = default)
@@ -101,7 +101,7 @@ public class RoomService : IRoomService
         var roomShardingRef = await GetRoomShardingRef(roomId, index, ct);
 
 
-        roomShardingRef.Tell(MessageEnvelope(roomId, Actors.Rooms.Start.Instance));
+        roomShardingRef.Tell(new Start(roomId));
     }
     
 
@@ -111,7 +111,7 @@ public class RoomService : IRoomService
         var roomShardingRef = await GetRoomShardingRef(roomId, index, ct);
 
 
-        var owner = await roomShardingRef.Ask<string>(MessageEnvelope(roomId, GetOwner.Instance), ct);
+        var owner = await roomShardingRef.Ask<string>(new GetOwner(roomId), ct);
         if (!string.Equals(owner, _userService.CurrentUser, StringComparison.OrdinalIgnoreCase))
         {
             throw new ApplicationException("You are not the room's owner");
@@ -124,7 +124,7 @@ public class RoomService : IRoomService
         var index = await _actorRegistry.GetAsync<RoomIndex>(ct);
         var roomShardingRef = await GetRoomShardingRef(roomId, index, ct);
 
-        roomShardingRef.Tell(MessageEnvelope(roomId, new SendUserAnswer(_userService.CurrentUser, new []{ alternativeId })));
+        roomShardingRef.Tell(new SendUserAnswer(roomId, _userService.CurrentUser, new []{ alternativeId }));
     }
 
     private async Task<IActorRef> GetRoomShardingRef(string roomId, IActorRef index, CancellationToken ct = default)
@@ -133,10 +133,5 @@ public class RoomService : IRoomService
 
         if (!exists) throw new ActorNotFoundException();
         return await _actorRegistry.GetAsync<Room>(ct);
-    }
-    
-    private static ShardingEnvelope MessageEnvelope<T>(string roomId, T message) where T: class
-    {
-        return new ShardingEnvelope(roomId, message);
     }
 }

@@ -25,8 +25,6 @@ public static class AkkaSetup
         hostBuilder.ConfigureServices((ctx, services) =>
         {
             
-            var extractor = new MessageExtractor(1000);
-
             var defaultShardOptions = new ShardOptions()
             {
                 Role = actorSystemName,
@@ -36,6 +34,7 @@ public static class AkkaSetup
 
             services.AddAkka(actorSystemName, (akkaBuilder) =>
             {
+                var userMessageExtractor = new UserMessageExtractor(50);
                 akkaBuilder
                     .ConfigureLoggers(setup =>
                     {
@@ -45,23 +44,23 @@ public static class AkkaSetup
                     .BootstrapNetwork(ctx.Configuration, actorSystemName, logger)
                     .WithShardRegion<User>(nameof(User),
                         User.Props,
-                        extractor,
+                        userMessageExtractor,
                         defaultShardOptions
                     )
                     .WithShardRegion<UserQuestions>(nameof(UserQuestions),
                         UserQuestions.Props,
-                        extractor,
+                        userMessageExtractor,
                         defaultShardOptions)
                     .WithShardRegion<TemplateIndex>(nameof(TemplateIndex),
                         TemplateIndex.Props,
-                        extractor,
+                        userMessageExtractor,
                         defaultShardOptions)
                     .WithShardRegion<Room>(nameof(Room),
                         (_, _, sp) =>
                             (identifier) => 
                                 Room.Props(identifier, sp.GetService<IHubContext<RoomHub>>(),
                                     sp.GetService<IUserService>()),
-                        extractor,
+                        new RoomMessageExtractor(50),
                         defaultShardOptions)
                     .WithSingleton<RoomIndex>("room-index", (_,ar,sp) =>
                         RoomIndex.Props("room-index",

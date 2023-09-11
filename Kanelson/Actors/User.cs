@@ -1,5 +1,6 @@
 using Akka.Actor;
 using Akka.Persistence;
+using Kanelson.Actors.Questions;
 using Kanelson.Models;
 
 namespace Kanelson.Actors;
@@ -51,13 +52,6 @@ public sealed class User : BaseWithSnapshotFrequencyActor
     }
 }
 
-public record UpsertUser(string Name);
+public sealed record UpsertUser(string UserId, string Name) : IWithUserId;
 
-public record GetUserInfo
-{
-    private GetUserInfo()
-    {
-    }
-
-    public static GetUserInfo Instance { get; } = new();
-}
+public sealed record GetUserInfo(string UserId) : IWithUserId;

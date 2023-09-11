@@ -24,17 +24,13 @@ public class UserService : IUserService
     public void Upsert(string id, string name)
     {
         var actor = _actorRegistry.Get<User>();
-        actor.Tell(MessageEnvelope(id, new UpsertUser(name)));
+        actor.Tell(new UpsertUser(id, name));
     }
     
     public async Task<UserInfo> GetUserInfo(string id, CancellationToken ct = default)
     {
         var actor = await _actorRegistry.GetAsync<User>(ct);
-        return await actor.Ask<UserInfo>(MessageEnvelope(id, Actors.GetUserInfo.Instance), ct);
+        return await actor.Ask<UserInfo>(new GetUserInfo(id), ct);
     }
-
-    private static ShardingEnvelope MessageEnvelope<T>(string id, T message) where T: class
-    {
-        return new ShardingEnvelope(id, message);
-    }
+    
 }

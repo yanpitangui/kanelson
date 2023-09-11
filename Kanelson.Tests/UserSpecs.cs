@@ -22,10 +22,10 @@ public class UserSpecs : PersistenceTestKit
     public async Task Upserting_user_should_set_name()
     {
         // act
-        _testActor.Tell(new UpsertUser("test user yay"));
+        _testActor.Tell(new UpsertUser(UserId, "test user yay"));
         
         // assert
-        var result = await _testActor.Ask<UserInfo>(Actors.GetUserInfo.Instance);
+        var result = await _testActor.Ask<UserInfo>(new Actors.GetUserInfo(UserId));
         result.Should().BeEquivalentTo(new UserInfo(UserId) { Name = "test user yay"});
     }
     
@@ -35,15 +35,15 @@ public class UserSpecs : PersistenceTestKit
         // arrange
         for (int i = 0; i < 20; i++)
         {
-            _testActor.Tell(new UpsertUser($"test user {i}"));
+            _testActor.Tell(new UpsertUser(UserId, $"test user {i}"));
         }
         
         // act
-        _testActor.Tell(new UpsertUser("test user"));
+        _testActor.Tell(new UpsertUser(UserId, "test user"));
 
         
         // assert
-        var result = await _testActor.Ask<UserInfo>(Actors.GetUserInfo.Instance);
+        var result = await _testActor.Ask<UserInfo>(new Actors.GetUserInfo(UserId));
         result.Should().BeEquivalentTo(new UserInfo(UserId) { Name = "test user"});
     }
     
@@ -54,7 +54,7 @@ public class UserSpecs : PersistenceTestKit
         // arrange
         for (int i = 0; i < 20; i++)
         {
-            _testActor.Tell(new UpsertUser($"test user {i}"));
+            _testActor.Tell(new UpsertUser(UserId, $"test user {i}"));
         }
 
         var userSnapshot = await GetUserInfo();
@@ -72,7 +72,7 @@ public class UserSpecs : PersistenceTestKit
 
     private async Task<UserInfo> GetUserInfo(IActorRef? actorRef = null)
     {
-        if(actorRef is not null) return await actorRef.Ask<UserInfo>(Actors.GetUserInfo.Instance);
-        return await _testActor.Ask<UserInfo>(Actors.GetUserInfo.Instance);
+        if(actorRef is not null) return await actorRef.Ask<UserInfo>(new Actors.GetUserInfo(UserId));
+        return await _testActor.Ask<UserInfo>(new Actors.GetUserInfo(UserId));
     }
 }

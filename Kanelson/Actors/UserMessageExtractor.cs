@@ -14,7 +14,7 @@ public class UserMessageExtractor : HashCodeMessageExtractor
         return message switch
         {
 
-            IWithRoomId e => e.RoomId,
+            IWithUserId e => e.UserId,
             _ => null
         };
     }

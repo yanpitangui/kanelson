@@ -29,7 +29,7 @@ Task("Test")
     };
 	
 	Coverlet(
-        "./Kanelson.Tests/bin/Debug/net7.0/Kanelson.Tests.dll", 
+        "./Kanelson.Tests/bin/Debug/net8.0/Kanelson.Tests.dll", 
         "./Kanelson.Tests/Kanelson.Tests.csproj", 
         coverletSettings);
 	

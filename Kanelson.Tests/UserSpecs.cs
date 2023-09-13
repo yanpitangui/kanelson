@@ -14,7 +14,7 @@ public class UserSpecs : PersistenceTestKit
     
     public UserSpecs()
     {
-        _testActor = new TestActorRef<User>(Sys, User.Props(UserId), name: UserId);
+        _testActor = new TestActorRef<User>(Sys, User.Props(UserId));
     }
 
 
@@ -62,7 +62,7 @@ public class UserSpecs : PersistenceTestKit
         // act
         await _testActor.GracefulStop(TimeSpan.FromSeconds(3));
         
-        var recoveringActor = new TestActorRef<User>(Sys, User.Props(UserId), name: UserId);
+        var recoveringActor = new TestActorRef<User>(Sys, User.Props(UserId));
         var userInfoAfterRecovery = await GetUserInfo(recoveringActor);
 
         // assert

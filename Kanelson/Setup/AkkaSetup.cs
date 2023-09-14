@@ -8,6 +8,7 @@ using Kanelson.Actors;
 using Kanelson.Actors.Questions;
 using Kanelson.Actors.Rooms;
 using Kanelson.Actors.Templates;
+using Kanelson.Actors.Users;
 using Kanelson.Hubs;
 using Kanelson.Services;
 using Microsoft.AspNetCore.SignalR;

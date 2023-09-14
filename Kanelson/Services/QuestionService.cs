@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using Akka.Actor;
-using Akka.Cluster.Sharding;
 using Akka.Hosting;
 using Akka.Util;
 using FluentValidation;
@@ -32,18 +31,18 @@ public class QuestionService : IQuestionService
 
     public ValidationResult SaveQuestion(Question question)
     {
-        _userQuestions.Tell(new UpsertQuestion(_userService.CurrentUser, question));
+        _userQuestions.Tell(new QuestionCommands.UpsertQuestion(_userService.CurrentUser, question));
         return new ValidationResult();
     }
 
     public void RemoveQuestion(Guid id)
     {
-        _userQuestions.Tell(new RemoveQuestion(_userService.CurrentUser, id));
+        _userQuestions.Tell(new QuestionCommands.RemoveQuestion(_userService.CurrentUser, id));
     }
 
     public async Task<Question> GetQuestion(Guid id)
     {
-        var result = await _userQuestions.Ask<Option<Question>>(new GetQuestion(_userService.CurrentUser, id));
+        var result = await _userQuestions.Ask<Option<Question>>(new QuestionQueries.GetQuestion(_userService.CurrentUser, id));
         if (result.HasValue)
         {
             return result.Value;
@@ -53,12 +52,12 @@ public class QuestionService : IQuestionService
 
     public Task<ImmutableArray<QuestionSummary>> GetQuestionsSummary()
     {
-        return _userQuestions.Ask<ImmutableArray<QuestionSummary>>(new Actors.Questions.GetQuestionsSummary(_userService.CurrentUser));
+        return _userQuestions.Ask<ImmutableArray<QuestionSummary>>(new QuestionQueries.GetQuestionsSummary(_userService.CurrentUser));
     }
 
     public async Task<ImmutableArray<Question>> GetQuestions(HashSet<Guid> ids)
     {
-        return await _userQuestions.Ask<ImmutableArray<Question>>(new GetQuestions(_userService.CurrentUser, ids.ToArray()));
+        return await _userQuestions.Ask<ImmutableArray<Question>>(new QuestionQueries.GetQuestions(_userService.CurrentUser, ids.ToArray()));
     }
 
     public async Task<ValidationResult> UploadQuestions(IBrowserFile file)
@@ -74,7 +73,7 @@ public class QuestionService : IQuestionService
         
         foreach (var question in questionList!) // Validação garante que não está nulo 
         {
-            _userQuestions.Tell(new UpsertQuestion(_userService.CurrentUser, question));
+            _userQuestions.Tell(new QuestionCommands.UpsertQuestion(_userService.CurrentUser, question));
         }
 
         return new ValidationResult();

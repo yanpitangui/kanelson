@@ -26,7 +26,7 @@ public class UserQuestionSpecs : PersistenceTestKit
     {
         // arrange
         var question = new Question {Name = "new question", Points = 1000,};
-        _testActor.Tell(new UpsertQuestion(UserId, question));
+        _testActor.Tell(new QuestionCommands.UpsertQuestion(UserId, question));
 
         // act
         var questionSummary = await GetSummary();
@@ -50,10 +50,10 @@ public class UserQuestionSpecs : PersistenceTestKit
                 new() {Correct = true, Description = "False"}, new() {Correct = false, Description = "True"}
             }
         };
-        _testActor.Tell(new UpsertQuestion(UserId, question));
+        _testActor.Tell(new QuestionCommands.UpsertQuestion(UserId, question));
 
         // act
-        var result = await _testActor.Ask<Option<Question>>(new GetQuestion(UserId, question.Id));
+        var result = await _testActor.Ask<Option<Question>>(new QuestionQueries.GetQuestion(UserId, question.Id));
 
         // assert
         await Verify(result.Value);
@@ -63,7 +63,7 @@ public class UserQuestionSpecs : PersistenceTestKit
     public async Task Getting_non_existing_questionId_should_return_invalid_option()
     {
         // act
-        var result = await _testActor.Ask<Option<Question>>(new GetQuestion(UserId, Guid.NewGuid()));
+        var result = await _testActor.Ask<Option<Question>>(new QuestionQueries.GetQuestion(UserId, Guid.NewGuid()));
 
         // assert
         result.HasValue.Should().BeFalse();
@@ -75,12 +75,12 @@ public class UserQuestionSpecs : PersistenceTestKit
         // arrange
         for (var i = 0; i < 10; i++)
         {
-            _testActor.Tell(new UpsertQuestion(UserId, new Question {Name = $"question {i}"}));
+            _testActor.Tell(new QuestionCommands.UpsertQuestion(UserId, new Question {Name = $"question {i}"}));
         }
 
         // act
         var result = await _testActor.Ask<ImmutableArray<Question>>
-        (new GetQuestions(UserId, Guid.NewGuid(), Guid.NewGuid(),
+        (new QuestionQueries.GetQuestions(UserId, Guid.NewGuid(), Guid.NewGuid(),
             Guid.NewGuid()));
 
         // assert
@@ -96,13 +96,13 @@ public class UserQuestionSpecs : PersistenceTestKit
         for (var i = 0; i < 10; i++)
         {
             var question = new Question() {Name = $"question {i}"};
-            _testActor.Tell(new UpsertQuestion(UserId, question));
+            _testActor.Tell(new QuestionCommands.UpsertQuestion(UserId, question));
             ids.Add(question.Id);
         }
 
         // act
         var result = await _testActor.Ask<ImmutableArray<Question>>
-            (new GetQuestions(UserId, ids.Take(3).ToArray()));
+            (new QuestionQueries.GetQuestions(UserId, ids.Take(3).ToArray()));
 
         // assert
         await Verify(result);
@@ -116,21 +116,21 @@ public class UserQuestionSpecs : PersistenceTestKit
         for (var i = 0; i < 10; i++)
         {
             var question = new Question() {Name = $"question {i}"};
-            _testActor.Tell(new UpsertQuestion(UserId, question));
+            _testActor.Tell(new QuestionCommands.UpsertQuestion(UserId, question));
             ids.Add(question.Id);
         }
 
         // act
-        _testActor.Tell(new RemoveQuestion(UserId, ids.First()));
+        _testActor.Tell(new QuestionCommands.RemoveQuestion(UserId, ids.First()));
 
         // assert
         var summary = await GetSummary();
         summary.Should().NotContain(x => x.Id == ids.First());
 
-        var questions = await _testActor.Ask<ImmutableArray<Question>>(new GetQuestions(UserId, ids.First()));
+        var questions = await _testActor.Ask<ImmutableArray<Question>>(new QuestionQueries.GetQuestions(UserId, ids.First()));
         questions.Should().BeEmpty();
 
-        var questionResult = await _testActor.Ask<Option<Question>>(new GetQuestion(UserId,ids.First()));
+        var questionResult = await _testActor.Ask<Option<Question>>(new QuestionQueries.GetQuestion(UserId,ids.First()));
         questionResult.HasValue.Should().BeFalse();
 
     }
@@ -144,13 +144,13 @@ public class UserQuestionSpecs : PersistenceTestKit
         for (var i = 0; i < 10; i++)
         {
             var question = new Question() {Name = $"question {i}"};
-            _testActor.Tell(new UpsertQuestion(UserId, question));
+            _testActor.Tell(new QuestionCommands.UpsertQuestion(UserId, question));
             ids.Add(question.Id);
         }
 
         for (var i = 0; i < 3; i++)
         {
-            _testActor.Tell(new RemoveQuestion(UserId, ids[i]));
+            _testActor.Tell(new QuestionCommands.RemoveQuestion(UserId, ids[i]));
         }
 
         var questionsSnapshot = await GetSummary();
@@ -167,8 +167,8 @@ public class UserQuestionSpecs : PersistenceTestKit
     
     private async Task<ImmutableArray<QuestionSummary>> GetSummary(IActorRef? actorRef = null)
     {
-        if(actorRef is not null) return await actorRef.Ask<ImmutableArray<QuestionSummary>>(new GetQuestionsSummary(UserId));
-        return await _testActor.Ask<ImmutableArray<QuestionSummary>>(new GetQuestionsSummary(UserId));
+        if(actorRef is not null) return await actorRef.Ask<ImmutableArray<QuestionSummary>>(new QuestionQueries.GetQuestionsSummary(UserId));
+        return await _testActor.Ask<ImmutableArray<QuestionSummary>>(new QuestionQueries.GetQuestionsSummary(UserId));
     }
 
 }

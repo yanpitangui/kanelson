@@ -1,9 +1,8 @@
 using Akka.Actor;
 using Akka.Persistence;
-using Kanelson.Actors.Questions;
 using Kanelson.Models;
 
-namespace Kanelson.Actors;
+namespace Kanelson.Actors.Users;
 
 
 
@@ -16,13 +15,13 @@ public sealed class User : BaseWithSnapshotFrequencyActor
         PersistenceId = userId;
         _state = new UserInfo(userId);
         
-        Recover<UpsertUser>(HandleUpsert);
+        Recover<UserCommands.UpsertUser>(HandleUpsert);
         
-        Command<UpsertUser>(o =>
+        Command<UserCommands.UpsertUser>(o =>
         {
             Persist(o, HandleUpsert);
         });
-        Command<GetUserInfo>(_ =>
+        Command<UserQueries.GetUserInfo>(_ =>
         {
             Sender.Tell(_state);
         });
@@ -38,7 +37,7 @@ public sealed class User : BaseWithSnapshotFrequencyActor
         Command<SaveSnapshotSuccess>(_ => { });
     }
 
-    private void HandleUpsert(UpsertUser user)
+    private void HandleUpsert(UserCommands.UpsertUser user)
     {
         _state.Name = user.Name;
         SaveSnapshotIfPassedInterval(_state);
@@ -52,6 +51,4 @@ public sealed class User : BaseWithSnapshotFrequencyActor
     }
 }
 
-public sealed record UpsertUser(string UserId, string Name) : IWithUserId;
 
-public sealed record GetUserInfo(string UserId) : IWithUserId;

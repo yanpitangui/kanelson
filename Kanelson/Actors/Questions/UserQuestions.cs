@@ -20,20 +20,20 @@ public class UserQuestions : BaseWithSnapshotFrequencyActor
         
         Recover<Question>(PersistAdd);
         
-        Recover<RemoveQuestion>(PersistRemove);
+        Recover<QuestionCommands.RemoveQuestion>(PersistRemove);
         
-        Command<UpsertQuestion>(o =>
+        Command<QuestionCommands.UpsertQuestion>(o =>
         {
             Persist(o.Question, PersistAdd);
         });
 
 
-        Command<RemoveQuestion>(o =>
+        Command<QuestionCommands.RemoveQuestion>(o =>
         {
             Persist(o, PersistRemove);
         });
 
-        Command<GetQuestionsSummary>(o =>
+        Command<QuestionQueries.GetQuestionsSummary>(o =>
         {
             Sender.Tell(_state.Questions.Values.Select(x => new QuestionSummary
             {
@@ -43,12 +43,12 @@ public class UserQuestions : BaseWithSnapshotFrequencyActor
         });
 
 
-        Command<GetQuestions>(o =>
+        Command<QuestionQueries.GetQuestions>(o =>
         {
             Sender.Tell(_state.Questions.Values.Where(x => o.Ids.Contains(x.Id)).ToImmutableArray());
         });
         
-        Command<GetQuestion>(o =>
+        Command<QuestionQueries.GetQuestion>(o =>
         {
             var found = _state.Questions.TryGetValue(o.Id, out var question);
             // Faz uma cópia simples da questão
@@ -77,7 +77,7 @@ public class UserQuestions : BaseWithSnapshotFrequencyActor
         SaveSnapshotIfPassedInterval(_state);
     }
 
-    private void PersistRemove(RemoveQuestion removeQuestion)
+    private void PersistRemove(QuestionCommands.RemoveQuestion removeQuestion)
     {
         _state.Questions.Remove(removeQuestion.Id);
         SaveSnapshotIfPassedInterval(_state);
@@ -88,14 +88,3 @@ public class UserQuestions : BaseWithSnapshotFrequencyActor
         return Akka.Actor.Props.Create<UserQuestions>(userId);
     }
 }
-
-
-public sealed record UpsertQuestion(string UserId, Question Question) : IWithUserId;
-
-public sealed record RemoveQuestion(string UserId, Guid Id): IWithUserId;
-
-public sealed record GetQuestions(string UserId, params Guid[] Ids): IWithUserId;
-
-public sealed record GetQuestion(string UserId, Guid Id) : IWithUserId;
-
-public sealed record GetQuestionsSummary(string UserId) : IWithUserId;

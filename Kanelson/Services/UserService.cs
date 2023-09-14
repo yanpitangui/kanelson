@@ -4,6 +4,7 @@ using Akka.Actor;
 using Akka.Cluster.Sharding;
 using Akka.Hosting;
 using Kanelson.Actors;
+using Kanelson.Actors.Users;
 using Kanelson.Models;
 
 namespace Kanelson.Services;
@@ -24,13 +25,13 @@ public class UserService : IUserService
     public void Upsert(string id, string name)
     {
         var actor = _actorRegistry.Get<User>();
-        actor.Tell(new UpsertUser(id, name));
+        actor.Tell(new UserCommands.UpsertUser(id, name));
     }
     
     public async Task<UserInfo> GetUserInfo(string id, CancellationToken ct = default)
     {
         var actor = await _actorRegistry.GetAsync<User>(ct);
-        return await actor.Ask<UserInfo>(new GetUserInfo(id), ct);
+        return await actor.Ask<UserInfo>(new UserQueries.GetUserInfo(id), ct);
     }
     
 }

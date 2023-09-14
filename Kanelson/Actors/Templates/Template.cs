@@ -19,12 +19,12 @@ public class Template : BaseWithSnapshotFrequencyActor
         _id = templateId;
 
 
-        Recover<Upsert>(HandleUpsert);
-        Command<Upsert>(upsert => Persist(upsert, HandleUpsert));
+        Recover<TemplateCommands.Upsert>(HandleUpsert);
+        Command<TemplateCommands.Upsert>(upsert => Persist(upsert, HandleUpsert));
         
-        Command<GetTemplate>(_ => Sender.Tell(_state.Template));
+        Command<TemplateQueries.GetTemplate>(_ => Sender.Tell(_state.Template));
 
-        Command<GetSummary>(_ => Sender.Tell(new TemplateSummary(_id, _state.Template.Name)));
+        Command<TemplateQueries.GetSummary>(_ => Sender.Tell(new TemplateSummary(_id, _state.Template.Name)));
         
                 
         Recover<SnapshotOffer>(o =>
@@ -48,7 +48,7 @@ public class Template : BaseWithSnapshotFrequencyActor
         });
     }
 
-    private void HandleUpsert(Upsert o)
+    private void HandleUpsert(TemplateCommands.Upsert o)
     {
         _state.Template = o.Template;
         SaveSnapshotIfPassedInterval(_state);
@@ -60,23 +60,3 @@ public class Template : BaseWithSnapshotFrequencyActor
     }
 
 }
-
-public record GetSummary
-{
-    private GetSummary()
-    {
-    }
-
-    public static GetSummary Instance { get; } = new();
-}
-
-public record GetTemplate
-{
-    private GetTemplate()
-    {
-    }
-
-    public static GetTemplate Instance { get; } = new();
-}
-
-public sealed record Upsert(Models.Template Template);

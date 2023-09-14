@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Collections.Immutable;
 using Akka.Actor;
 using Akka.Persistence;
+using Kanelson.Actors.Users;
 using Kanelson.Models;
 
 namespace Kanelson.Actors.Templates;
@@ -21,7 +22,7 @@ public class TemplateIndex : BaseWithSnapshotFrequencyActor
 
         _children = new();
         
-        Recover<Unregister>(unregister =>
+        Recover<TemplateQueries.Unregister>(unregister =>
         {
             HandleUnregister(unregister);
             var exists = _children.TryGetValue(unregister.Id, out var actorRef);
@@ -31,7 +32,7 @@ public class TemplateIndex : BaseWithSnapshotFrequencyActor
             }
         });
 
-        Command<Unregister>(o =>
+        Command<TemplateQueries.Unregister>(o =>
         {
             var exists = _children.TryGetValue(o.Id, out var actorRef);
             if (!actorRef.IsNobody() && exists)
@@ -42,9 +43,9 @@ public class TemplateIndex : BaseWithSnapshotFrequencyActor
             Persist(o, HandleUnregister);
         });
         
-        Recover<Register>(HandleRegister);
+        Recover<TemplateCommands.Register>(HandleRegister);
 
-        Command<GetRef>(o =>
+        Command<TemplateQueries.GetRef>(o =>
         {
             
             var exists = _children.TryGetValue(o.Id, out var actorRef);
@@ -56,18 +57,18 @@ public class TemplateIndex : BaseWithSnapshotFrequencyActor
 
             if (!_state.Items.Contains(o.Id))
             {
-                Persist(new Register(o.Id), HandleRegister);
+                Persist(new TemplateCommands.Register(o.Id), HandleRegister);
             }
             Sender.Tell(actorRef);
         });
         
         
-        Command<GetAllSummaries>(_ =>
+        Command<TemplateQueries.GetAllSummaries>(_ =>
         {
             
             var sender = Sender;
             
-            var tasks = _state.Items.Select(x => _children[x].Ask<TemplateSummary>(GetSummary.Instance));
+            var tasks = _state.Items.Select(x => _children[x].Ask<TemplateSummary>(TemplateQueries.GetSummary.Instance));
             
             async Task<ImmutableArray<TemplateSummary>> ExecuteWork()
             {
@@ -79,7 +80,7 @@ public class TemplateIndex : BaseWithSnapshotFrequencyActor
             ExecuteWork().PipeTo(sender);
         });
 
-        Command<Exists>(o => Sender.Tell(_state.Items.Contains(o.Id)));
+        Command<TemplateQueries.Exists>(o => Sender.Tell(_state.Items.Contains(o.Id)));
         
         Recover<SnapshotOffer>(o =>
         {
@@ -102,7 +103,7 @@ public class TemplateIndex : BaseWithSnapshotFrequencyActor
         }
     }
 
-    private void HandleRegister(Register r)
+    private void HandleRegister(TemplateCommands.Register r)
     {
         if (_state.Items.Add(r.Id))
         {
@@ -110,7 +111,7 @@ public class TemplateIndex : BaseWithSnapshotFrequencyActor
         }
     }
 
-    private void HandleUnregister(Unregister r)
+    private void HandleUnregister(TemplateQueries.Unregister r)
     {
         _state.Items.Remove(r.Id);
         SaveSnapshotIfPassedInterval(_state);
@@ -127,15 +128,5 @@ public class TemplateIndex : BaseWithSnapshotFrequencyActor
         return Akka.Actor.Props.Create<TemplateIndex>(userId);
     }
 
-    private sealed record Register(Guid Id);
 
 }
-
-
-public record GetAllSummaries(string UserId) : IWithUserId;
-
-public record Exists(string UserId, Guid Id) : IWithUserId;
-
-public record GetRef(string UserId, Guid Id) : IWithUserId;
-
-public record Unregister(string UserId, Guid Id) : IWithUserId;

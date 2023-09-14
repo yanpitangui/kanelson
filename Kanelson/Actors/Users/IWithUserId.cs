@@ -1,4 +1,4 @@
-namespace Kanelson.Actors;
+namespace Kanelson.Actors.Users;
 
 public interface IWithUserId
 {

@@ -1,7 +1,6 @@
 using Akka.Cluster.Sharding;
-using Kanelson.Actors.Rooms;
 
-namespace Kanelson.Actors;
+namespace Kanelson.Actors.Users;
 
 public class UserMessageExtractor : HashCodeMessageExtractor
 {

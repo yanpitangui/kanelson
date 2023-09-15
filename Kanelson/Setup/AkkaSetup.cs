@@ -1,10 +1,7 @@
-using Akka.Actor;
 using Akka.Cluster.Hosting;
-using Akka.Cluster.Sharding;
 using Akka.Hosting;
 using Akka.Persistence.Azure.Hosting;
 using Azure.Identity;
-using Kanelson.Actors;
 using Kanelson.Actors.Questions;
 using Kanelson.Actors.Rooms;
 using Kanelson.Actors.Templates;

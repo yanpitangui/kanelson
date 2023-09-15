@@ -2,7 +2,6 @@ using Akka.Actor;
 using Akka.Persistence.TestKit;
 using Akka.TestKit;
 using FluentAssertions;
-using Kanelson.Actors;
 using Kanelson.Actors.Users;
 using Kanelson.Models;
 

@@ -1,5 +1,3 @@
-using Akka.Hosting;
-using Kanelson;
 using Kanelson.Endpoints;
 using System.Diagnostics;
 using System.Security.Claims;

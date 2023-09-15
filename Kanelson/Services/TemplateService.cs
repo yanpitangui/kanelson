@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using Akka.Actor;
-using Akka.Cluster.Sharding;
 using Akka.Hosting;
 using Kanelson.Actors.Templates;
 using Kanelson.Models;

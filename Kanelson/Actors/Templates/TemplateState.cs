@@ -1,5 +1,3 @@
-using Kanelson.Models;
-
 namespace Kanelson.Actors.Templates;
 
 public record TemplateState

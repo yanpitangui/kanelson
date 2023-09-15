@@ -1,9 +1,6 @@
-﻿using System.Collections.Immutable;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Akka.Actor;
-using Akka.Cluster.Sharding;
 using Akka.Hosting;
-using Kanelson.Actors;
 using Kanelson.Actors.Users;
 using Kanelson.Models;
 

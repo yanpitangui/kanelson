@@ -1,8 +1,6 @@
-using System.Buffers;
 using System.Collections.Immutable;
 using Akka.Actor;
 using Akka.Persistence;
-using Kanelson.Actors.Users;
 using Kanelson.Models;
 
 namespace Kanelson.Actors.Templates;

@@ -5,7 +5,6 @@ using Kanelson.Hubs;
 using Kanelson.Models;
 using Kanelson.Services;
 using Microsoft.AspNetCore.SignalR;
-using System.Globalization;
 
 namespace Kanelson.Actors.Rooms;
 
@@ -38,19 +37,19 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
         
         _state = new RoomState();
         
-        Recover<SetBase>(HandleSetBase);
+        Recover<RoomCommands.SetBase>(HandleSetBase);
         
-        Command<SetBase>(o =>
+        Command<RoomCommands.SetBase>(o =>
         {
             Persist(o, HandleSetBase);
         });
         
-        Command<GetCurrentState>(_ =>
+        Command<RoomQueries.GetCurrentState>(_ =>
         {
             Sender.Tell(_state.CurrentState);
         });
         
-        CommandAsync<GetSummary>(async _ =>
+        CommandAsync<RoomQueries.GetSummary>(async _ =>
         {
             var ownerInfo = await userService.GetUserInfo(_state.OwnerId); 
             var summary = new RoomSummary(roomIdentifier,
@@ -59,18 +58,18 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
             Sender.Tell(summary);
         });
 
-        Recover<UpdateCurrentUsers>(HandleUpdateUsers);
+        Recover<RoomCommands.UpdateCurrentUsers>(HandleUpdateUsers);
 
-        Command<UpdateCurrentUsers>(o =>
+        Command<RoomCommands.UpdateCurrentUsers>(o =>
         { 
             Persist(o, static _ => {});
             // Não bloqueia esperando a persistencia
             HandleUpdateUsers(o);
         });
 
-        Command<GetCurrentQuestion>(_ => Sender.Tell(GetCurrentQuestionInfo()));
+        Command<RoomQueries.GetCurrentQuestion>(_ => Sender.Tell(GetCurrentQuestionInfo()));
 
-        Command<Start>(_ =>
+        Command<RoomCommands.Start>(_ =>
         {
             SetStartedState();
             SendNextQuestion();
@@ -142,7 +141,7 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
             }
         });
 
-        Command<NextQuestion>(o =>
+        Command<RoomCommands.NextQuestion>(_ =>
         {
             if (_state.CurrentQuestionIdx + 1 > _state.MaxQuestionIdx || _state.CurrentState == RoomStatus.DisplayingQuestion) return; 
             _state.CurrentQuestionIdx+= 1;
@@ -150,9 +149,9 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
             SetTimeHandler();
         });
         
-        Command<GetOwner>(_ => Sender.Tell(_state.OwnerId));
+        Command<RoomQueries.GetOwner>(_ => Sender.Tell(_state.OwnerId));
 
-        Command<SendUserAnswer>(o =>
+        Command<RoomCommands.SendUserAnswer>(o =>
         {
             var possibleAlternatives = CurrentQuestion.Alternatives.Select(static x => x.Id);
             if (!Array.TrueForAll(o.AlternativeIds, x => possibleAlternatives.Contains(x)))
@@ -170,13 +169,13 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
             }
             var questionAnswers = _state.Answers[CurrentQuestion.Id];
             var alternativeInfo = CalculatePoints(o.AlternativeIds);
-            questionAnswers!.TryAdd(o.UserId, alternativeInfo);
+            questionAnswers.TryAdd(o.UserId, alternativeInfo);
             var user = _state.CurrentUsers.FirstOrDefault(x => string.Equals(x.Id, o.UserId, StringComparison.OrdinalIgnoreCase));
             if (user != null) user.Answered = true;
             _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifier, RoomHub.SignalRMessages.UserAnswered, o.UserId));
         });
         
-        Command<UserConnected>(o =>
+        Command<RoomCommands.UserConnected>(o =>
         {
             _signalrActor.Tell(new SendSignalrUserMessage(o.UserId, RoomHub.SignalRMessages.CurrentUsersUpdated, _state.CurrentUsers));
             if(_state.CurrentState == RoomStatus.Finished) 
@@ -334,7 +333,7 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
              .Intersect(alternativeIds)
              .Count();
 
-         var percentage = wrong >= correct ? 0 : (decimal)maxCorrect / ((decimal)correct - (decimal)wrong); 
+         var percentage = wrong >= correct ? 0 : maxCorrect / (correct - (decimal)wrong); 
              
          
          var timeMinusDelay = Math.Max(timeToAnswer.TotalSeconds - 0.2d , 0); // Retira 200ms do cálculo para considerar delay  
@@ -354,7 +353,7 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
 
 
 
-    private void HandleUpdateUsers(UpdateCurrentUsers r)
+    private void HandleUpdateUsers(RoomCommands.UpdateCurrentUsers r)
     {
         var equal = r.Users.SetEquals(_state.CurrentUsers);
 
@@ -374,7 +373,7 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
         SaveSnapshotIfPassedInterval(_state);
     }
 
-    private void HandleSetBase(SetBase r)
+    private void HandleSetBase(RoomCommands.SetBase r)
     {
         _state.OwnerId = r.OwnerId;
         _state.Template = r.Template;
@@ -427,27 +426,6 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
 
 
 }
-public sealed record SetBase(string RoomId, string RoomName, string OwnerId, Template Template) : IWithRoomId;
-
-public sealed record GetCurrentState(string RoomId) : IWithRoomId;
-
-
-public sealed record GetSummary(string RoomId) : IWithRoomId;
-
-
-public sealed record UpdateCurrentUsers(string RoomId, HashSet<UserInfo> Users) : IWithRoomId;
-
-public sealed record GetCurrentQuestion(string RoomId) : IWithRoomId;
-
-
-public sealed record Start(string RoomId) : IWithRoomId;
-
-
-public sealed record NextQuestion(string RoomId) : IWithRoomId;
-
-public sealed record GetOwner(string RoomId) : IWithRoomId;
-
-public sealed record SendUserAnswer(string RoomId, string UserId, Guid[] AlternativeIds) : IWithRoomId;
 
 public enum RejectionReason
 {

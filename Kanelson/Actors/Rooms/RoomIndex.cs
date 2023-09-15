@@ -1,6 +1,5 @@
 using System.Collections.Immutable;
 using Akka.Actor;
-using Akka.Cluster.Sharding;
 using Akka.Persistence;
 using Kanelson.Hubs;
 using Kanelson.Models;
@@ -32,33 +31,33 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
 
         _state = new RoomIndexState();
         
-        Recover<Register>(HandleRegister);
+        Recover<RoomCommands.Register>(HandleRegister);
         
-        Command<Register>(o =>
+        Command<RoomCommands.Register>(o =>
         {
             Persist(o, HandleRegister);
         });
         
-        Recover<Unregister>(HandleUnregister);
+        Recover<RoomCommands.Unregister>(HandleUnregister);
         
-        Command<Unregister>(o =>
+        Command<RoomCommands.Unregister>(o =>
         {
             Persist(o, HandleUnregister);
         });
 
-        Command<Exists>(o =>
+        Command<RoomQueries.Exists>(o =>
         {
             Sender.Tell(_state.Items.Keys.Contains(o.RoomId, StringComparer.OrdinalIgnoreCase));
         });
 
-        CommandAsync<UserConnected>(async o =>
+        CommandAsync<RoomCommands.UserConnected>(async o =>
         {
             
             if(!_roomUsers.TryGetValue(o.RoomId, out var roomConnections))
             {
                 roomConnections = _roomUsers[o.RoomId] = new Dictionary<string, HubUser>(StringComparer.OrdinalIgnoreCase);
             }
-
+            
             var userAdded = false;
 
             if(!roomConnections.TryGetValue(o.UserId, out var user))
@@ -77,10 +76,10 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
             if (!userAdded) return;
 
             var users = roomConnections.Values.Cast<UserInfo>().ToHashSet();
-            roomShard.Tell(new UpdateCurrentUsers(o.RoomId, users));
+            roomShard.Tell(new RoomCommands.UpdateCurrentUsers(o.RoomId, users));
         });
 
-        Command<UserDisconnected>(o =>
+        Command<RoomCommands.UserDisconnected>(o =>
         {
             var rooms = _roomUsers
                 .Where(x => x.Value.ContainsKey(o.UserId))
@@ -102,12 +101,12 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
                 
                 if (!userDisconnected) continue;
                 var users = room.Room.Value.Values.Cast<UserInfo>().ToHashSet();
-                roomShard.Tell( new UpdateCurrentUsers(room.Room.Key, users));
+                roomShard.Tell( new RoomCommands.UpdateCurrentUsers(room.Room.Key, users));
                 
             }
         });
 
-        Command<GetRoomsBasicInfo>(_ =>
+        Command<RoomQueries.GetRoomsBasicInfo>(_ =>
         {
             Sender.Tell(_state.Items.Values.ToImmutableArray());
         });
@@ -125,7 +124,7 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
 
     }
 
-    private void HandleUnregister(Unregister r)
+    private void HandleUnregister(RoomCommands.Unregister r)
     {
         _state.Items.Remove(r.RoomId);
         GenerateChangedSignalRMessage().PipeTo(_signalrActor);
@@ -135,11 +134,11 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
 
     private async Task<SendSignalrGroupMessage> GenerateChangedSignalRMessage()
     {
-        var summary = await Self.Ask<ImmutableArray<BasicRoomInfo>>(GetRoomsBasicInfo.Instance);
+        var summary = await Self.Ask<ImmutableArray<BasicRoomInfo>>(RoomQueries.GetRoomsBasicInfo.Instance);
         return new SendSignalrGroupMessage(RoomLobbyHub.RoomsGroup, RoomLobbyHub.SignalRMessages.RoomsChanged, summary);
     }
 
-    private void HandleRegister(Register r)
+    private void HandleRegister(RoomCommands.Register r)
     {
         _roomShard.Tell(r.RoomBase);
         _state.Items.Add(r.RoomBase.RoomId, new BasicRoomInfo(r.RoomBase.RoomId, r.RoomBase.RoomName, r.RoomBase.OwnerId));
@@ -155,23 +154,3 @@ public sealed class RoomIndex : BaseWithSnapshotFrequencyActor
 
     }
 }
-
-
-public record UserConnected(string RoomId, string UserId, string ConnectionId) : IWithRoomId;
-
-public record UserDisconnected(string UserId, string ConnectionId);
-
-public record GetRoomsBasicInfo
-{
-    private GetRoomsBasicInfo()
-    {
-    }
-
-    public static GetRoomsBasicInfo Instance { get; } = new();
-}
-
-public record Register(SetBase RoomBase);
-
-public record Exists(string RoomId);
-
-public record Unregister(string RoomId);

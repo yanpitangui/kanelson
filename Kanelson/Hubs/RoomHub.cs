@@ -3,7 +3,6 @@ using Kanelson.Models;
 using Kanelson.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using System.Globalization;
 
 namespace Kanelson.Hubs;
 

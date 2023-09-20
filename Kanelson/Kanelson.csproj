@@ -15,6 +15,7 @@
     <ItemGroup>
       <PackageReference Include="Akka" />
       <PackageReference Include="Akka.Cluster.Hosting" />
+      <PackageReference Include="Akka.Cluster.Sharding" />
       <PackageReference Include="Akka.Discovery.KubernetesApi" />
       <PackageReference Include="Akka.HealthCheck.Hosting" />
       <PackageReference Include="Akka.Management" />

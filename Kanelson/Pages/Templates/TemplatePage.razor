@@ -1,9 +1,10 @@
 ﻿@page "/template/{Id:guid?}"
-@using Kanelson.Services
 @using Microsoft.AspNetCore.Components
-@using Kanelson.Models
 @using MudBlazor.Utilities
-@inject ITemplateService Service
+@using Kanelson.Domain.Templates.Models
+@using Kanelson.Domain.Questions
+@using Kanelson.Domain.Templates
+@inject IRoomTemplateService Service
 @inject NavigationManager Navigation
 @inject ISnackbar SnackBar
 @inject IQuestionService QuestionService;

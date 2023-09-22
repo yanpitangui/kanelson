@@ -1,8 +1,8 @@
 using System.Collections.Immutable;
 using System.Timers;
-using Kanelson.Actors.Rooms;
+using Kanelson.Domain.Rooms;
+using Kanelson.Domain.Rooms.Models;
 using Kanelson.Hubs;
-using Kanelson.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
@@ -22,7 +22,7 @@ public partial class Player : BaseRoomPage
     {
         TimerConfiguration.Stop();
         _playerStatus = PlayerStatus.Answered;
-        await HubConnection!.SendAsync(RoomHub.SignalRMessages.Answer, RoomId,  alternativeId);
+        await HubConnection!.SendAsync(SignalRMessages.Answer, RoomId,  alternativeId);
         await InvokeAsync(StateHasChanged);
     }
 
@@ -30,14 +30,14 @@ public partial class Player : BaseRoomPage
     {
         base.ConfigureExtraSignalrEvents();
 
-        HubConnection.On<UserAnswerSummary>(RoomHub.SignalRMessages.RoundSummary, summary =>
+        HubConnection.On<UserAnswerSummary>(SignalRMessages.RoundSummary, summary =>
         {
             // TODO: Exibir essa informação de alguma maneira
 
             InvokeAsync(StateHasChanged);
         });
 
-        HubConnection.On<RejectionReason>(RoomHub.SignalRMessages.AnswerRejected, reason =>
+        HubConnection.On<RejectionReason>(SignalRMessages.AnswerRejected, reason =>
         {
             var stringReason = reason is RejectionReason.InvalidState
                 ? Loc["InvalidState"]

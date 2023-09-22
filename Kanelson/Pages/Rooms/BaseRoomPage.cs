@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
-using Kanelson.Actors.Rooms;
-using Kanelson.Hubs;
-using Kanelson.Models;
+using Kanelson.Domain.Rooms;
+using Kanelson.Domain.Rooms.Models;
+using Kanelson.Domain.Templates.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Localization;
@@ -35,20 +35,20 @@ public class BaseRoomPage : MudComponentBase
         ConfigureExtraSignalrEvents();
         await HubConnection.StartAsync();
 
-        await HubConnection.SendAsync(RoomHub.SignalRMessages.JoinRoom, RoomId);
+        await HubConnection.SendAsync(SignalRMessages.JoinRoom, RoomId);
 
         await AfterConnectedConfiguration();
     }
 
     protected virtual void ConfigureExtraSignalrEvents()
     {
-        HubConnection.On<ImmutableArray<UserRanking>>(RoomHub.SignalRMessages.RoomFinished, (ranking) =>
+        HubConnection.On<ImmutableArray<UserRanking>>(SignalRMessages.RoomFinished, (ranking) =>
         {
             Rankings = ranking;
             InvokeAsync(StateHasChanged);
         });
         
-        HubConnection.On<CurrentQuestionInfo>(RoomHub.SignalRMessages.NextQuestion, (question) =>
+        HubConnection.On<CurrentQuestionInfo>(SignalRMessages.NextQuestion, (question) =>
         {
             CurrentQuestion = question;
             TimerConfiguration.ResetAndStart(question.Question.TimeLimit);
@@ -57,8 +57,9 @@ public class BaseRoomPage : MudComponentBase
         });
         
         
-        HubConnection.On<bool>(RoomHub.SignalRMessages.RoundFinished, (_) =>
+        HubConnection.On<TemplateQuestion>(SignalRMessages.RoundFinished, (questionWithCorrectAnswers) =>
         {
+            // TODO: Mostrar qual era a opção correta de alguma maneira
             TimerConfiguration.Stop();
             CurrentQuestion = null;
             InvokeAsync(StateHasChanged);

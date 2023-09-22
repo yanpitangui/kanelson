@@ -1,8 +1,9 @@
 ﻿@page "/templates"
-@using Kanelson.Services
 @using System.Collections.Immutable
-@using Kanelson.Models
-@inject ITemplateService Service
+@using Kanelson.Domain.Rooms
+@using Kanelson.Domain.Templates
+@using Kanelson.Domain.Templates.Models
+@inject IRoomTemplateService Service
 @inject IRoomService RoomService
 @inject ISnackbar SnackBar
 @inject NavigationManager Navigation

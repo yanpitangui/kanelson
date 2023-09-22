@@ -1,10 +1,8 @@
-using Akka.Hosting;
-using Kanelson;
+using Kanelson.Domain.Users;
 using Kanelson.Endpoints;
 using System.Diagnostics;
 using System.Security.Claims;
 using Kanelson.Hubs;
-using Kanelson.Services;
 using Kanelson.Setup;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.ResponseCompression;

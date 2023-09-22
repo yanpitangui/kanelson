@@ -1,7 +1,6 @@
 ﻿@page "/question/{Id:guid?}"
-@using Kanelson.Models
-@using Kanelson.Services
 @using Severity = MudBlazor.Severity
+@using Kanelson.Domain.Questions
 @inject IQuestionService _service
 @inject NavigationManager Navigation
 @inject ISnackbar snackBar

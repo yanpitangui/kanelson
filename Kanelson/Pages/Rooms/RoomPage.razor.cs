@@ -1,7 +1,6 @@
-using Kanelson.Actors.Rooms;
-using Kanelson.Hubs;
-using Kanelson.Models;
-using Kanelson.Services;
+using Kanelson.Domain.Rooms;
+using Kanelson.Domain.Rooms.Models;
+using Kanelson.Domain.Users;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Localization;
@@ -70,14 +69,14 @@ public sealed partial class RoomPage : ComponentBase, IAsyncDisposable
         _timerConfig.SetupAction(TimeElapsed);
 
         
-        _hubConnection.On<HashSet<RoomUser>>(RoomHub.SignalRMessages.CurrentUsersUpdated, (users) =>
+        _hubConnection.On<HashSet<RoomUser>>(SignalRMessages.CurrentUsersUpdated, (users) =>
         {
             _connectedUsers = users;
             InvokeAsync(StateHasChanged);
         });
         
         
-        _hubConnection.On<string>(RoomHub.SignalRMessages.UserAnswered, (userId) =>
+        _hubConnection.On<string>(SignalRMessages.UserAnswered, (userId) =>
         {
             var user = _connectedUsers.FirstOrDefault(x => string.Equals(x.Id, userId, StringComparison.OrdinalIgnoreCase));
             if (user != null)
@@ -86,7 +85,7 @@ public sealed partial class RoomPage : ComponentBase, IAsyncDisposable
             }
         });
 
-        _hubConnection.On<bool>(RoomHub.SignalRMessages.RoomDeleted, _ =>
+        _hubConnection.On<bool>(SignalRMessages.RoomDeleted, _ =>
         {
             Snackbar.Add(Loc["RoomDeleted"], Severity.Warning);
             Navigation.NavigateTo("rooms");

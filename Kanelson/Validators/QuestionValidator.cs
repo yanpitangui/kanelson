@@ -1,5 +1,5 @@
 using FluentValidation;
-using Kanelson.Models;
+using Kanelson.Domain.Questions;
 
 namespace Kanelson.Validators;
 

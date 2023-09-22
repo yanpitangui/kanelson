@@ -1,6 +1,6 @@
-﻿using Kanelson.Extensions;
-using Kanelson.Models;
-using Kanelson.Services;
+﻿using Kanelson.Domain.Rooms;
+using Kanelson.Domain.Users;
+using Kanelson.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
@@ -40,25 +40,6 @@ public class RoomHub : Hub
 
     }
     
-    public static class SignalRMessages
-    {
-        public const string CurrentUsersUpdated = nameof(CurrentUsersUpdated);
-        public const string RoomStatusChanged = nameof(RoomStatusChanged);
-        public const string NextQuestion = nameof(NextQuestion);
-        public const string RoundFinished = nameof(RoundFinished);
-        public const string Answer = nameof(Answer);
-        public const string JoinRoom = nameof(JoinRoom);
-        public const string UserAnswered = nameof(UserAnswered);
-        public const string RoomDeleted = nameof(RoomDeleted);
-        public const string RoomFinished = nameof(RoomFinished);
-        public const string RoundSummary = nameof(RoundSummary);
-        public const string AnswerRejected = nameof(AnswerRejected);
-    }
+
 }
 
-public record HubUser : UserInfo
-{
-
-    public static HubUser FromUserInfo(UserInfo userInfo) => new() {Id = userInfo.Id, Name = userInfo.Name};
-    public HashSet<string> Connections { get; set; } = new(StringComparer.OrdinalIgnoreCase);
-}

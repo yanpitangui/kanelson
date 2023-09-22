@@ -3,16 +3,16 @@ using Akka.Persistence.TestKit;
 using Akka.TestKit;
 using Bogus;
 using FluentAssertions;
-using Kanelson.Actors.Templates;
-using Kanelson.Models;
-using Template = Kanelson.Actors.Templates.Template;
+using Kanelson.Domain.Questions;
+using Kanelson.Domain.Templates;
+using Kanelson.Domain.Templates.Models;
 
 namespace Kanelson.Tests;
 
 public class TemplateSpecs : PersistenceTestKit
 {
     private readonly Guid TemplateId = Guid.NewGuid();
-    private readonly TestActorRef<Template> _testActor;
+    private readonly TestActorRef<RoomTemplate> _testActor;
     private static readonly Faker<Alternative> _alternativeGenerator = new Faker<Alternative>()
         .RuleFor(x => x.Correct, f => f.PickRandom(true, false))
         .RuleFor(x => x.Description, f => f.Lorem.Paragraph());
@@ -27,22 +27,22 @@ public class TemplateSpecs : PersistenceTestKit
     
     public TemplateSpecs()
     {
-        _testActor = new TestActorRef<Template>(Sys, Template.Props(TemplateId));
+        _testActor = new TestActorRef<RoomTemplate>(Sys, RoomTemplate.Props(TemplateId));
     }
     
     [Fact]
     public async Task Upserted_template_info_should_return_in_get()
     {
         // arrange
-        var template = new Models.Template
+        var template = new Template
         {
             Id = TemplateId,
             Name = "Test template", Questions = _questionGenerator.Generate(5)
         };
-        _testActor.Tell(new TemplateCommands.Upsert(template));
+        _testActor.Tell(new RoomTemplateCommands.Upsert(template));
 
         // act
-        var getTemplate = await _testActor.Ask<Models.Template>(TemplateQueries.GetTemplate.Instance);
+        var getTemplate = await _testActor.Ask<Template>(RoomTemplateQueries.GetTemplate.Instance);
 
         // assert
         getTemplate.Should().BeEquivalentTo(template);
@@ -52,16 +52,16 @@ public class TemplateSpecs : PersistenceTestKit
     public async Task Upserted_template_basic_info_should_return_in_summary()
     {
         // arrange
-        var template = new Models.Template
+        var template = new Template
         {
             Id = TemplateId,
             Name = "Test template", 
             Questions = _questionGenerator.Generate(5)
         };
-        _testActor.Tell(new TemplateCommands.Upsert(template));
+        _testActor.Tell(new RoomTemplateCommands.Upsert(template));
 
         // act
-        var getTemplate = await _testActor.Ask<TemplateSummary>(TemplateQueries.GetSummary.Instance);
+        var getTemplate = await _testActor.Ask<TemplateSummary>(RoomTemplateQueries.GetSummary.Instance);
 
         // assert
         getTemplate.Should().BeEquivalentTo(new  TemplateSummary(template.Id,template.Name));
@@ -71,7 +71,7 @@ public class TemplateSpecs : PersistenceTestKit
     public async Task Restarting_actor_should_recover_previous_state()
     {
         // arrange
-        var template = new Models.Template
+        var template = new Template
         {
             Id = TemplateId,
             Name = "Test template", 
@@ -85,15 +85,15 @@ public class TemplateSpecs : PersistenceTestKit
                 Name = $"Test template {i}",
                 Questions = _questionGenerator.Generate(3)
             };
-            _testActor.Tell(new TemplateCommands.Upsert(template));
+            _testActor.Tell(new RoomTemplateCommands.Upsert(template));
         }
 
-        var previousTemplate = await _testActor.Ask<Models.Template>(TemplateQueries.GetTemplate.Instance);
+        var previousTemplate = await _testActor.Ask<Template>(RoomTemplateQueries.GetTemplate.Instance);
         
         // act
         await _testActor.GracefulStop(TimeSpan.FromSeconds(3));
-        var recoveringActor = new TestActorRef<Template>(Sys, Template.Props(TemplateId));
-        var recoveredTemplate = await recoveringActor.Ask<Models.Template>(TemplateQueries.GetTemplate.Instance);
+        var recoveringActor = new TestActorRef<RoomTemplate>(Sys, Domain.Templates.RoomTemplate.Props(TemplateId));
+        var recoveredTemplate = await recoveringActor.Ask<Template>(RoomTemplateQueries.GetTemplate.Instance);
 
         
         // assert

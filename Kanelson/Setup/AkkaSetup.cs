@@ -2,12 +2,12 @@ using Akka.Cluster.Hosting;
 using Akka.Hosting;
 using Akka.Persistence.Azure.Hosting;
 using Azure.Identity;
-using Kanelson.Actors.Questions;
-using Kanelson.Actors.Rooms;
-using Kanelson.Actors.Templates;
-using Kanelson.Actors.Users;
+using Kanelson.Domain.Questions;
+using Kanelson.Domain.Rooms;
+using Kanelson.Domain.Templates;
+using Kanelson.Domain.Users;
+using Kanelson.Extractors;
 using Kanelson.Hubs;
-using Kanelson.Services;
 using Microsoft.AspNetCore.SignalR;
 using Serilog.Core;
 
@@ -49,21 +49,21 @@ public static class AkkaSetup
                         UserQuestions.Props,
                         userMessageExtractor,
                         defaultShardOptions)
-                    .WithShardRegion<TemplateIndex>(nameof(TemplateIndex),
-                        TemplateIndex.Props,
+                    .WithShardRegion<RoomTemplateIndex>(nameof(RoomTemplateIndex),
+                        RoomTemplateIndex.Props,
                         userMessageExtractor,
                         defaultShardOptions)
                     .WithShardRegion<Room>(nameof(Room),
                         (_, _, sp) =>
                             (identifier) => 
-                                Room.Props(identifier, sp.GetService<IHubContext<RoomHub>>(),
+                                Room.Props(identifier, (IHubContext)sp.GetService<IHubContext<RoomHub>>(),
                                     sp.GetService<IUserService>()),
                         new RoomMessageExtractor(50),
                         defaultShardOptions)
                     .WithSingleton<RoomIndex>("room-index", (_,ar,sp) =>
                         RoomIndex.Props("room-index",
                             ar.Get<Room>(),
-                            sp.GetService<IHubContext<RoomLobbyHub>>(),
+                            (IHubContext)sp.GetService<IHubContext<RoomLobbyHub>>(),
                             sp.GetService<IUserService>()), new ClusterSingletonOptions
                     {
                         Role = actorSystemName,

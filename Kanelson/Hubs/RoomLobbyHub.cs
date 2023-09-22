@@ -8,16 +8,8 @@ public class RoomLobbyHub : Hub
 {
     public override async Task OnConnectedAsync()
     {
-        await Groups.AddToGroupAsync(Context.ConnectionId, RoomsGroup);
+        await Groups.AddToGroupAsync(Context.ConnectionId, "Rooms");
 
         await base.OnConnectedAsync();
     }
-
-
-    public static class SignalRMessages
-    {
-        public const string RoomsChanged = nameof(RoomsChanged);
-    }
-
-    public const string RoomsGroup = "Rooms";
 }

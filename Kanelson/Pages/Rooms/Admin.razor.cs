@@ -1,8 +1,7 @@
 using System.Collections.Immutable;
-using Kanelson.Actors.Rooms;
+using Kanelson.Domain.Rooms;
+using Kanelson.Domain.Rooms.Models;
 using Kanelson.Hubs;
-using Kanelson.Models;
-using Kanelson.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Localization;
@@ -19,7 +18,7 @@ public partial class Admin : BaseRoomPage
     protected override void ConfigureExtraSignalrEvents()
     {
         base.ConfigureExtraSignalrEvents();
-        HubConnection.On<RoomStatus>(RoomHub.SignalRMessages.RoomStatusChanged, (state) =>
+        HubConnection.On<RoomStatus>(SignalRMessages.RoomStatusChanged, (state) =>
         {
             _roomStatus = state;
             InvokeAsync(StateHasChanged);

@@ -1,8 +1,8 @@
 ﻿@page "/rooms"
-@using Kanelson.Services
 @using System.Collections.Immutable
-@using Kanelson.Actors.Rooms
 @using Kanelson.Components.CardRoom
+@using Kanelson.Domain.Rooms
+@using Kanelson.Domain.Users
 @using Kanelson.Hubs
 @using Microsoft.AspNetCore.SignalR.Client
 @inject IRoomService Service
@@ -49,7 +49,7 @@ else
         _hubConnection = HttpAccessor.GetConnection(Navigation, "roomLobbyHub");
 
 
-        _hubConnection.On<ImmutableArray<BasicRoomInfo>>(RoomLobbyHub.SignalRMessages.RoomsChanged, (rooms) =>
+        _hubConnection.On<ImmutableArray<BasicRoomInfo>>(SignalRMessages.RoomsChanged, (rooms) =>
         {
             _rooms = rooms;
             InvokeAsync(StateHasChanged);

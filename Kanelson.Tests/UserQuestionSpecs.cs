@@ -3,8 +3,7 @@ using Akka.Persistence.TestKit;
 using Akka.TestKit;
 using Akka.Util;
 using FluentAssertions;
-using Kanelson.Actors.Questions;
-using Kanelson.Models;
+using Kanelson.Domain.Questions;
 using System.Collections.Immutable;
 
 namespace Kanelson.Tests;

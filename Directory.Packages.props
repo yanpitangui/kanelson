@@ -9,7 +9,7 @@
     <PackageVersion Include="Akka.Discovery.KubernetesApi" Version="1.5.7" />
     <PackageVersion Include="Akka.HealthCheck.Hosting" Version="1.5.12" />
     <PackageVersion Include="Akka.Cluster.Hosting" Version="1.5.13" />
-    <PackageVersion Include="Akka.Hosting" Version="1.5.12.1" />
+    <PackageVersion Include="Akka.Hosting" Version="1.5.13" />
     <PackageVersion Include="Akka.Management" Version="1.5.7" />
     <PackageVersion Include="Akka.Persistence" Version="1.5.13" />
     <PackageVersion Include="Akka.Persistence.Azure.Hosting" Version="1.5.1" />

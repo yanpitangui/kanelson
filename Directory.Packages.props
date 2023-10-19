@@ -20,7 +20,7 @@
     <PackageVersion Include="Azure.Identity" Version="1.10.2" />
     <PackageVersion Include="Bogus" Version="34.0.2" />
     <PackageVersion Include="coverlet.collector" Version="6.0.0" />
-    <PackageVersion Include="FluentValidation" Version="11.7.1" />
+    <PackageVersion Include="FluentValidation" Version="11.8.0" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.7.1" />
     <PackageVersion Include="IdGen" Version="3.0.3" />
     <PackageVersion Include="IdGen.DependencyInjection" Version="3.0.0" />

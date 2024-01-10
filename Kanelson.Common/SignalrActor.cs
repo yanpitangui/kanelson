@@ -9,12 +9,14 @@ public sealed class SignalrActor : ReceiveActor
     {
         Receive<SendSignalrGroupMessage>(o =>
         {
-            hubContext.Clients.Group(o.GroupId).SendAsync(o.MessageName, o.Data).PipeTo(Sender, Self);
+            var sender = Sender;
+            hubContext.Clients.Group(o.GroupId).SendAsync(o.MessageName, o.Data).PipeTo(sender, Self);
         });
 
         Receive<SendSignalrUserMessage>(o =>
         {
-            hubContext.Clients.User(o.UserId).SendAsync(o.MessageName, o.Data).PipeTo(Sender, Self);
+            var sender = Sender;
+            hubContext.Clients.User(o.UserId).SendAsync(o.MessageName, o.Data).PipeTo(sender, Self);
         });
         
         

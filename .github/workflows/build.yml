@@ -27,6 +27,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'microsoft' # See 'Supported distributions' for available options
+          java-version: '17'
       - name: Setup dotnet
         uses: actions/setup-dotnet@v4.0.0
         with:
@@ -34,27 +38,24 @@ jobs:
       - name: Install dotnet-sonarscanner
         run: |
           dotnet tool install --global dotnet-sonarscanner
-      - name: Install dotnet cake
+      - name: Install dotnet-coverage
         run: |
-          dotnet tool install -g Cake.Tool
+          dotnet tool install --global dotnet-coverage
 
-      - name: Install coverlet
-        run: |
-          dotnet tool install -g coverlet.console
-          
       - name: Cache NuGet Packages
         uses: actions/cache@v3
         with:
           key: nuget-${{ hashFiles('Directory.Packages.props') }}
           path: ~/.nuget/packages
-          
+
       - name: Build the project, run all tests and publish to SonarCloud
         run: |
           dotnet sonarscanner begin \
           /k:"yanpitangui_kanelson" \
           /o:"yanpitangui" \
-          /d:sonar.login="$SONAR_TOKEN" \
+          /d:sonar.token="$SONAR_TOKEN" \
           /d:sonar.host.url="https://sonarcloud.io" \
-          /d:sonar.cs.opencover.reportsPaths="./coverage.opencover.xml"
-          dotnet cake
-          dotnet sonarscanner end /d:sonar.login="$SONAR_TOKEN"
+          /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
+          dotnet build WebApiBoilerplate.sln --no-incremental          
+          dotnet-coverage collect 'dotnet test Kanelson.sln' -f xml  -o 'coverage.xml'
+          dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"

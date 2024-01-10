@@ -95,9 +95,5 @@
       <ProjectReference Include="..\Kanelson.Domain.Templates\Kanelson.Domain.Templates.csproj" />
       <ProjectReference Include="..\Kanelson.Domain.Users\Kanelson.Domain.Users.csproj" />
     </ItemGroup>
-    
-    <ItemGroup>
-      <Folder Include="Services\" />
-    </ItemGroup>
 
 </Project>

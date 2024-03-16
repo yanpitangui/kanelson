@@ -4,14 +4,14 @@
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Akka" Version="1.5.16" />
-    <PackageVersion Include="Akka.Cluster.Sharding" Version="1.5.16" />
+    <PackageVersion Include="Akka" Version="1.5.18" />
+    <PackageVersion Include="Akka.Cluster.Sharding" Version="1.5.18" />
     <PackageVersion Include="Akka.Discovery.KubernetesApi" Version="1.5.15" />
     <PackageVersion Include="Akka.HealthCheck.Hosting" Version="1.5.12" />
     <PackageVersion Include="Akka.Cluster.Hosting" Version="1.5.15" />
     <PackageVersion Include="Akka.Hosting" Version="1.5.15" />
     <PackageVersion Include="Akka.Management" Version="1.5.15" />
-    <PackageVersion Include="Akka.Persistence" Version="1.5.16" />
+    <PackageVersion Include="Akka.Persistence" Version="1.5.18" />
     <PackageVersion Include="Akka.Persistence.Azure.Hosting" Version="1.5.13" />
     <PackageVersion Include="Akka.Persistence.TestKit.Xunit2" Version="1.5.16" />
     <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="8.0.0" />

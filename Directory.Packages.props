@@ -10,7 +10,7 @@
     <PackageVersion Include="Akka.HealthCheck.Hosting" Version="1.5.24" />
     <PackageVersion Include="Akka.Cluster.Hosting" Version="1.5.18" />
     <PackageVersion Include="Akka.Hosting" Version="1.5.25" />
-    <PackageVersion Include="Akka.Management" Version="1.5.24" />
+    <PackageVersion Include="Akka.Management" Version="1.5.25.1" />
     <PackageVersion Include="Akka.Persistence" Version="1.5.24" />
     <PackageVersion Include="Akka.Persistence.Azure.Hosting" Version="1.5.19" />
     <PackageVersion Include="Akka.Persistence.TestKit.Xunit2" Version="1.5.20" />

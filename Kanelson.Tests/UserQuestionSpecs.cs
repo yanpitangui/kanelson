@@ -8,7 +8,6 @@ using System.Collections.Immutable;
 
 namespace Kanelson.Tests;
 
-[UsesVerify]
 public class UserQuestionSpecs : PersistenceTestKit
 {
     private const string UserId = "12345";

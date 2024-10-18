@@ -28,16 +28,13 @@ else
              <MudFileUpload Accept=".json" FilesChanged="UploadFiles" Class="mt-0"
                             T="IBrowserFile" 
                             SuppressOnChangeWhenInvalid="true">
-                 <ButtonTemplate>
                      <MudButton HtmlTag="label"
                                 Variant="Variant.Filled"
                                 Color="Color.Info"
                                 Class="ml-3"
-                                StartIcon="@Icons.Material.Filled.CloudUpload"
-                                for="@context">
+                                StartIcon="@Icons.Material.Filled.CloudUpload">
                          @Loc["UploadQuestions"]
                      </MudButton>
-                 </ButtonTemplate>
              </MudFileUpload>
              <MudButton StartIcon="@Icons.Material.Filled.Add" 
                         Variant="Variant.Filled" Class="ml-3"
@@ -53,8 +50,8 @@ else
             <MudTd DataLabel="Name">@context.Name</MudTd>
             <MudTd DataLabel="Edit/Delete">
                 <MudStack AlignItems="AlignItems.Center" Row="true" Spacing="3">
-                    <MudFab @onclick="@(() => EditQuestion(@context.Id))" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small"/>
-                    <MudFab @onclick="@(() => RemoveQuestion(@context.Id))" Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small"/>
+                    <MudFab @onclick="@(() => EditQuestion(@context.Id))" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small"/>
+                    <MudFab @onclick="@(() => RemoveQuestion(@context.Id))" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small"/>
                 </MudStack>
 
             </MudTd>

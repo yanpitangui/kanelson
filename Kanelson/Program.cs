@@ -30,8 +30,6 @@ builder.Services.AddResponseCompression(opts =>
 // Register Serilog
 builder.Logging.AddSerilog(logger);
 
-builder.Host.AddKeyVaultConfigurationSetup();
-
 builder.Services.AddHealthChecks();
 
 builder.Services.Configure<CookiePolicyOptions>(options =>

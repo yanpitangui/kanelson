@@ -1,13 +1,21 @@
-﻿@Render(GithubId)
+﻿@Render(GithubId, Name)
 
 @code {
 
     [Parameter]
     public string GithubId { get; set; } = null!;
+
+    [Parameter] 
+    public string Name { get; set; } = null!;
     
-    RenderFragment Render(string nameIdentifier)
+    RenderFragment Render(string nameIdentifier, string name)
     {
-        return @<MudAvatar Style="margin-right: 5px" Image="@GetUrlFromId(nameIdentifier)"/>;
+        return
+            @<MudTooltip Text="@name">
+                <MudAvatar Style="margin-right: 5px">
+                    <MudImage Src="@GetUrlFromId(nameIdentifier)"/>
+                </MudAvatar>
+            </MudTooltip>;
     }
 
     public static string GetUrlFromId(string nameIdentifier)

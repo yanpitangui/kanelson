@@ -19,11 +19,9 @@
       <PackageReference Include="Akka.Discovery.KubernetesApi" />
       <PackageReference Include="Akka.HealthCheck.Hosting" />
       <PackageReference Include="Akka.Management" />
-      <PackageReference Include="Akka.Persistence.Azure.Hosting" />
+      <PackageReference Include="Akka.Persistence.Sql" />
+      <PackageReference Include="Akka.Persistence.Sql.Hosting" />
       <PackageReference Include="AspNet.Security.OAuth.GitHub" />
-      <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Blobs" />
-      <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Keys" />
-      <PackageReference Include="Azure.Identity" />
       <PackageReference Include="FluentValidation" />
       <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
       <PackageReference Include="IdGen.DependencyInjection" />
@@ -33,8 +31,8 @@
       </PackageReference>
       <PackageReference Include="Microsoft.AspNetCore.Components.DataAnnotations.Validation" />
       <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
-      <PackageReference Include="Microsoft.Azure.AppConfiguration.AspNetCore" />
       <PackageReference Include="MudBlazor" />
+      <PackageReference Include="Npgsql" />
       <PackageReference Include="OneOf" />
       <PackageReference Include="Serilog" />
       <PackageReference Include="Serilog.AspNetCore" />

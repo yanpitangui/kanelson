@@ -1,13 +1,13 @@
 using Akka.Cluster.Hosting;
 using Akka.Hosting;
-using Akka.Persistence.Azure.Hosting;
-using Azure.Identity;
+using Akka.Persistence.Sql.Hosting;
 using Kanelson.Domain.Questions;
 using Kanelson.Domain.Rooms;
 using Kanelson.Domain.Templates;
 using Kanelson.Domain.Users;
 using Kanelson.Extractors;
 using Kanelson.Hubs;
+using LinqToDB;
 using Microsoft.AspNetCore.SignalR;
 using Serilog.Core;
 
@@ -69,24 +69,9 @@ public static class AkkaSetup
                         Role = actorSystemName,
                     });
 
-                if (ctx.HostingEnvironment.IsDevelopment())
-                {
-                    akkaBuilder
-                        .WithAzureTableJournal(ctx.Configuration.GetConnectionString("TableStorage")!)
-                        .WithAzureBlobsSnapshotStore(ctx.Configuration.GetConnectionString("BlobStorage")!);
-                    
-
-                }
-                else
-                {
-                    var credentials = new DefaultAzureCredential();
-
-                    akkaBuilder
-                        .WithAzureTableJournal(new Uri(ctx.Configuration.GetConnectionString("TableStorage")!),
-                            defaultAzureCredential: credentials)
-                        .WithAzureBlobsSnapshotStore(new Uri(ctx.Configuration.GetConnectionString("BlobStorage")!),
-                            defaultAzureCredential: credentials);
-                }
+                akkaBuilder.WithSqlPersistence(
+                    connectionString: ctx.Configuration.GetConnectionString("KanelsonDb")!,
+                    providerName: ProviderName.PostgreSQL);
 
             });
         });

@@ -72,7 +72,7 @@
                                 <MudTh>@Loc["Alternatives"]</MudTh>
                                 <MudTh>
                                     <MudFab @onclick="AddAlternative" Disabled="_question.Type == QuestionType.TrueFalse"
-                                            Color="Color.Secondary" Icon="@Icons.Material.Filled.Add"
+                                            Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Add"
                                             Size="Size.Small" IconSize="Size.Small"/></MudTh>
                             </HeaderContent>
                             <RowTemplate>
@@ -92,7 +92,7 @@
                                 <MudTd DataLabel="Delete">
                                     <MudFab @onclick="@(() => DeleteAlternative(@alternativeContext))"
                                             Disabled="_question.Type == QuestionType.TrueFalse"
-                                            Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete"
+                                            Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Delete"
                                             Size="Size.Small" IconSize="Size.Small"/>
 
                                 </MudTd>

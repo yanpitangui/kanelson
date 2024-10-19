@@ -15,6 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFolder", "SolutionF
 		docker-compose.yml = docker-compose.yml
 		.editorconfig = .editorconfig
 		Directory.Packages.props = Directory.Packages.props
+		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kanelson.Tests", "Kanelson.Tests\Kanelson.Tests.csproj", "{564E6574-731E-4816-88FB-FA90DE39AD18}"

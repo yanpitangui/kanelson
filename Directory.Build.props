@@ -1,0 +1,6 @@
+<Project>
+    <PropertyGroup>
+        <LangVersion>latest</LangVersion>
+        <NetLibVersion>net9.0</NetLibVersion>
+    </PropertyGroup>
+</Project>

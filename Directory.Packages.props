@@ -15,7 +15,7 @@
     <PackageVersion Include="Akka.Persistence.Sql" Version="1.5.30" />
     <PackageVersion Include="Akka.Persistence.Sql.Hosting" Version="1.5.30" />
     <PackageVersion Include="Akka.Persistence.TestKit.Xunit2" Version="1.5.30" />
-    <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="8.2.0" />
+    <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="8.3.0" />
     <PackageVersion Include="Bogus" Version="35.6.1" />
     <PackageVersion Include="FluentValidation" Version="11.10.0" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.10.0" />

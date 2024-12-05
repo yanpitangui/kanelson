@@ -4,7 +4,7 @@
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Akka" Version="1.5.31" />
+    <PackageVersion Include="Akka" Version="1.5.32" />
     <PackageVersion Include="Akka.Cluster.Sharding" Version="1.5.31" />
     <PackageVersion Include="Akka.Discovery.KubernetesApi" Version="1.5.31" />
     <PackageVersion Include="Akka.HealthCheck.Hosting" Version="1.5.31" />

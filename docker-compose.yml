@@ -1,23 +1,25 @@
 services:
-  azurite:
-    image: mcr.microsoft.com/azure-storage/azurite
-    command: "azurite --loose --blobHost 0.0.0.0 --blobPort 10000 --queueHost 0.0.0.0 --queuePort 10001 --tablePort 10002 --tableHost 0.0.0.0 --location /workspace"
+  db:
+    image: postgres:latest
     ports:
-      - 10000:10000
-      - 10001:10001
-      - 10002:10002
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres # The PostgreSQL user (useful to connect to the database)
+      - POSTGRES_PASSWORD=hqysxvqw5cgdYyQHTfHe # The PostgreSQL password (useful to connect to the database)
+      - POSTGRES_DB=Kanelson # The PostgreSQL default database (automatically created at first launch)
     volumes:
-      - ./azurite:/workspace
+      - sqlvolume:/var/lib/postgresql/data
   kanelson:
     image: kanelson
     build:
       context: .
       dockerfile: Dockerfile
     environment:
-      - ConnectionStrings__TableStorage=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;TableEndpoint=http://azurite:10002/devstoreaccount1;
-      - ConnectionStrings__BlobStorage=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;            
       - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__KanelsonDb=User ID=postgres;Password=hqysxvqw5cgdYyQHTfHe;Host=localhost;Port=5432;Database=Kanelson;Pooling=true;Maximum Pool Size=5;Multiplexing=true
     depends_on: 
-      - azurite
+      - db
     ports:
       - "7289:8080"
+volumes:
+  sqlvolume:

@@ -4,41 +4,41 @@
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Akka" Version="1.5.34" />
-    <PackageVersion Include="Akka.Cluster.Sharding" Version="1.5.31" />
-    <PackageVersion Include="Akka.Discovery.KubernetesApi" Version="1.5.31" />
-    <PackageVersion Include="Akka.HealthCheck.Hosting" Version="1.5.31" />
-    <PackageVersion Include="Akka.Cluster.Hosting" Version="1.5.31.1" />
-    <PackageVersion Include="Akka.Hosting" Version="1.5.31.1" />
-    <PackageVersion Include="Akka.Management" Version="1.5.31" />
-    <PackageVersion Include="Akka.Persistence" Version="1.5.34" />
-    <PackageVersion Include="Akka.Persistence.Sql" Version="1.5.30" />
-    <PackageVersion Include="Akka.Persistence.Sql.Hosting" Version="1.5.30" />
-    <PackageVersion Include="Akka.Persistence.TestKit.Xunit2" Version="1.5.34" />
-    <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="9.0.0" />
-    <PackageVersion Include="Bogus" Version="35.6.1" />
+    <PackageVersion Include="Akka" Version="1.5.39" />
+    <PackageVersion Include="Akka.Cluster.Sharding" Version="1.5.39" />
+    <PackageVersion Include="Akka.Discovery.KubernetesApi" Version="1.5.37" />
+    <PackageVersion Include="Akka.HealthCheck.Hosting" Version="1.5.37" />
+    <PackageVersion Include="Akka.Cluster.Hosting" Version="1.5.39" />
+    <PackageVersion Include="Akka.Hosting" Version="1.5.39" />
+    <PackageVersion Include="Akka.Management" Version="1.5.37" />
+    <PackageVersion Include="Akka.Persistence" Version="1.5.39" />
+    <PackageVersion Include="Akka.Persistence.Sql" Version="1.5.38.1" />
+    <PackageVersion Include="Akka.Persistence.Sql.Hosting" Version="1.5.38.1" />
+    <PackageVersion Include="Akka.Persistence.TestKit.Xunit2" Version="1.5.39" />
+    <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="9.2.0" />
+    <PackageVersion Include="Bogus" Version="35.6.2" />
     <PackageVersion Include="FluentValidation" Version="11.11.0" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
     <PackageVersion Include="IdGen" Version="3.0.7" />
     <PackageVersion Include="IdGen.DependencyInjection" Version="3.0.7" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.DataAnnotations.Validation" Version="3.2.0-rc1.20223.4" />
-    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
-    <PackageVersion Include="MudBlazor" Version="7.15.0" />
-    <PackageVersion Include="Npgsql" Version="9.0.2" />
+    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.3" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageVersion Include="MudBlazor" Version="8.3.0" />
+    <PackageVersion Include="Npgsql" Version="9.0.3" />
     <PackageVersion Include="OneOf" Version="3.0.271" />
     <PackageVersion Include="Serilog" Version="4.2.0" />
-    <PackageVersion Include="Serilog.AspNetCore" Version="8.0.3" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="9.0.0" />
     <PackageVersion Include="Serilog.Exceptions" Version="8.4.0" />
     <PackageVersion Include="Serilog.Sinks.Async" Version="2.1.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
-    <PackageVersion Include="Verify.Xunit" Version="28.8.1" />
-    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.3.0.106239">
+    <PackageVersion Include="Verify.Xunit" Version="28.16.0" />
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.7.0.110445">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageVersion>
-    <PackageVersion Include="xunit" Version="2.9.2" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2">
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageVersion>

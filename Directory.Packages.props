@@ -33,7 +33,7 @@
     <PackageVersion Include="Serilog.Sinks.Async" Version="2.1.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageVersion Include="Verify.Xunit" Version="28.16.0" />
-    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.7.0.110445">
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.8.0.113526">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageVersion>

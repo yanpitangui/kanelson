@@ -54,6 +54,14 @@ public class SerializationSpecs : IDisposable
     }
 
     [Fact]
+    public void RoomPlacement_roundtrips()
+    {
+        var original = new RoomPlacement("room-1", "Room", 1, 10, 1000, new DateTime(2026, 4, 24, 0, 0, 0, DateTimeKind.Utc));
+        var result = Roundtrip(original);
+        Assert.Equal(original, result);
+    }
+
+    [Fact]
     public void Question_roundtrips()
     {
         var original = new Question

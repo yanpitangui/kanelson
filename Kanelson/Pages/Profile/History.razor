@@ -1,0 +1,49 @@
+@page "/profile/history"
+@using Akka.Actor
+@using Akka.Hosting
+@using System.Collections.Immutable
+@using Kanelson.Domain.Users
+@inject IRequiredActor<UserHistory> UserHistoryActor
+@inject IUserService UserService
+@inject IStringLocalizer<Shared> Loc
+
+@if (_history is null)
+{
+    <h2>@Loc["Loading"]...</h2>
+}
+else
+{
+    <MudCard>
+        <MudTable Elevation="25" Items="_history" T="RoomPlacement">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">@Loc["History"]</MudText>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>@Loc["Room"]</MudTh>
+                <MudTh>@Loc["PlayedAt"]</MudTh>
+                <MudTh>@Loc["Placement"]</MudTh>
+                <MudTh>@Loc["Points"]</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@Loc["Room"]">@context.RoomName</MudTd>
+                <MudTd DataLabel="@Loc["PlayedAt"]">@context.PlayedAt.ToLocalTime().ToString("g")</MudTd>
+                <MudTd DataLabel="@Loc["Placement"]">@context.Rank/@context.TotalPlayers</MudTd>
+                <MudTd DataLabel="@Loc["Points"]">@context.Points</MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText>@Loc["NoHistory"]</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    </MudCard>
+}
+
+@code {
+    private ImmutableArray<RoomPlacement>? _history;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _history = await UserHistoryActor.ActorRef.Ask<ImmutableArray<RoomPlacement>>(
+            new UserHistoryQueries.GetHistory(UserService.CurrentUser));
+        await base.OnInitializedAsync();
+    }
+}

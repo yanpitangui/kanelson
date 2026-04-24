@@ -22,7 +22,7 @@ public sealed class RoomSpecs : PersistenceTestKit
     public async Task Local_room_subscription_should_stream_room_events()
     {
         var roomsIndexActor = Sys.ActorOf(AllRoomsIndexActor.Props(), "all-rooms-index-test");
-        var roomActor = Sys.ActorOf(Room.Props(RoomId, roomsIndexActor, new StubUserService(Owner, Player)), "room-actor-test");
+        var roomActor = Sys.ActorOf(Room.Props(RoomId, roomsIndexActor, Sys.DeadLetters, new StubUserService(Owner, Player)), "room-actor-test");
         var roomShard = Sys.ActorOf(Props.Create(() => new FixedRoomShard(roomActor)), "room-shard-test");
         var localRoomManager = Sys.ActorOf(LocalRoomActorManager.Props(roomShard), "local-room-manager");
 
@@ -36,11 +36,13 @@ public sealed class RoomSpecs : PersistenceTestKit
         await ExpectEvent<RoomEvents.CurrentUsersUpdated>(ownerSubscription.Reader, evt =>
             evt.Users.Should().ContainSingle(x => x.Id == Owner.Id));
 
-        await ExpectEvent<RoomEvents.CurrentUsersUpdated>(ownerSubscription.Reader, evt =>
-            evt.Users.Select(x => x.Id).Should().BeEquivalentTo([Owner.Id, Player.Id]));
+        await ExpectEvent<RoomEvents.CurrentUsersUpdated>(ownerSubscription.Reader,
+            evt => evt.Users.Select(x => x.Id).ToHashSet().SetEquals([Owner.Id, Player.Id]),
+            evt => evt.Users.Select(x => x.Id).Should().BeEquivalentTo([Owner.Id, Player.Id]));
 
-        await ExpectEvent<RoomEvents.CurrentUsersUpdated>(playerSubscription.Reader, evt =>
-            evt.Users.Select(x => x.Id).Should().BeEquivalentTo([Owner.Id, Player.Id]));
+        await ExpectEvent<RoomEvents.CurrentUsersUpdated>(playerSubscription.Reader,
+            evt => evt.Users.Select(x => x.Id).ToHashSet().SetEquals([Owner.Id, Player.Id]),
+            evt => evt.Users.Select(x => x.Id).Should().BeEquivalentTo([Owner.Id, Player.Id]));
 
         localRoom.Tell(new RoomCommands.Start(RoomId));
 
@@ -110,6 +112,27 @@ public sealed class RoomSpecs : PersistenceTestKit
             while (reader.TryRead(out var roomEvent))
             {
                 if (roomEvent is not TEvent typed)
+                {
+                    continue;
+                }
+
+                assert(typed);
+                return typed;
+            }
+        }
+
+        throw new TimeoutException($"Timed out waiting for {typeof(TEvent).Name}.");
+    }
+
+    private static async Task<TEvent> ExpectEvent<TEvent>(ChannelReader<IRoomEvent> reader, Func<TEvent, bool> predicate, Action<TEvent> assert)
+        where TEvent : class, IRoomEvent
+    {
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+        while (await reader.WaitToReadAsync(cts.Token))
+        {
+            while (reader.TryRead(out var roomEvent))
+            {
+                if (roomEvent is not TEvent typed || !predicate(typed))
                 {
                     continue;
                 }

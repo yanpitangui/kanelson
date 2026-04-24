@@ -20,6 +20,7 @@ public class Room : BaseWithSnapshotFrequencyActor
     private RoomState _state;
 
     private readonly IActorRef _roomsIndexActor;
+    private readonly IActorRef _userHistoryShard;
     private readonly ActorSelection _localRoomManager;
     private readonly ActorMaterializer _materializer;
     private IKillSwitch? _timerKillSwitch;
@@ -30,10 +31,11 @@ public class Room : BaseWithSnapshotFrequencyActor
     private IEnumerable<RoomUser> Users => _state.CurrentUsers.Where(x => !x.Owner);
 
 
-    public Room(string roomIdentifier, IActorRef roomsIndexActor, IUserService userService)
+    public Room(string roomIdentifier, IActorRef roomsIndexActor, IActorRef userHistoryShard, IUserService userService)
     {
         _roomIdentifier = roomIdentifier;
         _roomsIndexActor = roomsIndexActor;
+        _userHistoryShard = userHistoryShard;
         _localRoomManager = Context.ActorSelection("/user/local-room-manager");
         PersistenceId = $"room-{roomIdentifier}";
 
@@ -357,8 +359,32 @@ public class Room : BaseWithSnapshotFrequencyActor
         }
         else
         {
+            var rankings = GetRanking();
+            RecordPlacements(rankings);
             UpdateState(RoomStatus.Finished);
-            Broadcast(new RoomEvents.GameFinished(GetRanking()));
+            Broadcast(new RoomEvents.GameFinished(rankings));
+        }
+    }
+
+    private void RecordPlacements(ImmutableArray<UserRanking> rankings)
+    {
+        var playedAt = DateTime.UtcNow;
+        foreach (var ranking in rankings)
+        {
+            if (ranking.Rank is null)
+            {
+                continue;
+            }
+
+            _userHistoryShard.Tell(new UserHistoryCommands.RecordPlacement(
+                ranking.Id,
+                new RoomPlacement(
+                    _roomIdentifier,
+                    _state.Name,
+                    ranking.Rank.Value,
+                    rankings.Length,
+                    ranking.Points,
+                    playedAt)));
         }
     }
 
@@ -427,9 +453,9 @@ public class Room : BaseWithSnapshotFrequencyActor
         _localRoomManager.Tell(new SendToUser(_roomIdentifier, userId, roomEvent));
     }
 
-    public static Props Props(string roomIdentifier, IActorRef roomsIndexActor, IUserService userService)
+    public static Props Props(string roomIdentifier, IActorRef roomsIndexActor, IActorRef userHistoryShard, IUserService userService)
     {
-        return Akka.Actor.Props.Create<Room>(roomIdentifier, roomsIndexActor, userService);
+        return Akka.Actor.Props.Create<Room>(roomIdentifier, roomsIndexActor, userHistoryShard, userService);
     }
 
     private sealed record RoundExpired

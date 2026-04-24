@@ -53,6 +53,10 @@ akka.actor {
                         userMessageExtractor,
                         defaultShardOptions
                     )
+                    .WithShardRegion<UserHistory>(nameof(UserHistory),
+                        UserHistory.Props,
+                        userMessageExtractor,
+                        defaultShardOptions)
                     .WithShardRegion<UserQuestions>(nameof(UserQuestions),
                         UserQuestions.Props,
                         userMessageExtractor,
@@ -69,6 +73,7 @@ akka.actor {
                             (identifier) =>
                                 Room.Props(identifier,
                                     ar.Get<AllRoomsIndexActor>(),
+                                    ar.Get<UserHistory>(),
                                     sp.GetService<IUserService>()),
                         new RoomMessageExtractor(50),
                         defaultShardOptions)

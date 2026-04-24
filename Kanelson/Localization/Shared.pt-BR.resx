@@ -171,4 +171,16 @@
     <data name="QuestionUploadSuccess" xml:space="preserve">
         <value>Questões importadas com sucesso.</value>
     </data>
+    <data name="History" xml:space="preserve">
+        <value>Histórico</value>
+    </data>
+    <data name="PlayedAt" xml:space="preserve">
+        <value>Jogado em</value>
+    </data>
+    <data name="Placement" xml:space="preserve">
+        <value>Colocação</value>
+    </data>
+    <data name="NoHistory" xml:space="preserve">
+        <value>Nenhum resultado registrado ainda.</value>
+    </data>
 </root>

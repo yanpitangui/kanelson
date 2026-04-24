@@ -12,6 +12,8 @@ using Serilog;
 Activity.DefaultIdFormat = ActivityIdFormat.W3C;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.AddServiceDefaults();
 // remove default logging providers
 builder.Logging.ClearProviders();
 // Serilog configuration        
@@ -85,6 +87,8 @@ builder.Host.AddAkkaSetup(logger);
 builder.Host.AddDataProtectionSetup();
 
 var app = builder.Build();
+
+app.MapDefaultEndpoints();
 
 app.UseResponseCompression();
 

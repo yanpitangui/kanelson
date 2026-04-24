@@ -15,6 +15,7 @@
     <PackageVersion Include="Akka.Persistence.Sql.Hosting" Version="1.5.62" />
     <PackageVersion Include="Akka.Persistence.TestKit.Xunit2" Version="1.5.65" />
     <PackageVersion Include="Akka.Serialization.MessagePack2" Version="1.5.60" />
+    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.2.3" />
     <PackageVersion Include="AwesomeAssertions" Version="9.4.0" />
     <PackageVersion Include="MessagePack" Version="3.1.4" />
     <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="10.0.0" />
@@ -44,5 +45,13 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageVersion>
+    <PackageVersion Include="Aspire.Hosting.AppHost" Version="13.2.3" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="9.0.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.9.0" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.9.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.9.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.9.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.9.0" />
   </ItemGroup>
 </Project>

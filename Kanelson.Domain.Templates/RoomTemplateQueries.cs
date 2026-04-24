@@ -1,34 +1,33 @@
 using Kanelson.Common;
+using MessagePack;
 
 namespace Kanelson.Domain.Templates;
 
 public static class RoomTemplateQueries
 {
+    [MessagePackObject]
     public sealed record GetSummary
     {
-        private GetSummary()
-        {
-        }
-
+        public GetSummary() { }
         public static GetSummary Instance { get; } = new();
     }
 
+    [MessagePackObject]
     public sealed record GetTemplate
     {
-        private GetTemplate()
-        {
-        }
-
+        public GetTemplate() { }
         public static GetTemplate Instance { get; } = new();
     }
-    
-    public sealed record GetAllSummaries(string UserId) : IWithUserId;
 
-    public sealed record Exists(string UserId, Guid Id) : IWithUserId;
+    [MessagePackObject]
+    public sealed record GetAllSummaries([property: Key(0)] string UserId) : IWithUserId;
 
-    public sealed record GetRef(string UserId, Guid Id) : IWithUserId;
+    [MessagePackObject]
+    public sealed record Exists([property: Key(0)] string UserId, [property: Key(1)] Guid Id) : IWithUserId;
 
-    public sealed record Unregister(string UserId, Guid Id) : IWithUserId;
+    [MessagePackObject]
+    public sealed record GetRef([property: Key(0)] string UserId, [property: Key(1)] Guid Id) : IWithUserId;
 
-
+    [MessagePackObject]
+    public sealed record Unregister([property: Key(0)] string UserId, [property: Key(1)] Guid Id) : IWithUserId;
 }

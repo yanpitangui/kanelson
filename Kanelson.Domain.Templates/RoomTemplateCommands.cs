@@ -1,10 +1,13 @@
 using Kanelson.Domain.Templates.Models;
+using MessagePack;
 
 namespace Kanelson.Domain.Templates;
 
 public static class RoomTemplateCommands
 {
-    public sealed record Upsert(Template Template);
+    [MessagePackObject]
+    public sealed record Upsert([property: Key(0)] Template Template);
 
-    internal sealed record Register(Guid Id);
+    [MessagePackObject]
+    internal sealed record Register([property: Key(0)] Guid Id);
 }

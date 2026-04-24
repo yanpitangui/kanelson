@@ -7,11 +7,16 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
       <ProjectReference Include="..\Kanelson.Common\Kanelson.Common.csproj" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="Akka.Hosting" />
+      <PackageReference Include="MessagePack" />
     </ItemGroup>
 
 </Project>

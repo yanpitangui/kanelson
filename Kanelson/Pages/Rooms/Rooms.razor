@@ -1,15 +1,13 @@
-﻿@page "/rooms"
+@page "/rooms"
 @using System.Collections.Immutable
+@using System.Threading.Channels
 @using Kanelson.Components.CardRoom
 @using Kanelson.Domain.Rooms
 @using Kanelson.Domain.Users
-@using Kanelson.Hubs
-@using Microsoft.AspNetCore.SignalR.Client
 @inject IRoomService Service
 @inject IUserService UserService
 @inject NavigationManager Navigation
 @inject IStringLocalizer<Shared> Loc
-@inject IHttpContextAccessor HttpAccessor
 @inherits ComponentBase
 @implements IAsyncDisposable
 
@@ -36,47 +34,46 @@ else
             </CardRoomComponent>
         }
     </div>
-
 }
 
 @code {
 
     private ImmutableArray<BasicRoomInfo>? _rooms;
-    private HubConnection _hubConnection = null!;
+    private CancellationTokenSource _cts = new();
 
     protected override async Task OnInitializedAsync()
     {
-        _hubConnection = HttpAccessor.GetConnection(Navigation, "roomLobbyHub");
+        var channel = await Service.GetRoomsChannel();
+        _ = RunDataPump(channel);
+    }
 
-
-        _hubConnection.On<ImmutableArray<BasicRoomInfo>>(SignalRMessages.RoomsChanged, (rooms) =>
+    private async Task RunDataPump(ChannelReader<ImmutableArray<BasicRoomInfo>> reader)
+    {
+        try
         {
-            _rooms = rooms;
-            InvokeAsync(StateHasChanged);
-        });
-
-        _rooms = await Service.GetAll();
-        await _hubConnection.StartAsync();
+            await foreach (var rooms in reader.ReadAllAsync(_cts.Token))
+            {
+                _rooms = rooms;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException) { }
     }
 
     private void JoinRoom(string id)
-    { 
+    {
         Navigation.NavigateTo($"/room/{id}");
     }
 
     private async Task DeleteRoom(string id)
     {
         await Service.Delete(id);
-        await InvokeAsync(StateHasChanged);
     }
-
 
     public async ValueTask DisposeAsync()
     {
-        if (_hubConnection is IAsyncDisposable disposable)
-        {
-            await disposable.DisposeAsync();
-        }
+        await _cts.CancelAsync();
+        _cts.Dispose();
     }
 
 }

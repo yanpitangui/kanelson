@@ -1,7 +1,7 @@
 using Akka.Actor;
 using Akka.Persistence.TestKit;
 using Akka.TestKit;
-using FluentAssertions;
+using AwesomeAssertions;
 using Kanelson.Domain.Templates;
 using Kanelson.Domain.Templates.Models;
 using System.Collections.Immutable;
@@ -60,7 +60,7 @@ public class TemplateIndexSpecs : PersistenceTestKit
         
         // act
         var summaries = await GetSummaries();
-        summaries.Should().BeEquivalentTo(new TemplateSummary(id, "Test template to be registered"));
+        summaries.Should().BeEquivalentTo(new[] { new TemplateSummary(id, "Test template to be registered") });
 
     }
      

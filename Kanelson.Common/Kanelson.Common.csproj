@@ -7,12 +7,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    </ItemGroup>
-    
-    <ItemGroup>
       <PackageReference Include="Akka" />
       <PackageReference Include="Akka.Persistence" />
+      <PackageReference Include="MessagePack" />
     </ItemGroup>
 
 </Project>

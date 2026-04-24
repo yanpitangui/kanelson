@@ -13,13 +13,11 @@
             {
                 @if (_summary.Owner.Id == UserService.CurrentUser)
                 {
-                    <Admin RoomId="@Id" HubConnection="_hubConnection"
-                           TimerConfiguration="_timerConfig" Class="d-flex flex-1 py-9"/>
+                    <Admin RoomId="@Id" TimerConfiguration="_timerConfig" Class="d-flex flex-1 py-9"/>
                 }
                 else
                 {
-                    <Player RoomId="@Id" HubConnection="_hubConnection"
-                            TimerConfiguration="_timerConfig" Class="d-flex flex-1 py-9"/>
+                    <Player RoomId="@Id" TimerConfiguration="_timerConfig" Class="d-flex flex-1 py-9"/>
                 }
             }
             else

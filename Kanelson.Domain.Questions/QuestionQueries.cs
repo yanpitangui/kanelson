@@ -1,12 +1,16 @@
 using Kanelson.Common;
+using MessagePack;
 
 namespace Kanelson.Domain.Questions;
 
 public static class QuestionQueries
 {
-    public sealed record GetQuestions(string UserId, params Guid[] Ids): IWithUserId;
+    [MessagePackObject]
+    public sealed record GetQuestions([property: Key(0)] string UserId, [property: Key(1)] params Guid[] Ids) : IWithUserId;
 
-    public sealed record GetQuestion(string UserId, Guid Id) : IWithUserId;
+    [MessagePackObject]
+    public sealed record GetQuestion([property: Key(0)] string UserId, [property: Key(1)] Guid Id) : IWithUserId;
 
-    public sealed record GetQuestionsSummary(string UserId) : IWithUserId;
+    [MessagePackObject]
+    public sealed record GetQuestionsSummary([property: Key(0)] string UserId) : IWithUserId;
 }

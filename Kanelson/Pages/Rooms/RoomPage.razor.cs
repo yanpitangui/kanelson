@@ -1,10 +1,13 @@
+using Akka.Actor;
+using Akka.Hosting;
 using Kanelson.Domain.Rooms;
+using Kanelson.Domain.Rooms.Local;
 using Kanelson.Domain.Rooms.Models;
 using Kanelson.Domain.Users;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Localization;
 using MudBlazor;
+using System.Threading.Channels;
 using System.Timers;
 
 namespace Kanelson.Pages.Rooms;
@@ -17,11 +20,7 @@ public sealed partial class RoomPage : ComponentBase, IAsyncDisposable
         
     [Inject] 
     private NavigationManager Navigation { get; set; } = null!;
-    
-    [Inject]
-    private IHttpContextAccessor HttpAccessor { get; set; } = null!;
-    
-    
+
     [Inject]
     private IStringLocalizer<Localization.Shared> Loc { get; set; } = null!;
 
@@ -33,12 +32,16 @@ public sealed partial class RoomPage : ComponentBase, IAsyncDisposable
     
     [Inject]
     private IUserService UserService { get; set; } = null!;
-    
-    
+
+    [Inject]
+    private IRequiredActor<LocalRoomActorManager> LocalRoomActorManager { get; set; } = null!;
+
     private RoomSummary? _summary;
     private HashSet<RoomUser> _connectedUsers = new();
-    private HubConnection _hubConnection = null!;
     private readonly TimerConfiguration _timerConfig = new();
+    private CancellationTokenSource? _cts;
+    private IActorRef? _localRoomActor;
+    private Guid _subscriptionId;
 
 
     protected override async Task OnInitializedAsync()
@@ -46,9 +49,14 @@ public sealed partial class RoomPage : ComponentBase, IAsyncDisposable
         try
         {
             _summary = await RoomService.Get(Id);
-            
-            _hubConnection = HttpAccessor.GetConnection(Navigation, "roomHub");
-            ConfigureCommonSignalrEvents();
+            var userInfo = await UserService.GetUserInfo(UserService.CurrentUser);
+            _localRoomActor = await LocalRoomActorManager.ActorRef.Ask<IActorRef>(new GetLocalRoom(Id));
+            var subscription = await _localRoomActor.Ask<SubscriptionResult>(
+                new SubscribeToRoom(Id, userInfo.Id, userInfo.Name));
+            _subscriptionId = subscription.SubscriptionId;
+            _cts = new CancellationTokenSource();
+            _ = RunDataPump(subscription.Reader, _cts.Token);
+            _timerConfig.SetupAction(TimeElapsed);
 
         }
         catch (Exception)
@@ -62,36 +70,40 @@ public sealed partial class RoomPage : ComponentBase, IAsyncDisposable
             Navigation.NavigateTo("rooms");
         }
     }
-    
-    private void ConfigureCommonSignalrEvents()
+
+    private async Task RunDataPump(ChannelReader<IRoomEvent> reader, CancellationToken cancellationToken)
     {
-        
-        _timerConfig.SetupAction(TimeElapsed);
-
-        
-        _hubConnection.On<HashSet<RoomUser>>(SignalRMessages.CurrentUsersUpdated, (users) =>
+        try
         {
-            _connectedUsers = users;
-            InvokeAsync(StateHasChanged);
-        });
-        
-        
-        _hubConnection.On<string>(SignalRMessages.UserAnswered, (userId) =>
-        {
-            var user = _connectedUsers.FirstOrDefault(x => string.Equals(x.Id, userId, StringComparison.OrdinalIgnoreCase));
-            if (user != null)
+            await foreach (var roomEvent in reader.ReadAllAsync(cancellationToken))
             {
-                user.Answered = true;
-            }
-        });
+                switch (roomEvent)
+                {
+                    case RoomEvents.CurrentUsersUpdated users:
+                        _connectedUsers = users.Users;
+                        break;
+                    case RoomEvents.UserAnswered answered:
+                        var user = _connectedUsers.FirstOrDefault(x =>
+                            string.Equals(x.Id, answered.UserId, StringComparison.OrdinalIgnoreCase));
+                        if (user is not null)
+                        {
+                            user.Answered = true;
+                        }
+                        break;
+                    case RoomEvents.RoomDeleted:
+                        Snackbar.Add(Loc["RoomDeleted"], Severity.Warning);
+                        Navigation.NavigateTo("rooms");
+                        break;
+                }
 
-        _hubConnection.On<bool>(SignalRMessages.RoomDeleted, _ =>
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException)
         {
-            Snackbar.Add(Loc["RoomDeleted"], Severity.Warning);
-            Navigation.NavigateTo("rooms");
-        });
+        }
     }
-    
+
     private void TimeElapsed(object? sender, ElapsedEventArgs e)
     {
         _timerConfig.Increment();
@@ -100,10 +112,13 @@ public sealed partial class RoomPage : ComponentBase, IAsyncDisposable
     
     public async ValueTask DisposeAsync()
     {
-        if (_hubConnection is IAsyncDisposable disposable)
+        if (_cts is not null)
         {
-            await disposable.DisposeAsync();
+            await _cts.CancelAsync();
+            _cts.Dispose();
         }
+
+        _localRoomActor?.Tell(new UnsubscribeFromRoom(Id, _subscriptionId));
 
         if (_timerConfig is IDisposable handle)
         {

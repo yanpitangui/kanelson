@@ -1,24 +1,21 @@
+using MessagePack;
+
 namespace Kanelson.Domain.Rooms;
 
 public class RoomQueries
 {
-    public record Exists(string RoomId) : IWithRoomId;
+    [MessagePackObject]
+    public record Exists([property: Key(0)] string RoomId) : IWithRoomId;
 
-    public sealed record GetRoomsBasicInfo
-    {
-        private GetRoomsBasicInfo()
-        {
-        }
+    [MessagePackObject]
+    public sealed record GetCurrentState([property: Key(0)] string RoomId) : IWithRoomId;
 
-        public static GetRoomsBasicInfo Instance { get; } = new();
-    }
-    
-    public sealed record GetCurrentState(string RoomId) : IWithRoomId;
+    [MessagePackObject]
+    public sealed record GetSummary([property: Key(0)] string RoomId) : IWithRoomId;
 
-    public sealed record GetSummary(string RoomId) : IWithRoomId;
-    
-    public sealed record GetCurrentQuestion(string RoomId) : IWithRoomId;
+    [MessagePackObject]
+    public sealed record GetCurrentQuestion([property: Key(0)] string RoomId) : IWithRoomId;
 
-    public sealed record GetOwner(string RoomId) : IWithRoomId;
-    
+    [MessagePackObject]
+    public sealed record GetOwner([property: Key(0)] string RoomId) : IWithRoomId;
 }

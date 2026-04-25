@@ -4,43 +4,54 @@
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Akka" Version="1.5.39" />
-    <PackageVersion Include="Akka.Cluster.Sharding" Version="1.5.39" />
-    <PackageVersion Include="Akka.Discovery.KubernetesApi" Version="1.5.37" />
-    <PackageVersion Include="Akka.HealthCheck.Hosting" Version="1.5.37" />
-    <PackageVersion Include="Akka.Cluster.Hosting" Version="1.5.39" />
-    <PackageVersion Include="Akka.Hosting" Version="1.5.39" />
-    <PackageVersion Include="Akka.Management" Version="1.5.37" />
-    <PackageVersion Include="Akka.Persistence" Version="1.5.39" />
-    <PackageVersion Include="Akka.Persistence.Sql" Version="1.5.38.1" />
-    <PackageVersion Include="Akka.Persistence.Sql.Hosting" Version="1.5.38.1" />
-    <PackageVersion Include="Akka.Persistence.TestKit.Xunit2" Version="1.5.39" />
-    <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="9.2.0" />
-    <PackageVersion Include="Bogus" Version="35.6.2" />
-    <PackageVersion Include="FluentValidation" Version="11.11.0" />
-    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+    <PackageVersion Include="Akka" Version="1.5.65" />
+    <PackageVersion Include="Akka.Cluster.Sharding" Version="1.5.65" />
+    <PackageVersion Include="Akka.Discovery.KubernetesApi" Version="1.5.65" />
+    <PackageVersion Include="Akka.Cluster.Hosting" Version="1.5.65" />
+    <PackageVersion Include="Akka.Hosting" Version="1.5.65" />
+    <PackageVersion Include="Akka.Management" Version="1.5.65" />
+    <PackageVersion Include="Akka.Persistence" Version="1.5.65" />
+    <PackageVersion Include="Akka.Persistence.Sql" Version="1.5.62" />
+    <PackageVersion Include="Akka.Persistence.Sql.Hosting" Version="1.5.62" />
+    <PackageVersion Include="Akka.Persistence.TestKit.Xunit2" Version="1.5.65" />
+    <PackageVersion Include="Akka.Serialization.MessagePack2" Version="1.5.60" />
+    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.2.3" />
+    <PackageVersion Include="AwesomeAssertions" Version="9.4.0" />
+    <PackageVersion Include="MessagePack" Version="3.1.4" />
+    <PackageVersion Include="AspNet.Security.OAuth.GitHub" Version="10.0.0" />
+    <PackageVersion Include="Bogus" Version="35.6.5" />
+    <PackageVersion Include="FluentValidation" Version="12.1.1" />
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageVersion Include="IdGen" Version="3.0.7" />
     <PackageVersion Include="IdGen.DependencyInjection" Version="3.0.7" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.DataAnnotations.Validation" Version="3.2.0-rc1.20223.4" />
-    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.3" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
-    <PackageVersion Include="MudBlazor" Version="8.3.0" />
-    <PackageVersion Include="Npgsql" Version="9.0.3" />
+    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.7" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
+    <PackageVersion Include="MudBlazor" Version="9.4.0" />
+    <PackageVersion Include="Npgsql" Version="10.0.2" />
     <PackageVersion Include="OneOf" Version="3.0.271" />
-    <PackageVersion Include="Serilog" Version="4.2.0" />
-    <PackageVersion Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageVersion Include="Serilog" Version="4.3.1" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="Serilog.Exceptions" Version="8.4.0" />
     <PackageVersion Include="Serilog.Sinks.Async" Version="2.1.0" />
-    <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
-    <PackageVersion Include="Verify.Xunit" Version="28.16.0" />
-    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.7.0.110445">
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageVersion Include="Verify.Xunit" Version="31.12.5" />
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.24.0.138807">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageVersion>
     <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.0.2">
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageVersion>
+    <PackageVersion Include="Aspire.Hosting.AppHost" Version="13.2.3" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="9.0.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.9.0" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.9.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.9.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.9.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.9.0" />
   </ItemGroup>
 </Project>

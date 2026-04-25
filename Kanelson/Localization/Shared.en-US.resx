@@ -171,4 +171,16 @@
     <data name="QuestionUploadSuccess" xml:space="preserve">
         <value>Questions uploaded successfully.</value>
     </data>
+    <data name="History" xml:space="preserve">
+        <value>History</value>
+    </data>
+    <data name="PlayedAt" xml:space="preserve">
+        <value>Played at</value>
+    </data>
+    <data name="Placement" xml:space="preserve">
+        <value>Placement</value>
+    </data>
+    <data name="NoHistory" xml:space="preserve">
+        <value>No placements recorded yet.</value>
+    </data>
 </root>

@@ -2,7 +2,7 @@ using Akka.Actor;
 using Akka.Persistence.TestKit;
 using Akka.TestKit;
 using Akka.Util;
-using FluentAssertions;
+using AwesomeAssertions;
 using Kanelson.Domain.Questions;
 using System.Collections.Immutable;
 

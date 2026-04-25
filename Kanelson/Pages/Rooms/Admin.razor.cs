@@ -1,38 +1,26 @@
 using System.Collections.Immutable;
 using Kanelson.Domain.Rooms;
 using Kanelson.Domain.Rooms.Models;
-using Kanelson.Hubs;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.Localization;
 
 namespace Kanelson.Pages.Rooms;
 
 public partial class Admin : BaseRoomPage
 {
-    [Inject] 
-    private IRoomService RoomService {get; set; } = null!;
-
     private RoomStatus _roomStatus;
 
-    protected override void ConfigureExtraSignalrEvents()
+    protected override void HandleEvent(IRoomEvent roomEvent)
     {
-        base.ConfigureExtraSignalrEvents();
-        HubConnection.On<RoomStatus>(SignalRMessages.RoomStatusChanged, (state) =>
+        base.HandleEvent(roomEvent);
+        if (roomEvent is RoomEvents.RoomStatusChanged state)
         {
-            _roomStatus = state;
-            InvokeAsync(StateHasChanged);
-        });
+            _roomStatus = state.Status;
+        }
     }
 
     protected override async Task AfterConnectedConfiguration()
     {
-        var currentState = await RoomService.GetCurrentState(RoomId);
-        _roomStatus = currentState;
-        
-        CurrentQuestion = await RoomService.GetCurrentQuestion(RoomId);
-
-        await InvokeAsync(StateHasChanged);
+        await base.AfterConnectedConfiguration();
+        _roomStatus = await RoomService.GetCurrentState(RoomId);
     }
 
 

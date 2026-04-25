@@ -1,12 +1,8 @@
 using System.Collections.Immutable;
-using System.Timers;
 using Kanelson.Domain.Rooms;
 using Kanelson.Domain.Rooms.Models;
-using Kanelson.Hubs;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.SignalR.Client;
 using MudBlazor;
-using Timer = System.Timers.Timer;
 
 namespace Kanelson.Pages.Rooms;
 
@@ -22,38 +18,33 @@ public partial class Player : BaseRoomPage
     {
         TimerConfiguration.Stop();
         _playerStatus = PlayerStatus.Answered;
-        await HubConnection!.SendAsync(SignalRMessages.Answer, RoomId,  alternativeId);
+        await RoomService.Answer(RoomId, alternativeId);
         await InvokeAsync(StateHasChanged);
     }
 
-    protected override void ConfigureExtraSignalrEvents()
+    protected override void HandleEvent(IRoomEvent roomEvent)
     {
-        base.ConfigureExtraSignalrEvents();
-
-        HubConnection.On<UserAnswerSummary>(SignalRMessages.RoundSummary, summary =>
+        base.HandleEvent(roomEvent);
+        switch (roomEvent)
         {
-            // TODO: Exibir essa informação de alguma maneira
-
-            InvokeAsync(StateHasChanged);
-        });
-
-        HubConnection.On<RejectionReason>(SignalRMessages.AnswerRejected, reason =>
-        {
-            var stringReason = reason is RejectionReason.InvalidState
-                ? Loc["InvalidState"]
-                : Loc["AnswerRejected"];
-            if (reason is RejectionReason.InvalidAlternatives)
-            {
-                _playerStatus = PlayerStatus.Answering;
-            }
-            Snackbar.Add(stringReason, Severity.Error, config =>
-            {
-                config.RequireInteraction = false;
-                config.CloseAfterNavigation = false;
-                config.ShowCloseIcon = false;
-            });
-            InvokeAsync(StateHasChanged);
-        });
+            case RoomEvents.UserRoundSummary:
+                break;
+            case RoomEvents.AnswerRejected rejection:
+                var stringReason = rejection.Reason is RejectionReason.InvalidState
+                    ? Loc["InvalidState"]
+                    : Loc["AnswerRejected"];
+                if (rejection.Reason is RejectionReason.InvalidAlternatives)
+                {
+                    _playerStatus = PlayerStatus.Answering;
+                }
+                Snackbar.Add(stringReason, Severity.Error, config =>
+                {
+                    config.RequireInteraction = false;
+                    config.CloseAfterNavigation = false;
+                    config.ShowCloseIcon = false;
+                });
+                break;
+        }
     }
 
     protected override void OnNextQuestion()

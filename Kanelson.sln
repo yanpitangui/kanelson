@@ -12,7 +12,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFolder", "SolutionFolder", "{50FCAFC4-0891-4F2E-9AF3-B120BC8C6B18}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
-		docker-compose.yml = docker-compose.yml
 		.editorconfig = .editorconfig
 		Directory.Packages.props = Directory.Packages.props
 		Directory.Build.props = Directory.Build.props
@@ -34,6 +33,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kanelson.Domain.Templates", "Kanelson.Domain.Templates\Kanelson.Domain.Templates.csproj", "{AF0044C1-BE0C-448D-8C70-CD83C9C67139}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kanelson.Domain.Rooms", "Kanelson.Domain.Rooms\Kanelson.Domain.Rooms.csproj", "{E7108F41-4291-4563-BC2F-49082029DF11}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kanelson.AppHost", "Kanelson.AppHost\Kanelson.AppHost.csproj", "{4A33DA52-5DDC-464A-B8D7-319078243809}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kanelson.ServiceDefaults", "Kanelson.ServiceDefaults\Kanelson.ServiceDefaults.csproj", "{77A0EF6E-EBEF-4799-9E5A-C97D53EE1177}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,5 +72,13 @@ Global
 		{E7108F41-4291-4563-BC2F-49082029DF11}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E7108F41-4291-4563-BC2F-49082029DF11}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E7108F41-4291-4563-BC2F-49082029DF11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A33DA52-5DDC-464A-B8D7-319078243809}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A33DA52-5DDC-464A-B8D7-319078243809}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A33DA52-5DDC-464A-B8D7-319078243809}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A33DA52-5DDC-464A-B8D7-319078243809}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77A0EF6E-EBEF-4799-9E5A-C97D53EE1177}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77A0EF6E-EBEF-4799-9E5A-C97D53EE1177}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77A0EF6E-EBEF-4799-9E5A-C97D53EE1177}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77A0EF6E-EBEF-4799-9E5A-C97D53EE1177}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

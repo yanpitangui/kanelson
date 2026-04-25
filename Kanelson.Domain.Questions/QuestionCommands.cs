@@ -1,10 +1,13 @@
 using Kanelson.Common;
+using MessagePack;
 
 namespace Kanelson.Domain.Questions;
 
 public static class QuestionCommands
 {
-    public sealed record UpsertQuestion(string UserId, Question Question) : IWithUserId;
+    [MessagePackObject]
+    public sealed record UpsertQuestion([property: Key(0)] string UserId, [property: Key(1)] Question Question) : IWithUserId;
 
-    public sealed record RemoveQuestion(string UserId, Guid Id): IWithUserId;
+    [MessagePackObject]
+    public sealed record RemoveQuestion([property: Key(0)] string UserId, [property: Key(1)] Guid Id) : IWithUserId;
 }

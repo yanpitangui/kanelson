@@ -2,7 +2,6 @@
 using Akka.Configuration;
 using Akka.Discovery.Config.Hosting;
 using Akka.Discovery.KubernetesApi;
-using Akka.HealthCheck.Hosting;
 using Akka.Hosting;
 using Akka.Management;
 using Akka.Management.Cluster.Bootstrap;
@@ -125,13 +124,6 @@ public static class AkkaBootstrap
             .WithRemoting(remoteOptions)
             .WithClustering(clusterOptions)
             .WithAkkaManagement(managementOptions)
-            // Not explicitly setting the liveness provider. The Akka.Remote port
-            // is usually an effective-enough tool for this.
-            .WithHealthCheck(opt =>
-            {
-                opt.Readiness.Transport = HealthCheckTransport.Tcp;
-                opt.Readiness.TcpPort = options.ReadinessPort;
-            })
             // Add Akka.Management.Cluster.Bootstrap support
             .WithClusterBootstrap(bootstrapOptions, autoStart: true);
         

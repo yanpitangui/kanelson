@@ -1,7 +1,7 @@
 using Akka.Actor;
 using Akka.Persistence.TestKit;
 using Akka.TestKit;
-using FluentAssertions;
+using AwesomeAssertions;
 using Kanelson.Domain.Users;
 
 namespace Kanelson.Tests;

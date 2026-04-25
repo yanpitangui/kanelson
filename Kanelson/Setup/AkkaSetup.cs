@@ -3,12 +3,11 @@ using Akka.Hosting;
 using Akka.Persistence.Sql.Hosting;
 using Kanelson.Domain.Questions;
 using Kanelson.Domain.Rooms;
+using Kanelson.Domain.Rooms.Local;
 using Kanelson.Domain.Templates;
 using Kanelson.Domain.Users;
 using Kanelson.Extractors;
-using Kanelson.Hubs;
 using LinqToDB;
-using Microsoft.AspNetCore.SignalR;
 using Serilog.Core;
 
 
@@ -22,7 +21,7 @@ public static class AkkaSetup
 
         hostBuilder.ConfigureServices((ctx, services) =>
         {
-            
+
             var defaultShardOptions = new ShardOptions()
             {
                 Role = actorSystemName,
@@ -39,12 +38,25 @@ public static class AkkaSetup
                         setup.ClearLoggers();
                         setup.AddLoggerFactory();
                     })
+                    .AddHocon(@"
+akka.actor {
+  serializers {
+    messagepack = ""Akka.Serialization.MessagePack.MsgPackSerializer, Akka.Serialization.MessagePack""
+  }
+  serialization-bindings {
+    ""System.Object"" = messagepack
+  }
+}", Akka.Hosting.HoconAddMode.Append)
                     .BootstrapNetwork(ctx.Configuration, actorSystemName, logger)
                     .WithShardRegion<User>(nameof(User),
                         User.Props,
                         userMessageExtractor,
                         defaultShardOptions
                     )
+                    .WithShardRegion<UserHistory>(nameof(UserHistory),
+                        UserHistory.Props,
+                        userMessageExtractor,
+                        defaultShardOptions)
                     .WithShardRegion<UserQuestions>(nameof(UserQuestions),
                         UserQuestions.Props,
                         userMessageExtractor,
@@ -53,20 +65,25 @@ public static class AkkaSetup
                         RoomTemplateIndex.Props,
                         userMessageExtractor,
                         defaultShardOptions)
+                    .WithSingleton<AllRoomsIndexActor>("all-rooms-index",
+                        (_, _, _) => AllRoomsIndexActor.Props(),
+                        new ClusterSingletonOptions { Role = actorSystemName })
                     .WithShardRegion<Room>(nameof(Room),
-                        (_, _, sp) =>
-                            (identifier) => 
-                                Room.Props(identifier, (IHubContext)sp.GetService<IHubContext<RoomHub>>(),
+                        (_, ar, sp) =>
+                            (identifier) =>
+                                Room.Props(identifier,
+                                    ar.Get<AllRoomsIndexActor>(),
+                                    ar.Get<UserHistory>(),
                                     sp.GetService<IUserService>()),
                         new RoomMessageExtractor(50),
                         defaultShardOptions)
-                    .WithSingleton<RoomIndex>("room-index", (_,ar,sp) =>
-                        RoomIndex.Props("room-index",
-                            ar.Get<Room>(),
-                            (IHubContext)sp.GetService<IHubContext<RoomLobbyHub>>(),
-                            sp.GetService<IUserService>()), new ClusterSingletonOptions
+                    .WithActors((system, registry) =>
                     {
-                        Role = actorSystemName,
+                        var roomShard = registry.Get<Room>();
+                        var localRoomManager = system.ActorOf(
+                            LocalRoomActorManager.Props(roomShard),
+                            "local-room-manager");
+                        registry.Register<LocalRoomActorManager>(localRoomManager);
                     });
 
                 akkaBuilder.WithSqlPersistence(

@@ -1,40 +1,45 @@
 using Akka.Actor;
 using Akka.Persistence;
+using Akka.Streams;
+using Akka.Streams.Dsl;
 using Kanelson.Common;
+using Kanelson.Domain.Rooms.Local;
 using Kanelson.Domain.Rooms.Models;
 using Kanelson.Domain.Templates.Models;
 using Kanelson.Domain.Users;
-using Microsoft.AspNetCore.SignalR;
+using MessagePack;
+using System.Diagnostics;
 using System.Collections.Immutable;
 
 namespace Kanelson.Domain.Rooms;
 
-public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
+public class Room : BaseWithSnapshotFrequencyActor
 {
-    
     public override string PersistenceId { get; }
-    public ITimerScheduler Timers { get; set; } = null!;
-    
-    private const string AnswerloopTimerName = "AnswerLoop";
 
     private RoomState _state;
 
-    private readonly IActorRef _signalrActor;
-    
-    
-    private DateTime _currentQuestionStartTime;
+    private readonly IActorRef _roomsIndexActor;
+    private readonly IActorRef _userHistoryShard;
+    private readonly ActorSelection _localRoomManager;
+    private readonly ActorMaterializer _materializer;
+    private IKillSwitch? _timerKillSwitch;
+    private Stopwatch? _roundStopwatch;
     private readonly string _roomIdentifier;
     private TemplateQuestion CurrentQuestion => _state.Template.Questions[_state.CurrentQuestionIdx];
 
     private IEnumerable<RoomUser> Users => _state.CurrentUsers.Where(x => !x.Owner);
 
 
-    public Room(string roomIdentifier, IHubContext hubContext, IUserService userService)
+    public Room(string roomIdentifier, IActorRef roomsIndexActor, IActorRef userHistoryShard, IUserService userService)
     {
         _roomIdentifier = roomIdentifier;
+        _roomsIndexActor = roomsIndexActor;
+        _userHistoryShard = userHistoryShard;
+        _localRoomManager = Context.ActorSelection("/user/local-room-manager");
         PersistenceId = $"room-{roomIdentifier}";
-        
-        _signalrActor = Context.ActorOf(SignalrActor.Props(hubContext));
+
+        _materializer = ActorMaterializer.Create(Context);
         
         _state = new RoomState();
         
@@ -59,14 +64,7 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
             Sender.Tell(summary);
         });
 
-        Recover<RoomCommands.UpdateCurrentUsers>(HandleUpdateUsers);
-
-        Command<RoomCommands.UpdateCurrentUsers>(o =>
-        { 
-            Persist(o, static _ => {});
-            // Não bloqueia esperando a persistencia
-            HandleUpdateUsers(o);
-        });
+        Command<RoomCommands.UpdateCurrentUsers>(HandleUpdateUsers);
 
         Command<RoomQueries.GetCurrentQuestion>(_ => Sender.Tell(GetCurrentQuestionInfo()));
 
@@ -78,40 +76,7 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
         });
         
         
-        Command<HandleAnswerLoop>(_ =>
-        {
-            var time = _currentQuestionStartTime;
-            
-            var currentQuestion = CurrentQuestion;
-            var everyoneAnswered = CheckEveryoneAnswered();
-             
-             // Finaliza o round e espera a próxima pergunta (se tiver)
-             if (DateTime.UtcNow - time >= TimeSpan.FromSeconds(currentQuestion.TimeLimit) || everyoneAnswered)
-             {
-                 Timers.Cancel(AnswerloopTimerName);
-
-                 _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifier, SignalRMessages.RoundFinished, Data: currentQuestion));
-
-                 FillAnswersFromUsersThatHaveNotAnswered();
-                 
-                 foreach (var userId in Users.Select(x => x.Id))
-                 {
-                     _signalrActor.Tell(new SendSignalrUserMessage(userId, SignalRMessages.RoundSummary, GetUserRoundSummary(userId)));
-                 }
-
-                 if (_state.CurrentQuestionIdx < _state.MaxQuestionIdx)
-                 {
-                     UpdateState(RoomStatus.AwaitingForNextQuestion);
-                 }
-                 else
-                 {
-                     UpdateState(RoomStatus.Finished);
-                     _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifier, SignalRMessages.RoomFinished,
-                         GetRanking()));
-                 }
-
-             }
-        });
+        Command<RoundExpired>(_ => EndCurrentRound());
         
         Recover<StatusChanged>(o =>
         {
@@ -157,15 +122,13 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
             var possibleAlternatives = CurrentQuestion.Alternatives.Select(static x => x.Id);
             if (!Array.TrueForAll(o.AlternativeIds, x => possibleAlternatives.Contains(x)))
             {
-                _signalrActor.Tell(new SendSignalrUserMessage(o.UserId, SignalRMessages.AnswerRejected, RejectionReason.InvalidAlternatives));
+                SendToUser(o.UserId, new RoomEvents.AnswerRejected(RejectionReason.InvalidAlternatives));
                 return;
             }
 
             if (_state.CurrentState is not RoomStatus.DisplayingQuestion)
             {
-                _signalrActor.Tell(new SendSignalrUserMessage(o.UserId, 
-                    SignalRMessages.AnswerRejected,
-                    RejectionReason.InvalidState));
+                SendToUser(o.UserId, new RoomEvents.AnswerRejected(RejectionReason.InvalidState));
                 return;
             }
             var questionAnswers = _state.Answers[CurrentQuestion.Id];
@@ -173,25 +136,40 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
             questionAnswers.TryAdd(o.UserId, alternativeInfo);
             var user = _state.CurrentUsers.FirstOrDefault(x => string.Equals(x.Id, o.UserId, StringComparison.OrdinalIgnoreCase));
             if (user != null) user.Answered = true;
-            _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifier, SignalRMessages.UserAnswered, o.UserId));
+            Broadcast(new RoomEvents.UserAnswered(o.UserId));
+
+            if (CheckEveryoneAnswered())
+            {
+                EndCurrentRound();
+            }
         });
         
         Command<RoomCommands.UserConnected>(o =>
         {
-            _signalrActor.Tell(new SendSignalrUserMessage(o.UserId, SignalRMessages.CurrentUsersUpdated, _state.CurrentUsers));
+            SendToUser(o.UserId, new RoomEvents.CurrentUsersUpdated(_state.CurrentUsers));
             if(_state.CurrentState == RoomStatus.Finished) 
-                _signalrActor.Tell(new SendSignalrUserMessage(o.UserId, SignalRMessages.RoomFinished, GetRanking()));
+                SendToUser(o.UserId, new RoomEvents.GameFinished(GetRanking()));
         });
         
                 
+        Command<RoomCommands.Shutdown>(_ =>
+        {
+            _roomsIndexActor.Tell(new AllRoomsPublisherMessages.RoomUnregistered(_roomIdentifier));
+            Broadcast(new RoomEvents.RoomDeleted());
+            DeleteMessages(Int64.MaxValue);
+            DeleteSnapshots(SnapshotSelectionCriteria.Latest);
+        });
+
         Command<ShutdownCommand>(_ =>
         {
-            _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifier, SignalRMessages.RoomDeleted, Data: true));
+            _roomsIndexActor.Tell(new AllRoomsPublisherMessages.RoomUnregistered(_roomIdentifier));
+            Broadcast(new RoomEvents.RoomDeleted());
             DeleteMessages(Int64.MaxValue);
             DeleteSnapshots(SnapshotSelectionCriteria.Latest);
         });
         
         Command<SaveSnapshotSuccess>(_ => { });
+        Command<TimerStreamCompleted>(_ => { });
 
         
         Recover<SnapshotOffer>(o =>
@@ -280,15 +258,18 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
         {
             user.Answered = false;
         }
-        _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifier, SignalRMessages.NextQuestion,
-            GetCurrentQuestionInfo()));
+        Broadcast(new RoomEvents.NextQuestion(GetCurrentQuestionInfo()));
     }
     
     private void SetTimeHandler()
     {
-        _currentQuestionStartTime = DateTime.UtcNow;
-        Timers.StartPeriodicTimer(AnswerloopTimerName, HandleAnswerLoop.Instance
-             , TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1));
+        _roundStopwatch = Stopwatch.StartNew();
+        _timerKillSwitch = Source
+            .Single(RoundExpired.Instance)
+            .Delay(TimeSpan.FromSeconds(CurrentQuestion.TimeLimit))
+            .ViaMaterialized(KillSwitches.Single<RoundExpired>(), Keep.Right)
+            .To(Sink.ActorRef<RoundExpired>(Self, TimerStreamCompleted.Instance, _ => TimerStreamCompleted.Instance))
+            .Run(_materializer);
     }
 
 
@@ -306,14 +287,14 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
         {
             SaveSnapshotIfPassedInterval(_state);
         }
-        _signalrActor.Tell(new SendSignalrUserMessage(_state.OwnerId,SignalRMessages.RoomStatusChanged, _state.CurrentState));
+        SendToUser(_state.OwnerId, new RoomEvents.RoomStatusChanged(_state.CurrentState));
         
         
     }
      
      private RoomAnswer CalculatePoints(Guid[] alternativeIds)
      {
-         var timeToAnswer = DateTime.UtcNow - _currentQuestionStartTime;
+         var timeToAnswer = _roundStopwatch?.Elapsed ?? TimeSpan.Zero;
          
          var correctAlternatives = CurrentQuestion
              .Alternatives
@@ -350,7 +331,62 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
              TimeToAnswer = timeToAnswer
          };
      }
-    
+
+    private void EndCurrentRound()
+    {
+        if (_state.CurrentState is not RoomStatus.DisplayingQuestion)
+        {
+            return;
+        }
+
+        _timerKillSwitch?.Shutdown();
+        _timerKillSwitch = null;
+        _roundStopwatch?.Stop();
+
+        var currentQuestion = CurrentQuestion;
+        Broadcast(new RoomEvents.RoundFinished(currentQuestion));
+
+        FillAnswersFromUsersThatHaveNotAnswered();
+
+        foreach (var userId in Users.Select(x => x.Id))
+        {
+            SendToUser(userId, new RoomEvents.UserRoundSummary(GetUserRoundSummary(userId)));
+        }
+
+        if (_state.CurrentQuestionIdx < _state.MaxQuestionIdx)
+        {
+            UpdateState(RoomStatus.AwaitingForNextQuestion);
+        }
+        else
+        {
+            var rankings = GetRanking();
+            RecordPlacements(rankings);
+            UpdateState(RoomStatus.Finished);
+            Broadcast(new RoomEvents.GameFinished(rankings));
+        }
+    }
+
+    private void RecordPlacements(ImmutableArray<UserRanking> rankings)
+    {
+        var playedAt = DateTime.UtcNow;
+        foreach (var ranking in rankings)
+        {
+            if (ranking.Rank is null)
+            {
+                continue;
+            }
+
+            _userHistoryShard.Tell(new UserHistoryCommands.RecordPlacement(
+                ranking.Id,
+                new RoomPlacement(
+                    _roomIdentifier,
+                    _state.Name,
+                    ranking.Rank.Value,
+                    rankings.Length,
+                    ranking.Points,
+                    playedAt)));
+        }
+    }
 
 
 
@@ -369,7 +405,7 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
 
         if (!equal)
         {
-            _signalrActor.Tell(new SendSignalrGroupMessage(_roomIdentifier, SignalRMessages.CurrentUsersUpdated, _state.CurrentUsers));
+            Broadcast(new RoomEvents.CurrentUsersUpdated(_state.CurrentUsers));
         }
         SaveSnapshotIfPassedInterval(_state);
     }
@@ -381,6 +417,7 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
         _state.Name = r.RoomName;
         _state.MaxQuestionIdx = Math.Clamp(_state.Template.Questions.Count - 1, 0, 100);
         _state.CurrentQuestionIdx = 0;
+        _roomsIndexActor.Tell(new AllRoomsPublisherMessages.RoomRegistered(_roomIdentifier, r.RoomName, r.OwnerId));
         SaveSnapshotIfPassedInterval(_state);
     }
     
@@ -406,22 +443,35 @@ public class Room : BaseWithSnapshotFrequencyActor, IWithTimers
     }
 
 
-    public static Props Props(string roomIdentifier, IHubContext hubContext, IUserService userService)
+    private void Broadcast(IRoomEvent roomEvent)
     {
-        return Akka.Actor.Props.Create<Room>(roomIdentifier, hubContext, userService);
-    }
-    
-    
-    private sealed record HandleAnswerLoop
-    {
-        private HandleAnswerLoop()
-        {
-        }
-
-        public static HandleAnswerLoop Instance { get; } = new();
+        _localRoomManager.Tell(new BroadcastEvent(_roomIdentifier, roomEvent));
     }
 
-    private sealed record StatusChanged(RoomStatus Status, bool IncrementedQuestionIdx);
+    private void SendToUser(string userId, IRoomEvent roomEvent)
+    {
+        _localRoomManager.Tell(new SendToUser(_roomIdentifier, userId, roomEvent));
+    }
+
+    public static Props Props(string roomIdentifier, IActorRef roomsIndexActor, IActorRef userHistoryShard, IUserService userService)
+    {
+        return Akka.Actor.Props.Create<Room>(roomIdentifier, roomsIndexActor, userHistoryShard, userService);
+    }
+
+    private sealed record RoundExpired
+    {
+        private RoundExpired() { }
+        public static RoundExpired Instance { get; } = new();
+    }
+
+    private sealed record TimerStreamCompleted
+    {
+        private TimerStreamCompleted() { }
+        public static TimerStreamCompleted Instance { get; } = new();
+    }
+
+    [MessagePackObject]
+    internal sealed record StatusChanged([property: Key(0)] RoomStatus Status, [property: Key(1)] bool IncrementedQuestionIdx);
 
 
 

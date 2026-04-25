@@ -1,8 +1,8 @@
 using Akka.Actor;
 using Akka.Persistence.TestKit;
 using Akka.TestKit;
+using AwesomeAssertions;
 using Bogus;
-using FluentAssertions;
 using Kanelson.Domain.Questions;
 using Kanelson.Domain.Templates;
 using Kanelson.Domain.Templates.Models;

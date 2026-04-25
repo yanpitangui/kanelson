@@ -2,7 +2,6 @@ using Kanelson.Domain.Users;
 using Kanelson.Endpoints;
 using System.Diagnostics;
 using System.Security.Claims;
-using Kanelson.Hubs;
 using Kanelson.Setup;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -13,6 +12,8 @@ using Serilog;
 Activity.DefaultIdFormat = ActivityIdFormat.W3C;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.AddServiceDefaults();
 // remove default logging providers
 builder.Logging.ClearProviders();
 // Serilog configuration        
@@ -87,6 +88,8 @@ builder.Host.AddDataProtectionSetup();
 
 var app = builder.Build();
 
+app.MapDefaultEndpoints();
+
 app.UseResponseCompression();
 
 // Configure the HTTP request pipeline.
@@ -104,8 +107,6 @@ app.UseStaticFiles();
 app.UseCookiePolicy();
 app.MapAuthentication();
 app.MapCulture();
-app.MapHub<RoomHub>("/roomHub");
-app.MapHub<RoomLobbyHub>("/roomLobbyHub");
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 app.UseAuthentication();

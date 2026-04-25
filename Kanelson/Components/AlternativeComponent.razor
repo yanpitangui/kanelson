@@ -1,40 +1,26 @@
-@using Color = Kanelson.Shared.AlternativeColor
 @using Kanelson.Domain.Questions
 
-@Render()
+<button class="alt-tile @_tileClass" @onclick="OnClick">
+    <span class="alt-tile-letter">@_letter</span>
+    <span>@Alternative.Description</span>
+</button>
 
 @code {
+    private static readonly char[] Letters = ['A', 'B', 'C', 'D'];
 
-    [Parameter]
-    public int Idx { get; set; }
+    [Parameter] public int Idx { get; set; }
+    [Parameter] public Alternative Alternative { get; set; } = null!;
+    [Parameter] public EventCallback<Guid> OnClickCallback { get; set; }
 
-    [Parameter]
-    public Alternative Alternative { get; set; } = null!;
-    
-    [Parameter]
-    public EventCallback<Guid> OnClickCallback {get; set;}
-
-
-    private AlternativeColor _alternativeColor = null!;
-
+    private string _tileClass = string.Empty;
+    private char _letter;
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        _alternativeColor = AlternativeColor.GetColor(Idx);
+        _tileClass = AlternativeColor.GetColor(Idx).Code;
+        _letter = Letters[Idx % Letters.Length];
     }
 
-    private async Task OnClick()
-    {
-        await OnClickCallback.InvokeAsync(Alternative.Id);
-    }
-    
-    RenderFragment Render()
-    {
-        var style = $"background: {_alternativeColor?.Code} !important;";
-        return @<MudButton Style=@style Class="e-paper d-flex align-center justify-center mud-width-full py-8" @onclick="@OnClick">
-                    <span class="alternative-description">@Alternative.Description</span>
-                </MudButton>;
-    }
-    
+    private async Task OnClick() => await OnClickCallback.InvokeAsync(Alternative.Id);
 }

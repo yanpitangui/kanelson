@@ -1,26 +1,35 @@
 ﻿@using System.Collections.Immutable
-@inherits MudComponentBase
-@inject IStringLocalizer<Shared> Loc
 
-<MudTable Items="Ranking" Hover="true" Breakpoint="Breakpoint.Sm">
-    <HeaderContent>
-        <MudTh>Pos.</MudTh>
-        <MudTh>@Loc["Name"]</MudTh>
-        <MudTh>@Loc["Points"]</MudTh>
-        <MudTh>@Loc["AverageTime"]</MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Pos.">@(context.Rank?.ToString() ?? "--")</MudTd>
-        <MudTd DataLabel="@Loc["Name"]">
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                <Avatar GithubId="@context.Id"/>
-                <span>@context.Name</span>
-            </MudStack>
-        </MudTd>
-        <MudTd DataLabel="@Loc["Points"]">@context.Points</MudTd>
-        <MudTd DataLabel="@Loc["AverageTime"]">@context.AverageTime</MudTd>
-    </RowTemplate>
-</MudTable>
+<div class="ranking">
+    @if (Ranking.Length > 0)
+    {
+        <div class="ranking-podium">
+            @foreach (var user in Ranking.Take(3))
+            {
+                <div class="ranking-podium__block ranking-podium__block--@(user.Rank ?? 99)">
+                    <div class="ranking-podium__rank">@(user.Rank?.ToString() ?? "--")</div>
+                    <div class="ranking-podium__initial">@(user.Name.Length > 0 ? user.Name[0].ToString().ToUpper() : "?")</div>
+                    <div class="ranking-podium__name">@user.Name</div>
+                    <div class="ranking-podium__points">@user.Points pts</div>
+                </div>
+            }
+        </div>
+
+        @foreach (var user in Ranking.Skip(3))
+        {
+            <div class="ranking-row">
+                <span class="ranking-row__rank">@(user.Rank?.ToString() ?? "--")</span>
+                <span class="ranking-row__name">@user.Name</span>
+                <span class="ranking-row__points">@user.Points pts</span>
+                <span class="ranking-row__time" style="color: var(--k-text-muted); font-size: 11px;">@user.AverageTime</span>
+            </div>
+        }
+    }
+    else
+    {
+        <p style="text-align: center; color: var(--k-text-muted);">No results yet.</p>
+    }
+</div>
 
 @code {
     [Parameter] public ImmutableArray<Domain.Rooms.UserRanking> Ranking { get; set; } = ImmutableArray<Domain.Rooms.UserRanking>.Empty;

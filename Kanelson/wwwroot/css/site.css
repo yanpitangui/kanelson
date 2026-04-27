@@ -382,114 +382,50 @@ a, .btn-link { color: var(--k-accent); }
 
 .btn-game-ghost:hover { background: rgba(255, 255, 255, 0.08); }
 
-/* ── Ranking / Podium ── */
-.ranking-container {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--k-border);
-    border-radius: 16px;
-    overflow: hidden;
-}
+/* ── Ranking ── */
+.ranking { display: flex; flex-direction: column; gap: 8px; }
 
-.ranking-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--k-border);
+.ranking-podium {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.ranking-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--k-text);
-}
-
-.ranking-subtitle {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--k-text-muted);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-}
-
-.podium {
-    display: flex;
-    align-items: flex-end;
     justify-content: center;
+    align-items: flex-end;
     gap: 8px;
-    padding: 20px 16px 0;
+    padding: 16px 0;
 }
 
-.podium-item {
+.ranking-podium__block {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
-}
-
-.podium-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    font-weight: 700;
-    color: white;
-}
-
-.podium-avatar--1 { background: linear-gradient(135deg, #fbbf24, #d97706); }
-.podium-avatar--2 { background: linear-gradient(135deg, #94a3b8, #64748b); }
-.podium-avatar--3 { background: linear-gradient(135deg, #b45309, #92400e); }
-
-.podium-name {
-    font-size: 11px;
-    font-weight: 600;
-    color: #94a3b8;
+    gap: 4px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    min-width: 80px;
     text-align: center;
 }
 
-.podium-points {
-    font-size: 10px;
-    color: var(--k-text-muted);
-}
+.ranking-podium__block--1 { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 4px 16px rgba(245,158,11,0.4); }
+.ranking-podium__block--2 { background: linear-gradient(135deg, #94a3b8, #64748b); box-shadow: 0 4px 16px rgba(148,163,184,0.3); }
+.ranking-podium__block--3 { background: linear-gradient(135deg, #c2714f, #a0522d); box-shadow: 0 4px 16px rgba(194,113,79,0.3); }
+.ranking-podium__block--99 { background: rgba(255,255,255,0.05); }
 
-.podium-block {
-    border-radius: 8px 8px 0 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    font-weight: 900;
-    color: rgba(0, 0, 0, 0.2);
-    width: 64px;
-}
-
-.podium-block--1 { height: 72px; background: linear-gradient(135deg, #fbbf24, #d97706); }
-.podium-block--2 { height: 52px; background: linear-gradient(135deg, #94a3b8, #64748b); }
-.podium-block--3 { height: 36px; background: linear-gradient(135deg, #b45309, #92400e); }
-
-.ranking-rows {
-    padding: 12px 16px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
+.ranking-podium__rank { font-size: 10px; font-weight: 700; opacity: 0.7; }
+.ranking-podium__initial { width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: white; }
+.ranking-podium__name { font-size: 12px; font-weight: 600; color: white; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ranking-podium__points { font-size: 11px; color: rgba(255,255,255,0.7); }
 
 .ranking-row {
-    background: var(--k-surface);
-    border-radius: 10px;
-    padding: 10px 14px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--k-surface);
+    border: 1px solid var(--k-border);
+    border-radius: 10px;
 }
-
-.ranking-row__pos { width: 22px; font-weight: 700; color: var(--k-accent); font-size: 13px; }
-.ranking-row__name { flex: 1; font-weight: 600; color: var(--k-text); }
-.ranking-row__pts { font-weight: 700; color: #fbbf24; font-size: 13px; }
-.ranking-row__avg { font-size: 11px; color: var(--k-text-muted); }
+.ranking-row__rank { font-size: 13px; font-weight: 700; color: var(--k-accent); width: 24px; }
+.ranking-row__name { flex: 1; font-size: 13px; font-weight: 500; }
+.ranking-row__points { font-size: 13px; font-weight: 700; color: #fbbf24; }
 
 /* ── Room Card ── */
 .room-card {

@@ -1,5 +1,6 @@
 @page "/room/{Id}"
 @layout Kanelson.Shared.GameLayout
+@attribute [Authorize]
 
 <div class="game-header">
     <span class="game-header__room-id">@Loc["Room"]: @Id</span>

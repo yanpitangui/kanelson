@@ -1,46 +1,38 @@
 @using Kanelson.Domain.Rooms.Models
 @inject IStringLocalizer<Shared> Loc
-<MudCard>
-    
+
+<div class="question-container">
     @if (Info.Question.ImageUrl != null)
     {
-    
-    
-        <MudStack AlignItems="AlignItems.Center">
-            <MudCardHeader>
-                <MudImage Src="@Info.Question.ImageUrl"/>
-            </MudCardHeader>
-        </MudStack>
-
-
+        <div class="question-image">
+            <img src="@Info.Question.ImageUrl" alt="question image" />
+        </div>
     }
-    <MudCardHeader Class="question-header">(@Info.CurrentNumber/@Info.MaxNumber) @Info.Question.Name</MudCardHeader>
-    <MudCardContent>
-        <MudGrid Spacing="5" Justify="Justify.SpaceBetween">
-            @for (int i = 0; i < Info.Question.Alternatives.Count; i++)
-            {
-                var alternative = Info.Question.Alternatives[i];
-                var i1 = i;
-                <MudItem Style="width: calc(100% + 40px); flex: 1 1 0;">
-                    <AlternativeComponent Alternative="alternative" OnClickCallback="AnswerClickCallback" Idx="@i1"/>
-                </MudItem>
-            }
 
-        </MudGrid>
-    </MudCardContent>
-</MudCard>
+    <div class="question-counter">@Loc["Question"] @Info.CurrentNumber / @Info.MaxNumber</div>
+    <div class="question-text">@Info.Question.Name</div>
 
+    <div class="question-progress">
+        <div class="question-progress-fill"
+             style="width: @(((double)Info.CurrentNumber / Info.MaxNumber) * 100)%">
+        </div>
+    </div>
 
-
+    <div class="alternatives-grid">
+        @for (int i = 0; i < Info.Question.Alternatives.Count; i++)
+        {
+            var alternative = Info.Question.Alternatives[i];
+            var idx = i;
+            <AlternativeComponent Alternative="alternative"
+                                   OnClickCallback="AnswerClickCallback"
+                                   Idx="@idx" />
+        }
+    </div>
+</div>
 
 @code {
-    [Parameter]
-    public CurrentQuestionInfo Info { get; set; } = null!;
-    
-
-    [Parameter]
-    public EventCallback<Guid> AnswerClickCallback { get; set; }
-
+    [Parameter] public CurrentQuestionInfo Info { get; set; } = null!;
+    [Parameter] public EventCallback<Guid> AnswerClickCallback { get; set; }
 }
 
 

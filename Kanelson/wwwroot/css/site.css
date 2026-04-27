@@ -129,6 +129,8 @@ a, .btn-link { color: var(--k-accent); }
     background: var(--k-bg);
     color: var(--k-text);
     font-family: 'Space Grotesk', sans-serif;
+    display: flex;
+    flex-direction: column;
 }
 
 .game-header {

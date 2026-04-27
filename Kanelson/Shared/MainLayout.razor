@@ -1,28 +1,33 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @inject IStringLocalizer<Shared> Loc
-<MudThemeProvider />
+
+<MudThemeProvider Theme="_theme" IsDarkMode="true"/>
 <MudPopoverProvider />
 <MudSnackbarProvider/>
-
 
 <PageTitle>Kanelson</PageTitle>
 <MudLayout>
     <CascadingAuthenticationState>
-        <MudAppBar Elevation="0">
-            <MudIconButton StartIcon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())"/>
+        <MudAppBar Elevation="0" Style="background-color: #0d0808; border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="DrawerToggle"/>
+            <span class="k-logo">
+                <span class="k-logo__ka">Ka</span><span class="k-logo__nelson">nelson</span>
+            </span>
             <MudSpacer/>
             <LoginDisplay/>
         </MudAppBar>
-        <MudDrawer @bind-Open="_drawerOpen" Elevation="1">
+        <MudDrawer @bind-Open="_drawerOpen" Elevation="1" Style="background-color: #0d0808; border-right: 1px solid rgba(255,255,255,0.06);">
             <MudDrawerHeader>
-                <MudText Typo="Typo.h6">Kanelson</MudText>
+                <span class="k-logo">
+                    <span class="k-logo__ka">Ka</span><span class="k-logo__nelson">nelson</span>
+                </span>
             </MudDrawerHeader>
             <NavMenu/>
         </MudDrawer>
         <MudMainContent>
             <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-16">
                 <AuthorizeView>
-                    <Authorized> 
+                    <Authorized>
                         @Body
                         <MudDivider Style="margin-top: 15px"/>
                         <MudContainer Style="margin-top: 15px">
@@ -31,25 +36,48 @@
                                 <CultureSelector Class="flex-1 d-flex"/>
                             </div>
                         </MudContainer>
-                    </Authorized> 
-                    <NotAuthorized> 
+                    </Authorized>
+                    <NotAuthorized>
                         <MudText>@Loc["LoginRequired"]</MudText>
                     </NotAuthorized>
-                </AuthorizeView> 
+                </AuthorizeView>
             </MudContainer>
         </MudMainContent>
-
     </CascadingAuthenticationState>
 </MudLayout>
 
 @code {
     bool _drawerOpen = true;
 
-    void DrawerToggle()
+    void DrawerToggle() => _drawerOpen = !_drawerOpen;
+
+    private readonly MudTheme _theme = new()
     {
-        _drawerOpen = !_drawerOpen;
-    }
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#ff4500",
+            AppbarBackground = "#0d0808",
+            DrawerBackground = "#0d0808",
+            Background = "#100a0a",
+            Surface = "rgba(255,255,255,0.04)",
+            TextPrimary = "#f1f5f9",
+            TextSecondary = "#64748b",
+            ActionDefault = "#f1f5f9",
+            DrawerText = "#f1f5f9",
+            AppbarText = "#f1f5f9",
+        },
+        PaletteDark = new PaletteDark
+        {
+            Primary = "#ff4500",
+            AppbarBackground = "#0d0808",
+            DrawerBackground = "#0d0808",
+            Background = "#100a0a",
+            Surface = "rgba(255,255,255,0.04)",
+            TextPrimary = "#f1f5f9",
+            TextSecondary = "#64748b",
+            ActionDefault = "#f1f5f9",
+            DrawerText = "#f1f5f9",
+            AppbarText = "#f1f5f9",
+        }
+    };
 }
-
-
-

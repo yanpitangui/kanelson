@@ -326,6 +326,23 @@ a, .btn-link { color: var(--k-accent); }
 .answer-bar__icon.tile-c, .answer-bar__fill.tile-c { background: linear-gradient(90deg, #14b8a6, #0d9488); }
 .answer-bar__icon.tile-d, .answer-bar__fill.tile-d { background: linear-gradient(90deg, #a78bfa, #7c3aed); }
 
+/* ── k-btn-primary ── */
+.k-btn-primary {
+    background: linear-gradient(135deg, var(--k-accent), var(--k-accent-dark));
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 28px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(255, 69, 0, 0.35);
+    transition: filter 0.15s, transform 0.1s;
+}
+.k-btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.k-btn-primary:active { transform: translateY(0); }
+
 /* ── Admin Controls ── */
 .admin-controls {
     display: flex;

@@ -2,44 +2,34 @@
 @using Kanelson.Domain.Rooms.Models
 @inherits BaseRoomPage
 
-<MudStack>
-        
+<div style="display: flex; flex-direction: column; gap: 16px;">
+
     @if (CurrentQuestion is not null && _roomStatus == RoomStatus.DisplayingQuestion)
     {
-        
-        @if (TimerConfiguration.Enabled)
-        {
-            <Progress Status="ProgressStatus.Active" Type="ProgressType.Circle"
-                      TrailColor="#ff4d4f"
-                      Percent="@TimerConfiguration.Percentage" Format="TimerConfiguration.Format"></Progress>
-        }
-        
-        
+        <div style="display: flex; justify-content: center; align-items: center; gap: 16px;">
+            @if (TimerConfiguration.Enabled)
+            {
+                <Progress Percent="@TimerConfiguration.Percentage" Format="TimerConfiguration.Format"/>
+            }
+            <span style="font-size: 13px; font-weight: 600; color: var(--k-text-muted); text-transform: uppercase; letter-spacing: 1px;">HOST</span>
+        </div>
         <QuestionComponent Info="CurrentQuestion"/>
     }
-    
     else if (Rankings != null)
     {
-        <UserRanking Ranking="Rankings.Value" />
+        <UserRanking Ranking="Rankings.Value"/>
     }
 
-    
-    <MudCardActions>
+    <div style="display: flex; gap: 12px; padding-top: 8px;">
         @if (_roomStatus == RoomStatus.Created)
         {
-            <MudButton @onclick="Start" Color="Color.Primary" 
-                       Variant="Variant.Filled"
-                       StartIcon="@Icons.Material.Filled.Start">@Loc["StartButton"]</MudButton>
+            <button class="k-btn-primary" @onclick="Start">@Loc["StartButton"]</button>
         }
-        
-    
         @if (_roomStatus == RoomStatus.AwaitingForNextQuestion)
         {
-            <MudButton @onclick="NextQuestion" Color="Color.Primary" 
-                       Variant="Variant.Filled"
-                       StartIcon="@Icons.Material.Filled.SkipNext">@Loc["NextQuestionButton"]</MudButton>
+            <button class="k-btn-primary" @onclick="NextQuestion">@Loc["NextQuestionButton"]</button>
         }
-    </MudCardActions>
-    
-</MudStack>
+    </div>
+
+</div>
 

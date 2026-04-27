@@ -1,67 +1,28 @@
-.navbar-toggler {
-    background-color: rgba(255, 255, 255, 0.1);
+::deep .mud-nav-link.active {
+    color: #ff4500 !important;
+    background: rgba(255, 69, 0, 0.1) !important;
 }
 
-.top-row {
-    height: 3.5rem;
-    background-color: rgba(0,0,0,0.4);
+::deep .mud-nav-link.active .mud-nav-link-icon {
+    color: #ff4500 !important;
 }
 
-.navbar-brand {
-    font-size: 1.1rem;
+::deep .mud-nav-link:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
 }
 
-.oi {
-    width: 2rem;
-    font-size: 1.1rem;
-    vertical-align: text-top;
-    top: -2px;
+::deep .mud-nav-link {
+    color: #94a3b8;
+    border-radius: 8px;
+    margin: 2px 8px;
 }
 
-.nav-item {
-    font-size: 0.9rem;
-    padding-bottom: 0.5rem;
-}
-
-    .nav-item:first-of-type {
-        padding-top: 1rem;
-    }
-
-    .nav-item:last-of-type {
-        padding-bottom: 1rem;
-    }
-
-    .nav-item ::deep a {
-        color: #d7d7d7;
-        border-radius: 4px;
-        height: 3rem;
-        display: flex;
-        align-items: center;
-        line-height: 3rem;
-    }
-
-.nav-item ::deep a.active {
-    background-color: rgba(255,255,255,0.25);
-    color: white;
-}
-
-.nav-item ::deep a:hover {
-    background-color: rgba(255,255,255,0.1);
-    color: white;
+::deep .mud-nav-link-icon {
+    color: #64748b;
 }
 
 @media (min-width: 641px) {
-    .navbar-toggler {
-        display: none;
-    }
-
-    .collapse {
-        /* Never collapse the sidebar for wide screens */
-        display: block;
-    }
-    
     .nav-scrollable {
-        /* Allow sidebar to scroll for tall menus */
         height: calc(100vh - 3.5rem);
         overflow-y: auto;
     }

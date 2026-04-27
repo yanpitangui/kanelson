@@ -19,6 +19,7 @@ html, body {
     --k-text:         #f1f5f9;
     --k-text-muted:   #64748b;
     --k-text-warm:    #fff1f0;
+    --k-timer-track:  rgba(255, 255, 255, 0.07);
 }
 
 h1:focus { outline: none; }

@@ -1,41 +1,28 @@
-﻿@page "/room/{Id}"
+@page "/room/{Id}"
+@layout Kanelson.Shared.GameLayout
 
-<MudCard>
-    <MudCardContent Class="room-header">
-        <span class="room-identifier">@Loc["Room"]: <b>@Id</b></span>
-    </MudCardContent>
-    <MudCardContent>
-        <div class="d-flex flex-row flex-grow-1 flex-wrap gap-3">
-            <MudPaper Class="d-flex flex-initial">
-               <ConnectedUsersComponent ConnectedUsers="_connectedUsers"/>
-            </MudPaper>
-            @if (_summary is not null)
-            {
-                @if (_summary.Owner.Id == UserService.CurrentUser)
-                {
-                    <Admin RoomId="@Id" TimerConfiguration="_timerConfig" Class="d-flex flex-1 py-9"/>
-                }
-                else
-                {
-                    <Player RoomId="@Id" TimerConfiguration="_timerConfig" Class="d-flex flex-1 py-9"/>
-                }
-            }
-            else
-            {
-                <div>@Loc["Loading"]...</div>
-            }
-        </div>
+<div class="game-header">
+    <span class="game-header__room-id">@Loc["Room"]: @Id</span>
+    <ConnectedUsersComponent ConnectedUsers="_connectedUsers"/>
+</div>
 
-    </MudCardContent>
-
-</MudCard>
-
-
+<div class="game-body">
+    @if (_summary is not null)
+    {
+        @if (_summary.Owner.Id == UserService.CurrentUser)
+        {
+            <Admin RoomId="@Id" TimerConfiguration="_timerConfig"/>
+        }
+        else
+        {
+            <Player RoomId="@Id" TimerConfiguration="_timerConfig"/>
+        }
+    }
+    else
+    {
+        <div style="color: var(--k-text-muted); text-align: center; padding-top: 40px;">@Loc["Loading"]...</div>
+    }
+</div>
 
 @code {
-
-
-
-
-
 }

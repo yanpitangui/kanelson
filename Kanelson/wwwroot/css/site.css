@@ -474,30 +474,33 @@ a, .btn-link { color: var(--k-accent); }
 
 .btn-enter:hover { background: rgba(255, 69, 0, 0.2); }
 
-/* ── Home Page ── */
+/* ── Home ── */
 .home-welcome {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 70vh;
+    min-height: 60vh;
+    gap: 20px;
     text-align: center;
-    gap: 16px;
+    padding: 40px 20px;
 }
 
-.home-logo {
-    font-size: 56px;
+.home-welcome__logo {
+    font-size: 3.5rem;
     font-weight: 700;
-    color: var(--k-text);
-    letter-spacing: -2px;
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: -1px;
     line-height: 1;
 }
 
-.home-logo span { color: var(--k-accent); }
+.k-logo-xl__ka { color: #f1f5f9; }
+.k-logo-xl__nelson { color: #ff4500; }
 
-.home-tagline {
-    font-size: 18px;
-    color: var(--k-text-muted);
-    font-weight: 500;
+.home-welcome__tagline {
+    font-size: 1.1rem;
+    color: #64748b;
     max-width: 400px;
+    line-height: 1.5;
+    margin: 0;
 }

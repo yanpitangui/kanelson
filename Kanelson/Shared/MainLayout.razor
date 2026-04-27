@@ -1,5 +1,4 @@
 @inherits LayoutComponentBase
-@inject IStringLocalizer<Shared> Loc
 
 <MudThemeProvider Theme="_theme" IsDarkMode="true"/>
 <MudPopoverProvider />
@@ -7,43 +6,34 @@
 
 <PageTitle>Kanelson</PageTitle>
 <MudLayout>
-    <CascadingAuthenticationState>
-        <MudAppBar Elevation="0" Style="background-color: #0d0808; border-bottom: 1px solid rgba(255,255,255,0.06);">
-            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="DrawerToggle"/>
+    <MudAppBar Elevation="0" Style="background-color: #0d0808; border-bottom: 1px solid rgba(255,255,255,0.06);">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="DrawerToggle"/>
+        <span class="k-logo">
+            <span class="k-logo__ka">Ka</span><span class="k-logo__nelson">nelson</span>
+        </span>
+        <MudSpacer/>
+        <LoginDisplay/>
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="1" Style="background-color: #0d0808; border-right: 1px solid rgba(255,255,255,0.06);">
+        <MudDrawerHeader>
             <span class="k-logo">
                 <span class="k-logo__ka">Ka</span><span class="k-logo__nelson">nelson</span>
             </span>
-            <MudSpacer/>
-            <LoginDisplay/>
-        </MudAppBar>
-        <MudDrawer @bind-Open="_drawerOpen" Elevation="1" Style="background-color: #0d0808; border-right: 1px solid rgba(255,255,255,0.06);">
-            <MudDrawerHeader>
-                <span class="k-logo">
-                    <span class="k-logo__ka">Ka</span><span class="k-logo__nelson">nelson</span>
-                </span>
-            </MudDrawerHeader>
-            <NavMenu/>
-        </MudDrawer>
-        <MudMainContent>
-            <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-16">
-                <AuthorizeView>
-                    <Authorized>
-                        @Body
-                        <MudDivider Style="margin-top: 15px"/>
-                        <MudContainer Style="margin-top: 15px">
-                            <div class="d-flex flex-grow-1 gap-4">
-                                <MudText Class="flex-1 d-flex" Typo="Typo.body1">Copyright © @DateTime.Today.Year Kanelson.</MudText>
-                                <CultureSelector Class="flex-1 d-flex"/>
-                            </div>
-                        </MudContainer>
-                    </Authorized>
-                    <NotAuthorized>
-                        <MudText>@Loc["LoginRequired"]</MudText>
-                    </NotAuthorized>
-                </AuthorizeView>
+        </MudDrawerHeader>
+        <NavMenu/>
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-16">
+            @Body
+            <MudDivider Style="margin-top: 15px"/>
+            <MudContainer Style="margin-top: 15px">
+                <div class="d-flex flex-grow-1 gap-4">
+                    <MudText Class="flex-1 d-flex" Typo="Typo.body1">Copyright © @DateTime.Today.Year Kanelson.</MudText>
+                    <CultureSelector Class="flex-1 d-flex"/>
+                </div>
             </MudContainer>
-        </MudMainContent>
-    </CascadingAuthenticationState>
+        </MudContainer>
+    </MudMainContent>
 </MudLayout>
 
 @code {

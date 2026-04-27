@@ -68,6 +68,13 @@ builder.Services.AddAuthentication(o =>
     });
 
 
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
+
 builder.Services.AddOptions();
 builder.Services.AddRazorComponents();
 builder.Services.AddRazorPages();

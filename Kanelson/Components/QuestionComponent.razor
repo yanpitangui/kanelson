@@ -1,3 +1,4 @@
+@using Kanelson.Domain.Questions
 @using Kanelson.Domain.Rooms.Models
 @inject IStringLocalizer<Shared> Loc
 
@@ -12,6 +13,11 @@
     <div class="question-counter">@Loc["Question"] @Info.CurrentNumber / @Info.MaxNumber</div>
     <div class="question-text">@Info.Question.Name</div>
 
+    @if (Info.Question.Type == QuestionType.MultiCorrect)
+    {
+        <div class="question-hint">@Loc["SelectAllThatApply"]</div>
+    }
+
     <div class="question-progress">
         <div class="question-progress-fill"
              style="width: @(((double)Info.CurrentNumber / Info.MaxNumber) * 100)%">
@@ -24,17 +30,55 @@
             var alternative = Info.Question.Alternatives[i];
             var idx = i;
             <AlternativeComponent Alternative="alternative"
-                                   OnClickCallback="AnswerClickCallback"
+                                   OnClickCallback="@HandleAlternativeClick"
+                                   MultiSelectMode="@(Info.Question.Type == QuestionType.MultiCorrect)"
+                                   IsSelected="@_selectedAlternatives.Contains(alternative.Id)"
                                    Idx="@idx" />
         }
     </div>
+
+    @if (Info.Question.Type == QuestionType.MultiCorrect)
+    {
+        <div style="display: flex; justify-content: center; padding-top: 12px;">
+            <button class="k-btn-primary"
+                    disabled="@(_selectedAlternatives.Count == 0)"
+                    @onclick="SubmitMultiCorrect">
+                @Loc["SubmitButton"]
+            </button>
+        </div>
+    }
 </div>
 
 @code {
     [Parameter] public CurrentQuestionInfo Info { get; set; } = null!;
     [Parameter] public EventCallback<Guid> AnswerClickCallback { get; set; }
+    [Parameter] public EventCallback<Guid[]> OnMultiCorrectSubmit { get; set; }
+
+    private HashSet<Guid> _selectedAlternatives = new();
+
+    protected override void OnParametersSet()
+    {
+        if (Info?.Question.Type != QuestionType.MultiCorrect)
+            _selectedAlternatives.Clear();
+    }
+
+    private async Task HandleAlternativeClick(Guid id)
+    {
+        if (Info.Question.Type == QuestionType.MultiCorrect)
+        {
+            if (!_selectedAlternatives.Add(id))
+                _selectedAlternatives.Remove(id);
+            StateHasChanged();
+        }
+        else
+        {
+            await AnswerClickCallback.InvokeAsync(id);
+        }
+    }
+
+    private async Task SubmitMultiCorrect()
+    {
+        await OnMultiCorrectSubmit.InvokeAsync(_selectedAlternatives.ToArray());
+        _selectedAlternatives.Clear();
+    }
 }
-
-
-
-

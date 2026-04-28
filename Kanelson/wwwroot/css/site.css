@@ -967,6 +967,13 @@ a, .btn-link { color: var(--k-accent); }
     pointer-events: none;
 }
 
+/* ── Multi-correct alternative state ── */
+.alt-tile--selected { outline: 3px solid #fff; outline-offset: 2px; }
+.alt-tile-checkbox { font-size: 18px; line-height: 1; }
+
+/* ── Question hint ── */
+.question-hint { font-size: 11px; text-align: center; color: #90cdf4; background: rgba(99,179,237,0.1); border-radius: 6px; padding: 4px 10px; margin-bottom: 12px; font-weight: 600; }
+
 /* ── Vote distribution chart ── */
 .vote-dist { display: flex; flex-direction: column; gap: 10px; width: 100%; }
 .vote-dist__row { display: flex; flex-direction: column; gap: 4px; }

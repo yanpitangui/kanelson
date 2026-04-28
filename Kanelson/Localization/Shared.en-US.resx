@@ -225,4 +225,10 @@
     <data name="DragToReorder" xml:space="preserve">
         <value>Drag items to set the question order</value>
     </data>
+    <data name="SelectAllThatApply" xml:space="preserve">
+        <value>Select all that apply</value>
+    </data>
+    <data name="SubmitButton" xml:space="preserve">
+        <value>Submit</value>
+    </data>
 </root>

@@ -225,4 +225,10 @@
     <data name="DragToReorder" xml:space="preserve">
         <value>Arraste os itens para definir a ordem das perguntas</value>
     </data>
+    <data name="SelectAllThatApply" xml:space="preserve">
+        <value>Selecione todas as opções corretas</value>
+    </data>
+    <data name="SubmitButton" xml:space="preserve">
+        <value>Enviar</value>
+    </data>
 </root>

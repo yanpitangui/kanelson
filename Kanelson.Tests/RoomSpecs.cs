@@ -28,7 +28,8 @@ public sealed class RoomSpecs : PersistenceTestKit
 
         var localRoom = await localRoomManager.Ask<IActorRef>(new GetLocalRoom(RoomId));
 
-        localRoom.Tell(new RoomCommands.SetBase(RoomId, "Room", Owner.Id, CreateTemplate()));
+        var template = CreateTemplate();
+        localRoom.Tell(new RoomCommands.SetBase(RoomId, "Room", Owner.Id, template));
 
         var ownerSubscription = await localRoom.Ask<SubscriptionResult>(new SubscribeToRoom(RoomId, Owner.Id, Owner.Name));
         var playerSubscription = await localRoom.Ask<SubscriptionResult>(new SubscribeToRoom(RoomId, Player.Id, Player.Name));
@@ -53,10 +54,10 @@ public sealed class RoomSpecs : PersistenceTestKit
 
         await ExpectEvent<RoomEvents.NextQuestion>(ownerSubscription.Reader, evt =>
             evt.Info.CurrentNumber.Should().Be(1));
-        var nextQuestion = await ExpectEvent<RoomEvents.NextQuestion>(playerSubscription.Reader, evt =>
+        await ExpectEvent<RoomEvents.NextQuestion>(playerSubscription.Reader, evt =>
             evt.Info.CurrentNumber.Should().Be(1));
 
-        var correctAlternative = nextQuestion.Info.Question.Alternatives.Single(x => x.Correct);
+        var correctAlternative = template.Questions[0].Alternatives.Single(x => x.Correct);
         localRoom.Tell(new RoomCommands.SendUserAnswer(RoomId, Player.Id, [correctAlternative.Id]));
 
         await ExpectEvent<RoomEvents.UserAnswered>(ownerSubscription.Reader, evt =>
@@ -79,6 +80,70 @@ public sealed class RoomSpecs : PersistenceTestKit
         localRoom.Tell(new UnsubscribeFromRoom(RoomId, playerSubscription.SubscriptionId));
     }
 
+    [Fact]
+    public async Task CurrentQuestionInfo_does_not_expose_correct_flags_to_subscribers()
+    {
+        var roomsIndexActor = Sys.ActorOf(AllRoomsIndexActor.Props(), "all-rooms-index-leak");
+        var roomActor = Sys.ActorOf(Room.Props("room-leak", roomsIndexActor, Sys.DeadLetters, new StubUserService(Owner)), "room-actor-leak");
+        var roomShard = Sys.ActorOf(Props.Create(() => new FixedRoomShard(roomActor)), "room-shard-leak");
+        var localRoomManager = Sys.ActorOf(LocalRoomActorManager.Props(roomShard), "local-room-manager");
+
+        var localRoom = await localRoomManager.Ask<IActorRef>(new GetLocalRoom("room-leak"));
+        localRoom.Tell(new RoomCommands.SetBase("room-leak", "Room", Owner.Id, CreateMultiCorrectTemplate()));
+
+        var ownerSub = await localRoom.Ask<SubscriptionResult>(new SubscribeToRoom("room-leak", Owner.Id, Owner.Name));
+        localRoom.Tell(new RoomCommands.Start("room-leak"));
+
+        await ExpectEvent<RoomEvents.RoomStatusChanged>(ownerSub.Reader, _ => { });
+        await ExpectEvent<RoomEvents.RoomStatusChanged>(ownerSub.Reader, _ => { });
+
+        var nextQ = await ExpectEvent<RoomEvents.NextQuestion>(ownerSub.Reader, _ => { });
+        nextQ.Info.Question.Alternatives.Should().NotContain(a => a.Correct,
+            "Correct flags must be stripped from NextQuestion broadcast");
+    }
+
+    [Fact]
+    public async Task MultiCorrect_scoring_penalises_wrong_picks_and_gives_partial_credit()
+    {
+        var roomsIndexActor = Sys.ActorOf(AllRoomsIndexActor.Props(), "all-rooms-index-scoring");
+        var player2 = new UserInfo("player2") { Name = "Player 2" };
+        var roomActor = Sys.ActorOf(Room.Props("room-scoring", roomsIndexActor, Sys.DeadLetters, new StubUserService(Owner, Player, player2)), "room-actor-scoring");
+        var roomShard = Sys.ActorOf(Props.Create(() => new FixedRoomShard(roomActor)), "room-shard-scoring");
+        var localRoomManager = Sys.ActorOf(LocalRoomActorManager.Props(roomShard), "local-room-manager");
+
+        var localRoom = await localRoomManager.Ask<IActorRef>(new GetLocalRoom("room-scoring"));
+        var template = CreateMultiCorrectTemplate();
+        localRoom.Tell(new RoomCommands.SetBase("room-scoring", "Room", Owner.Id, template));
+
+        var ownerSub = await localRoom.Ask<SubscriptionResult>(new SubscribeToRoom("room-scoring", Owner.Id, Owner.Name));
+        var playerSub = await localRoom.Ask<SubscriptionResult>(new SubscribeToRoom("room-scoring", Player.Id, Player.Name));
+        var player2Sub = await localRoom.Ask<SubscriptionResult>(new SubscribeToRoom("room-scoring", player2.Id, player2.Name));
+
+        localRoom.Tell(new RoomCommands.Start("room-scoring"));
+
+        await ExpectEvent<RoomEvents.RoomStatusChanged>(ownerSub.Reader, _ => { });
+        await ExpectEvent<RoomEvents.RoomStatusChanged>(ownerSub.Reader, _ => { });
+        await ExpectEvent<RoomEvents.NextQuestion>(ownerSub.Reader, _ => { });
+        await ExpectEvent<RoomEvents.NextQuestion>(playerSub.Reader, _ => { });
+        await ExpectEvent<RoomEvents.NextQuestion>(player2Sub.Reader, _ => { });
+
+        var correctIds = template.Questions[0].Alternatives.Where(a => a.Correct).Select(a => a.Id).ToArray();
+        var wrongId = template.Questions[0].Alternatives.First(a => !a.Correct).Id;
+
+        localRoom.Tell(new RoomCommands.SendUserAnswer("room-scoring", Player.Id, [correctIds[0]]));
+        localRoom.Tell(new RoomCommands.SendUserAnswer("room-scoring", player2.Id, [correctIds[0], wrongId]));
+
+        await ExpectEvent<RoomEvents.RoundFinished>(ownerSub.Reader, _ => { });
+
+        var playerSummary = await ExpectEvent<RoomEvents.UserRoundSummary>(playerSub.Reader, _ => { });
+        var player2Summary = await ExpectEvent<RoomEvents.UserRoundSummary>(player2Sub.Reader, _ => { });
+
+        playerSummary.Summary.PointsEarned.Should().BeGreaterThan(0, "partial credit for 1 of 2 correct");
+        playerSummary.Summary.PointsEarned.Should().BeLessThan(template.Questions[0].Points, "not full credit");
+        player2Summary.Summary.PointsEarned.Should().BeLessThan(playerSummary.Summary.PointsEarned,
+            "picking a wrong answer reduces score further");
+    }
+
     private static Template CreateTemplate()
     {
         return new Template
@@ -97,6 +162,32 @@ public sealed class RoomSpecs : PersistenceTestKit
                     [
                         new Alternative { Description = "Correct", Correct = true },
                         new Alternative { Description = "Wrong", Correct = false }
+                    ]
+                }
+            ]
+        };
+    }
+
+    private static Template CreateMultiCorrectTemplate()
+    {
+        return new Template
+        {
+            Name = "MultiCorrect Template",
+            Questions =
+            [
+                new TemplateQuestion
+                {
+                    Name = "Pick all correct",
+                    Type = QuestionType.MultiCorrect,
+                    TimeLimit = 5,
+                    Points = 1000,
+                    Order = 0,
+                    Alternatives =
+                    [
+                        new Alternative { Description = "Correct A", Correct = true },
+                        new Alternative { Description = "Correct B", Correct = true },
+                        new Alternative { Description = "Wrong C",   Correct = false },
+                        new Alternative { Description = "Wrong D",   Correct = false }
                     ]
                 }
             ]

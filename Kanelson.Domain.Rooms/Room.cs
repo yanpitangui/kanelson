@@ -214,12 +214,17 @@ public class Room : BaseWithSnapshotFrequencyActor
     private UserAnswerSummary GetUserRoundSummary(string userId)
     {
         var userAnswer = _state.Answers[CurrentQuestion.Id][userId];
-        return new UserAnswerSummary(CurrentQuestion, userAnswer.Alternatives, 0m);
+        return new UserAnswerSummary(CurrentQuestion, userAnswer.Alternatives, userAnswer.Points);
     }
 
     private CurrentQuestionInfo GetCurrentQuestionInfo()
     {
-        return new CurrentQuestionInfo(_state.Template.Questions[_state.CurrentQuestionIdx], _state.CurrentQuestionIdx + 1, _state.MaxQuestionIdx + 1);
+        var question = _state.Template.Questions[_state.CurrentQuestionIdx];
+        var safeQuestion = question with
+        {
+            Alternatives = question.Alternatives.Select(a => a with { Correct = false }).ToList()
+        };
+        return new CurrentQuestionInfo(safeQuestion, _state.CurrentQuestionIdx + 1, _state.MaxQuestionIdx + 1);
     }
 
 
@@ -315,7 +320,7 @@ public class Room : BaseWithSnapshotFrequencyActor
              .Intersect(alternativeIds)
              .Count();
 
-         var percentage = wrong >= correct ? 0 : maxCorrect / (correct - (decimal)wrong); 
+         var percentage = Math.Max(0m, (correct - wrong) / (decimal)maxCorrect);
              
          
          var timeMinusDelay = Math.Max(timeToAnswer.TotalSeconds - 0.2d , 0); // Retira 200ms do cálculo para considerar delay  

@@ -1,7 +1,7 @@
 ﻿{
   Id: Guid_1,
   Name: new question,
-  TimeLimit: 5,
+  TimeLimit: 10,
   Points: 1000,
   Alternatives: [
     {

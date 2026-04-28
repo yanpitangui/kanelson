@@ -966,3 +966,25 @@ a, .btn-link { color: var(--k-accent); }
     cursor: not-allowed;
     pointer-events: none;
 }
+
+/* ── Vote distribution chart ── */
+.vote-dist { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.vote-dist__row { display: flex; flex-direction: column; gap: 4px; }
+.vote-dist__label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--k-text, #fff); }
+.vote-dist__count { margin-left: auto; color: var(--k-text-muted, #888); font-size: 12px; }
+.vote-dist__badge { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; }
+.vote-dist__badge--correct { background: rgba(39,174,96,0.2); color: #2ecc71; }
+.vote-dist__badge--you { background: rgba(99,179,237,0.2); color: #90cdf4; }
+.vote-dist__bar-bg { background: rgba(255,255,255,0.07); border-radius: 6px; height: 20px; overflow: hidden; }
+.vote-dist__bar-fill { height: 100%; border-radius: 6px; background: rgba(255,255,255,0.2); transition: width 0.4s ease; }
+.vote-dist__bar-fill--correct { background: #27ae60; }
+
+/* ── Vote distribution wrapper ── */
+.vote-dist-wrapper { padding: 16px 0 8px; }
+
+/* ── Post-round score chip ── */
+.round-summary { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 16px 0; width: 100%; }
+.score-chip { font-size: 14px; font-weight: 700; padding: 6px 18px; border-radius: 20px; }
+.score-chip--good { background: rgba(39,174,96,0.15); color: #2ecc71; }
+.score-chip--partial { background: rgba(237,192,78,0.15); color: #ecc94b; }
+.score-chip--bad { background: rgba(231,76,60,0.15); color: #e74c3c; }

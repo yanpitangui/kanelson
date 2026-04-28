@@ -1,0 +1,38 @@
+@using Kanelson.Domain.Rooms.Models
+@using System.Collections.Immutable
+
+@if (Distribution.Length > 0)
+{
+    var total = Distribution.Sum(x => x.VoteCount);
+    <div class="vote-dist">
+        @foreach (var alt in Distribution)
+        {
+            var pct = total > 0 ? (double)alt.VoteCount / total * 100 : 0;
+            var isYours = YourAnswers != null && YourAnswers.Contains(alt.AlternativeId);
+            <div class="vote-dist__row">
+                <div class="vote-dist__label">
+                    <span>@alt.Description</span>
+                    @if (alt.Correct)
+                    {
+                        <span class="vote-dist__badge vote-dist__badge--correct">✓</span>
+                    }
+                    @if (isYours)
+                    {
+                        <span class="vote-dist__badge vote-dist__badge--you">you</span>
+                    }
+                    <span class="vote-dist__count">@alt.VoteCount</span>
+                </div>
+                <div class="vote-dist__bar-bg">
+                    <div class="vote-dist__bar-fill @(alt.Correct ? "vote-dist__bar-fill--correct" : "")"
+                         style="width: @pct.ToString("F0")%">
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public ImmutableArray<AlternativeVoteSummary> Distribution { get; set; }
+    [Parameter] public IEnumerable<Guid>? YourAnswers { get; set; }
+}

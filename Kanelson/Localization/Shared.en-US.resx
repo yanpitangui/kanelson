@@ -93,6 +93,9 @@
     <data name="QuestionType_Quiz" xml:space="preserve">
         <value>Quiz</value>
     </data>
+    <data name="QuestionType_MultiCorrect" xml:space="preserve">
+        <value>Multiple Correct</value>
+    </data>
     <data name="Create/Edit_Templates" xml:space="preserve">
         <value>Create/Edit Templates</value>
     </data>

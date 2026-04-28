@@ -26,4 +26,12 @@ public record CurrentQuestionInfo(
 [MessagePackObject]
 public record UserAnswerSummary(
     [property: Key(0)] Question Question,
-    [property: Key(1)] IEnumerable<Guid> Answered);
+    [property: Key(1)] IEnumerable<Guid> Answered,
+    [property: Key(2)] decimal PointsEarned);
+
+[MessagePackObject]
+public record AlternativeVoteSummary(
+    [property: Key(0)] Guid AlternativeId,
+    [property: Key(1)] string Description,
+    [property: Key(2)] int VoteCount,
+    [property: Key(3)] bool Correct);

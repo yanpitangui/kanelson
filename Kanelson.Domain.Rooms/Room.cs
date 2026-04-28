@@ -214,7 +214,7 @@ public class Room : BaseWithSnapshotFrequencyActor
     private UserAnswerSummary GetUserRoundSummary(string userId)
     {
         var userAnswer = _state.Answers[CurrentQuestion.Id][userId];
-        return new UserAnswerSummary(CurrentQuestion, userAnswer.Alternatives);
+        return new UserAnswerSummary(CurrentQuestion, userAnswer.Alternatives, 0m);
     }
 
     private CurrentQuestionInfo GetCurrentQuestionInfo()

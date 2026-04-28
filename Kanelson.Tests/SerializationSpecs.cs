@@ -139,5 +139,16 @@ public class SerializationSpecs : IDisposable
         Assert.Equal(q.Name, result.Questions[q.Id].Name);
     }
 
+    [Fact]
+    public void AlternativeVoteSummary_roundtrips()
+    {
+        var original = new AlternativeVoteSummary(Guid.NewGuid(), "Option A", 7, true);
+        var result = Roundtrip(original);
+        Assert.Equal(original.AlternativeId, result.AlternativeId);
+        Assert.Equal(original.Description, result.Description);
+        Assert.Equal(original.VoteCount, result.VoteCount);
+        Assert.Equal(original.Correct, result.Correct);
+    }
+
     public void Dispose() => _system.Terminate().Wait(TimeSpan.FromSeconds(5));
 }

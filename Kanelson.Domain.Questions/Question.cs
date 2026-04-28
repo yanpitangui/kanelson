@@ -76,5 +76,6 @@ public record Alternative
 public enum QuestionType
 {
     TrueFalse,
-    Quiz
+    Quiz,
+    MultiCorrect
 }

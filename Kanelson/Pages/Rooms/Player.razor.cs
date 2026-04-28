@@ -18,7 +18,7 @@ public partial class Player : BaseRoomPage
     {
         TimerConfiguration.Stop();
         _playerStatus = PlayerStatus.Answered;
-        await RoomService.Answer(RoomId, alternativeId);
+        await RoomService.Answer(RoomId, default, alternativeId);
         await InvokeAsync(StateHasChanged);
     }
 

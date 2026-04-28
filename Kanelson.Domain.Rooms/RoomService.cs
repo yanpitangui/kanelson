@@ -84,10 +84,10 @@ public class RoomService : IRoomService
         roomShardingRef.Tell(new RoomCommands.Shutdown(roomId));
     }
 
-    public async Task Answer(string roomId, Guid alternativeId, CancellationToken ct = default)
+    public async Task Answer(string roomId, CancellationToken ct = default, params Guid[] alternativeIds)
     {
         var roomShardingRef = await GetRoomShardingRef(roomId, ct);
-        roomShardingRef.Tell(new RoomCommands.SendUserAnswer(roomId, _userService.CurrentUser, [alternativeId]));
+        roomShardingRef.Tell(new RoomCommands.SendUserAnswer(roomId, _userService.CurrentUser, alternativeIds));
     }
 
     private async Task<IActorRef> GetRoomShardingRef(string roomId, CancellationToken ct = default)

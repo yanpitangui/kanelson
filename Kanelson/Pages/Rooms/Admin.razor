@@ -30,6 +30,12 @@ else if (Rankings != null)
 
 @if (_roomStatus == RoomStatus.AwaitingForNextQuestion)
 {
+    @if (VoteDistribution.HasValue && VoteDistribution.Value.Length > 0)
+    {
+        <div class="vote-dist-wrapper">
+            <VoteDistributionComponent Distribution="VoteDistribution.Value" />
+        </div>
+    }
     <div style="display: flex; justify-content: center; padding-top: 8px;">
         <button class="k-btn-primary" @onclick="NextQuestion">@Loc["NextQuestionButton"]</button>
     </div>

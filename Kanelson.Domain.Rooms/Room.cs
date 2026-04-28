@@ -325,7 +325,7 @@ public class Room : BaseWithSnapshotFrequencyActor
          var percentage = Math.Max(0m, (correct - wrong) / (decimal)maxCorrect);
              
          
-         var timeMinusDelay = Math.Max(timeToAnswer.TotalSeconds - 0.2d , 0); // Retira 200ms do cálculo para considerar delay  
+         var timeMinusDelay = Math.Max(timeToAnswer.TotalSeconds - 1d, 0);
              
          // Kahoot formula: https://support.kahoot.com/hc/en-us/articles/115002303908-How-points-work
          var wouldBePoints = Math.Round((decimal)

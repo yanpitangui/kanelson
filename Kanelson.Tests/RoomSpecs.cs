@@ -168,6 +168,39 @@ public sealed class RoomSpecs : PersistenceTestKit
         };
     }
 
+    [Fact]
+    public async Task RoundFinished_event_carries_vote_distribution()
+    {
+        var roomsIndexActor = Sys.ActorOf(AllRoomsIndexActor.Props(), "all-rooms-index-dist");
+        var roomActor = Sys.ActorOf(Room.Props("room-dist", roomsIndexActor, Sys.DeadLetters, new StubUserService(Owner, Player)), "room-actor-dist");
+        var roomShard = Sys.ActorOf(Props.Create(() => new FixedRoomShard(roomActor)), "room-shard-dist");
+        var localRoomManager = Sys.ActorOf(LocalRoomActorManager.Props(roomShard), "local-room-manager");
+
+        var localRoom = await localRoomManager.Ask<IActorRef>(new GetLocalRoom("room-dist"));
+        var template = CreateTemplate();
+        localRoom.Tell(new RoomCommands.SetBase("room-dist", "Room", Owner.Id, template));
+
+        var ownerSub = await localRoom.Ask<SubscriptionResult>(new SubscribeToRoom("room-dist", Owner.Id, Owner.Name));
+        var playerSub = await localRoom.Ask<SubscriptionResult>(new SubscribeToRoom("room-dist", Player.Id, Player.Name));
+
+        localRoom.Tell(new RoomCommands.Start("room-dist"));
+
+        await ExpectEvent<RoomEvents.RoomStatusChanged>(ownerSub.Reader, _ => { });
+        await ExpectEvent<RoomEvents.RoomStatusChanged>(ownerSub.Reader, _ => { });
+        await ExpectEvent<RoomEvents.NextQuestion>(ownerSub.Reader, _ => { });
+        await ExpectEvent<RoomEvents.NextQuestion>(playerSub.Reader, _ => { });
+
+        var correctId = template.Questions[0].Alternatives.Single(x => x.Correct).Id;
+        localRoom.Tell(new RoomCommands.SendUserAnswer("room-dist", Player.Id, [correctId]));
+
+        var roundFinished = await ExpectEvent<RoomEvents.RoundFinished>(ownerSub.Reader, _ => { });
+
+        roundFinished.VoteDistribution.Should().HaveCount(2);
+        var correctEntry = roundFinished.VoteDistribution.Single(x => x.Correct);
+        correctEntry.VoteCount.Should().Be(1);
+        roundFinished.VoteDistribution.Single(x => !x.Correct).VoteCount.Should().Be(0);
+    }
+
     private static Template CreateMultiCorrectTemplate()
     {
         return new Template

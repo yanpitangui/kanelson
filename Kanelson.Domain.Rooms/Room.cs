@@ -349,7 +349,15 @@ public class Room : BaseWithSnapshotFrequencyActor
         _roundStopwatch?.Stop();
 
         var currentQuestion = CurrentQuestion;
-        Broadcast(new RoomEvents.RoundFinished(currentQuestion));
+        var answers = _state.Answers.TryGetValue(currentQuestion.Id, out var ans) ? ans : new Dictionary<string, RoomAnswer>();
+        var voteDistribution = currentQuestion.Alternatives
+            .Select(alt => new AlternativeVoteSummary(
+                alt.Id,
+                alt.Description,
+                answers.Values.Count(a => a.Alternatives != null && a.Alternatives.Contains(alt.Id)),
+                alt.Correct))
+            .ToImmutableArray();
+        Broadcast(new RoomEvents.RoundFinished(currentQuestion, voteDistribution));
 
         FillAnswersFromUsersThatHaveNotAnswered();
 

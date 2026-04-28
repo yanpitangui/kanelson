@@ -34,6 +34,7 @@ public abstract class BaseRoomPage : MudComponentBase, IAsyncDisposable
 
     protected ImmutableArray<UserRanking>? Rankings;
     protected CurrentQuestionInfo? CurrentQuestion;
+    protected ImmutableArray<AlternativeVoteSummary>? VoteDistribution;
 
     private CancellationTokenSource? _cts;
     private IActorRef? _localRoomActor;
@@ -61,12 +62,14 @@ public abstract class BaseRoomPage : MudComponentBase, IAsyncDisposable
                 break;
             case RoomEvents.NextQuestion question:
                 CurrentQuestion = question.Info;
+                VoteDistribution = null;
                 TimerConfiguration.ResetAndStart(question.Info.Question.TimeLimit);
                 OnNextQuestion();
                 break;
-            case RoomEvents.RoundFinished:
+            case RoomEvents.RoundFinished roundFinished:
                 TimerConfiguration.Stop();
                 CurrentQuestion = null;
+                VoteDistribution = roundFinished.VoteDistribution;
                 break;
         }
     }

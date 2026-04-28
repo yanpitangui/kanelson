@@ -89,9 +89,8 @@ else
 
     private async Task CreateRoom(Guid id, string name)
     {
-        await RoomService.CreateRoom(id, name);
-        SnackBar.Add(Loc["RoomCreatedSuccess"], Severity.Success);
-        Navigation.NavigateTo($"rooms");
+        var roomId = await RoomService.CreateRoom(id, name);
+        Navigation.NavigateTo($"room/{roomId}");
     }
 
 }

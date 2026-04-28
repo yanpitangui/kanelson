@@ -30,12 +30,21 @@ public sealed class TimerConfiguration : IDisposable
         _current = 0;
         Percentage = 100;
         _max = maxValue;
+        OnExpired = null;
     }
+
+    public Action? OnExpired { get; set; }
 
     public void Increment()
     {
         _current++;
-        Percentage = (_max - _current)/_max * 100;
+        Percentage = (_max - _current) / _max * 100;
+        if (_current >= _max)
+        {
+            var handler = OnExpired;
+            OnExpired = null;
+            handler?.Invoke();
+        }
     }
     
     public void Dispose()

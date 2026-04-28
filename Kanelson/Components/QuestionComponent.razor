@@ -53,6 +53,7 @@
     [Parameter] public CurrentQuestionInfo Info { get; set; } = null!;
     [Parameter] public EventCallback<Guid> AnswerClickCallback { get; set; }
     [Parameter] public EventCallback<Guid[]> OnMultiCorrectSubmit { get; set; }
+    [Parameter] public EventCallback<IReadOnlyCollection<Guid>> OnSelectionsChanged { get; set; }
 
     private HashSet<Guid> _selectedAlternatives = new();
 
@@ -69,6 +70,7 @@
             if (!_selectedAlternatives.Add(id))
                 _selectedAlternatives.Remove(id);
             StateHasChanged();
+            await OnSelectionsChanged.InvokeAsync(_selectedAlternatives);
         }
         else
         {

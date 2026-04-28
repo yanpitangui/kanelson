@@ -12,6 +12,7 @@ public partial class Player : BaseRoomPage
 
     private PlayerStatus _playerStatus = PlayerStatus.Answering;
     private UserAnswerSummary? _roundSummary;
+    private readonly HashSet<Guid> _multiCorrectSelections = new();
 
     private async Task Answer(Guid alternativeId)
     {
@@ -55,10 +56,23 @@ public partial class Player : BaseRoomPage
         }
     }
 
+    internal void OnMultiSelectionsChanged(IReadOnlyCollection<Guid> selections)
+    {
+        _multiCorrectSelections.Clear();
+        foreach (var id in selections) _multiCorrectSelections.Add(id);
+    }
+
     protected override void OnNextQuestion()
     {
         _playerStatus = PlayerStatus.Answering;
         _roundSummary = null;
+        _multiCorrectSelections.Clear();
+
+        if (CurrentQuestion?.Question.Type == Domain.Questions.QuestionType.MultiCorrect)
+        {
+            TimerConfiguration.OnExpired = () =>
+                _ = AnswerMulti(_multiCorrectSelections.ToArray());
+        }
     }
 
     private string ScoreChipClass(decimal points, int maxPoints)

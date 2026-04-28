@@ -13,6 +13,7 @@
     }
     <QuestionComponent AnswerClickCallback="@Answer"
                        OnMultiCorrectSubmit="@AnswerMulti"
+                       OnSelectionsChanged="@(ids => OnMultiSelectionsChanged(ids))"
                        Info="@CurrentQuestion"/>
 }
 else if (Rankings != null)

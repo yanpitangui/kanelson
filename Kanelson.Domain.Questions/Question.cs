@@ -64,7 +64,7 @@ public record Alternative
     public Guid Id { get; set; } = Guid.NewGuid();
 
     [Required]
-    [StringLength(200, MinimumLength = 4)]
+    [StringLength(200, MinimumLength = 1)]
     [MsgKey(1)]
     public string Description { get; set; } = null!;
 

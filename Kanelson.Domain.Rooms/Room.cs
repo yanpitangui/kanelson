@@ -266,12 +266,14 @@ public class Room : BaseWithSnapshotFrequencyActor
         Broadcast(new RoomEvents.NextQuestion(GetCurrentQuestionInfo()));
     }
     
+    private static readonly TimeSpan RoundGracePeriod = TimeSpan.FromSeconds(1);
+
     private void SetTimeHandler()
     {
         _roundStopwatch = Stopwatch.StartNew();
         _timerKillSwitch = Source
             .Single(RoundExpired.Instance)
-            .Delay(TimeSpan.FromSeconds(CurrentQuestion.TimeLimit))
+            .Delay(TimeSpan.FromSeconds(CurrentQuestion.TimeLimit) + RoundGracePeriod)
             .ViaMaterialized(KillSwitches.Single<RoundExpired>(), Keep.Right)
             .To(Sink.ActorRef<RoundExpired>(Self, TimerStreamCompleted.Instance, _ => TimerStreamCompleted.Instance))
             .Run(_materializer);

@@ -1,35 +1,36 @@
-﻿@using Kanelson.Components.progress
+@using Kanelson.Components.progress
 @using Kanelson.Domain.Rooms.Models
 @inherits BaseRoomPage
 
-<div style="display: flex; flex-direction: column; gap: 16px;">
-
-    @if (CurrentQuestion is not null && _roomStatus == RoomStatus.DisplayingQuestion)
-    {
-        <div style="display: flex; justify-content: center; align-items: center; gap: 16px;">
-            @if (TimerConfiguration.Enabled)
-            {
-                <Progress Percent="@TimerConfiguration.Percentage" Format="TimerConfiguration.Format"/>
-            }
-            <span style="font-size: 13px; font-weight: 600; color: var(--k-text-muted); text-transform: uppercase; letter-spacing: 1px;">HOST</span>
-        </div>
-        <QuestionComponent Info="CurrentQuestion"/>
-    }
-    else if (Rankings != null)
-    {
-        <UserRanking Ranking="Rankings.Value"/>
-    }
-
-    <div style="display: flex; gap: 12px; padding-top: 8px;">
-        @if (_roomStatus == RoomStatus.Created)
-        {
-            <button class="k-btn-primary" @onclick="Start">@Loc["StartButton"]</button>
-        }
-        @if (_roomStatus == RoomStatus.AwaitingForNextQuestion)
-        {
-            <button class="k-btn-primary" @onclick="NextQuestion">@Loc["NextQuestionButton"]</button>
-        }
+@if (_roomStatus == RoomStatus.Created)
+{
+    <div class="lobby-waiting">
+        <div class="lobby-waiting__icon">⏳</div>
+        <p class="lobby-waiting__text">
+            @Loc["WaitingForPlayers"]<span class="waiting-dots"><span>.</span><span>.</span><span>.</span></span>
+        </p>
+        <button class="k-btn-primary" @onclick="Start">@Loc["StartButton"]</button>
     </div>
+}
+else if (CurrentQuestion is not null && _roomStatus == RoomStatus.DisplayingQuestion)
+{
+    <div style="display: flex; justify-content: center; align-items: center; gap: 16px;">
+        @if (TimerConfiguration.Enabled)
+        {
+            <Progress Percent="@TimerConfiguration.Percentage" Format="TimerConfiguration.Format"/>
+        }
+        <span style="font-size: 13px; font-weight: 600; color: var(--k-text-muted); text-transform: uppercase; letter-spacing: 1px;">HOST</span>
+    </div>
+    <QuestionComponent Info="CurrentQuestion"/>
+}
+else if (Rankings != null)
+{
+    <UserRanking Ranking="Rankings.Value"/>
+}
 
-</div>
-
+@if (_roomStatus == RoomStatus.AwaitingForNextQuestion)
+{
+    <div style="display: flex; justify-content: center; padding-top: 8px;">
+        <button class="k-btn-primary" @onclick="NextQuestion">@Loc["NextQuestionButton"]</button>
+    </div>
+}

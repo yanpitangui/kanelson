@@ -13,11 +13,11 @@
 <MudCard Elevation="25">
     <MudCardHeader>
         <CardHeaderContent>
-            <MudText Typo="Typo.h6">Incluir/Editar templates</MudText>
+            <MudText Typo="Typo.h6">@Loc["EditTemplate"]</MudText>
         </CardHeaderContent>
     </MudCardHeader>
     <MudGrid>
-        <MudItem xs="12" sm="7">
+        <MudItem xs="12">
             <MudPaper Class="pa-4">
                 <EditForm Model="@_template" OnValidSubmit="SaveTemplate">
                     <ObjectGraphDataAnnotationsValidator />
@@ -28,7 +28,7 @@
                                       For="@(() => _template.Name)"
                                       Immediate="true"
                                       Label="@Loc["Name"]"/>
-                        <MudDropContainer Items="_items" T="TemplateQuestionDrop" Context="templateContext"
+                        <MudDropContainer @ref="_dropContainer" Items="_items" T="TemplateQuestionDrop" Context="templateContext"
                                           ItemsSelector="@((item, dropzone) => item.Selector == dropzone)"
                                           ItemDropped="ItemUpdated" Class="d-flex flex-wrap flex-grow-1">
                             <ChildContent>
@@ -38,11 +38,24 @@
                                 <MudDropZone T="TemplateQuestionDrop" Identifier="2"
                                              AllowReorder="true"
                                              Class="rounded border-1 mud-border-lines-default pa-6 ma-8 flex-grow-1">
-                                    <MudText Typo="Typo.h6" Class="mb-4">@Loc["AssignedQuestions"]</MudText>
+                                    <MudText Typo="Typo.h6" Class="mb-1">@Loc["PlayOrder"]</MudText>
+                                    <MudText Typo="Typo.caption" Class="mb-4" Style="color: var(--mud-palette-text-secondary)">@Loc["DragToReorder"]</MudText>
                                 </MudDropZone>
                             </ChildContent>
                             <ItemRenderer>
-                                <MudListItem T="string" Class="mud-elevation-25 rounded" Text="@templateContext.Name"/>
+                                @if (templateContext.Selector == "2" && templateContext.Position > 0)
+                                {
+                                    <MudListItem T="string" Class="mud-elevation-25 rounded">
+                                        <div style="display:flex;align-items:center;gap:10px;">
+                                            <span style="font-size:12px;font-weight:700;color:var(--mud-palette-primary);min-width:20px;">@templateContext.Position.</span>
+                                            <span>@templateContext.Name</span>
+                                        </div>
+                                    </MudListItem>
+                                }
+                                else
+                                {
+                                    <MudListItem T="string" Class="mud-elevation-25 rounded" Text="@templateContext.Name"/>
+                                }
                             </ItemRenderer>
                         </MudDropContainer>
                     </MudCardContent>
@@ -66,6 +79,7 @@
     
     private Template _template = new();
 
+    private MudDropContainer<TemplateQuestionDrop>? _dropContainer;
     private readonly List<TemplateQuestionDrop> _items = new();
     private ServerModelValidator _serverModelValidator = null!;
 
@@ -111,26 +125,41 @@
                     .Select(x => x.Order).First();
             }
             _items.AddRange(items.OrderBy(x => x.Order));
+            RefreshPositions();
             await InvokeAsync(StateHasChanged);
         }
     }
     
     private void ItemUpdated(MudItemDropInfo<TemplateQuestionDrop> dropItem)
     {
-
         if (dropItem?.Item is null) return;
-        
+
         dropItem.Item.Selector = dropItem.DropzoneIdentifier;
-        
-        // Como essa mágica funciona??
+
         var indexOffset = dropItem.DropzoneIdentifier switch
         {
-            "2"  => _items.Count(x => x.Selector == "1"),
-            _ => 0,
-            };
+            "2" => _items.Count(x => x.Selector == "1"),
+            _   => 0,
+        };
 
         _items.UpdateOrder(dropItem, item => item.Order, indexOffset);
+        PhysicallyReorderByOrder();
+        RefreshPositions();
+        _dropContainer?.Refresh();
+    }
 
+    private void PhysicallyReorderByOrder()
+    {
+        var reordered = _items.OrderBy(x => x.Selector == "1" ? int.MinValue : x.Order).ToList();
+        _items.Clear();
+        _items.AddRange(reordered);
+    }
+
+    private void RefreshPositions()
+    {
+        var pos = 1;
+        foreach (var item in _items.Where(x => x.Selector == "2"))
+            item.Position = pos++;
     }
     
     private async Task SaveTemplate()
@@ -172,6 +201,7 @@
     {
         public string Selector { get; set; } = "1";
         public int Order { get; set; }
+        public int Position { get; set; }
     }
 
 }

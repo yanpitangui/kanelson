@@ -4,25 +4,30 @@
 
 <div class="game-header">
     <span class="game-header__room-id">@Loc["Room"]: @Id</span>
-    <ConnectedUsersComponent ConnectedUsers="_connectedUsers"/>
+    <button class="k-btn-ghost" @onclick="@(() => Navigation.NavigateTo("rooms"))">@Loc["LeaveRoom"]</button>
 </div>
 
 <div class="game-body">
-    @if (_summary is not null)
-    {
-        @if (_summary.Owner.Id == UserService.CurrentUser)
+    <div class="game-content">
+        @if (_summary is not null)
         {
-            <Admin RoomId="@Id" TimerConfiguration="_timerConfig"/>
+            @if (_summary.Owner.Id == UserService.CurrentUser)
+            {
+                <Admin RoomId="@Id" TimerConfiguration="_timerConfig"/>
+            }
+            else
+            {
+                <Player RoomId="@Id" TimerConfiguration="_timerConfig"/>
+            }
         }
         else
         {
-            <Player RoomId="@Id" TimerConfiguration="_timerConfig"/>
+            <div style="color: var(--k-text-muted); text-align: center; padding-top: 40px;">@Loc["Loading"]...</div>
         }
-    }
-    else
-    {
-        <div style="color: var(--k-text-muted); text-align: center; padding-top: 40px;">@Loc["Loading"]...</div>
-    }
+    </div>
+    <aside class="players-panel">
+        <ConnectedUsersComponent ConnectedUsers="_connectedUsers"/>
+    </aside>
 </div>
 
 @code {

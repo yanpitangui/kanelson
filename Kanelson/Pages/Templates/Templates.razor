@@ -1,4 +1,4 @@
-﻿@page "/templates"
+@page "/templates"
 @using System.Collections.Immutable
 @using Kanelson.Domain.Rooms
 @using Kanelson.Domain.Templates
@@ -12,40 +12,57 @@
 
 @if (_templates is null)
 {
-    <h2>@Loc["Loading"]...</h2>
+    <p class="k-loading">@Loc["Loading"]…</p>
 }
 else
 {
-    <MudCard>
-        <MudTable Elevation="25" Items="_templates" T="TemplateSummary" >
-         <ToolBarContent>
-             <MudText Typo="Typo.h6">@Loc["Templates"]</MudText>
-             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>EditTemplate(null))"
-                        Class="ml-auto">
-                 @Loc["CreateTemplateButton"]
-             </MudButton>
-         </ToolBarContent>
-        <HeaderContent>
-            <MudTh>@Loc["Name"]</MudTh>
-            <MudTh>@Loc["Edit/Delete"]</MudTh>
-            <MudTh>@Loc["CreateRoom"]</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Nome">@context.Name</MudTd>
-            <MudTd DataLabel="Edit/Delete">
-                <MudStack AlignItems="AlignItems.Center" Row="true" Spacing="3">
-                    <MudFab @onclick="@(() => EditTemplate(@context.Id))" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small"/>
-                    <MudFab @onclick="@(() => DeleteTemplate(@context.Id))" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small"/>
-                </MudStack>
-            </MudTd>
-            <MudTd DataLabel="CreateRoom">
-                <MudFab @onclick="@(()=>CreateRoom(@context.Id, @context.Name))" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" IconSize="Size.Small" />
-            </MudTd>
-        </RowTemplate>
-     </MudTable>
-    </MudCard>
-
-
+    <div class="k-card">
+        <div class="k-card__header k-card__header--toolbar">
+            <h2 class="k-card__title">@Loc["Templates"]</h2>
+            <div class="k-toolbar">
+                <button class="k-btn-primary" @onclick="@(() => EditTemplate(null))">
+                    <svg class="k-btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                    @Loc["CreateTemplateButton"]
+                </button>
+            </div>
+        </div>
+        <table class="k-table">
+            <thead>
+                <tr>
+                    <th>@Loc["Name"]</th>
+                    <th class="k-table__actions-col">@Loc["Edit/Delete"]</th>
+                    <th class="k-table__actions-col">@Loc["CreateRoom"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in _templates)
+                {
+                    <tr class="k-table__row">
+                        <td>@t.Name</td>
+                        <td>
+                            <div class="k-row-actions">
+                                <button class="k-icon-btn k-icon-btn--edit" title="@Loc["Edit"]" @onclick="@(() => EditTemplate(t.Id))">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm17.71-10.21a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                                </button>
+                                <button class="k-icon-btn k-icon-btn--delete" title="@Loc["Delete"]" @onclick="@(() => DeleteTemplate(t.Id))">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2.46-7.12 1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="k-icon-btn k-icon-btn--play" title="@Loc["CreateRoom"]" @onclick="@(() => CreateRoom(t.Id, t.Name))">
+                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (_templates.Value.IsEmpty)
+        {
+            <div class="k-table__empty">@Loc["NoTemplates"]</div>
+        }
+    </div>
 }
 
 
@@ -63,7 +80,6 @@ else
     {
         Service.DeleteTemplate(id);
         _templates = await Service.GetTemplates();
-
     }
 
     private void EditTemplate(Guid? id)

@@ -1,5 +1,35 @@
 @inherits LayoutComponentBase
 
+<MudThemeProvider Theme="_theme" IsDarkMode="true"/>
+<MudPopoverProvider />
+<MudSnackbarProvider />
+
 <div class="game-layout">
     @Body
 </div>
+
+@code {
+    private readonly MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#ff4500",
+            AppbarBackground = "#0d0808",
+            Background = "#100a0a",
+            Surface = "rgba(255,255,255,0.04)",
+            TextPrimary = "#f1f5f9",
+            TextSecondary = "#64748b",
+            ActionDefault = "#f1f5f9",
+        },
+        PaletteDark = new PaletteDark
+        {
+            Primary = "#ff4500",
+            AppbarBackground = "#0d0808",
+            Background = "#100a0a",
+            Surface = "rgba(255,255,255,0.04)",
+            TextPrimary = "#f1f5f9",
+            TextSecondary = "#64748b",
+            ActionDefault = "#f1f5f9",
+        }
+    };
+}

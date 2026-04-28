@@ -10,11 +10,11 @@
 <MudCard Elevation="25">
     <MudCardHeader>
         <CardHeaderContent>
-            <MudText Typo="Typo.h6">Incluir/Editar perguntas</MudText>
+            <MudText Typo="Typo.h6">@Loc["EditQuestion"]</MudText>
         </CardHeaderContent>
     </MudCardHeader>
     <MudGrid>
-        <MudItem xs="12" sm="7">
+        <MudItem xs="12">
             <MudPaper Class="pa-4">
                 <EditForm Model="@_question" OnValidSubmit="SaveQuestion">
                     <ObjectGraphDataAnnotationsValidator />
@@ -122,7 +122,7 @@
     
     private AlternativeComparer _comparer = new();
 
-    private static int[] _tempos = {5, 10, 20, 30, 60, 90, 120, 240};
+    private static int[] _tempos = {10, 20, 30, 60, 90, 120, 240};
     
     internal void SelectedValueChange(QuestionType value)
     {

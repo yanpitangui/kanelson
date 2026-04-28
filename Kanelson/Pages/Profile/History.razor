@@ -3,38 +3,49 @@
 @using Akka.Hosting
 @using System.Collections.Immutable
 @using Kanelson.Domain.Users
+@attribute [Authorize]
 @inject IRequiredActor<UserHistory> UserHistoryActor
 @inject IUserService UserService
 @inject IStringLocalizer<Shared> Loc
 
 @if (_history is null)
 {
-    <h2>@Loc["Loading"]...</h2>
+    <p class="k-loading">@Loc["Loading"]…</p>
 }
 else
 {
-    <MudCard>
-        <MudTable Elevation="25" Items="_history" T="RoomPlacement">
-            <ToolBarContent>
-                <MudText Typo="Typo.h6">@Loc["History"]</MudText>
-            </ToolBarContent>
-            <HeaderContent>
-                <MudTh>@Loc["Room"]</MudTh>
-                <MudTh>@Loc["PlayedAt"]</MudTh>
-                <MudTh>@Loc["Placement"]</MudTh>
-                <MudTh>@Loc["Points"]</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="@Loc["Room"]">@context.RoomName</MudTd>
-                <MudTd DataLabel="@Loc["PlayedAt"]">@context.PlayedAt.ToLocalTime().ToString("g")</MudTd>
-                <MudTd DataLabel="@Loc["Placement"]">@context.Rank/@context.TotalPlayers</MudTd>
-                <MudTd DataLabel="@Loc["Points"]">@context.Points</MudTd>
-            </RowTemplate>
-            <NoRecordsContent>
-                <MudText>@Loc["NoHistory"]</MudText>
-            </NoRecordsContent>
-        </MudTable>
-    </MudCard>
+    <div class="k-card">
+        <div class="k-card__header">
+            <h2 class="k-card__title">@Loc["History"]</h2>
+        </div>
+        <table class="k-table">
+            <thead>
+                <tr>
+                    <th>@Loc["Room"]</th>
+                    <th>@Loc["PlayedAt"]</th>
+                    <th>@Loc["Placement"]</th>
+                    <th>@Loc["Points"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var entry in _history)
+                {
+                    <tr class="k-table__row">
+                        <td>@entry.RoomName</td>
+                        <td>@entry.PlayedAt.ToLocalTime().ToString("g")</td>
+                        <td>
+                            <span class="k-placement">@entry.Rank<span class="k-placement__sep">/</span>@entry.TotalPlayers</span>
+                        </td>
+                        <td><span class="k-points">@entry.Points</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (_history.Value.IsEmpty)
+        {
+            <div class="k-table__empty">@Loc["NoHistory"]</div>
+        }
+    </div>
 }
 
 @code {

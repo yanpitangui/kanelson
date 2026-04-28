@@ -1,4 +1,4 @@
-﻿@page "/questions"
+@page "/questions"
 @using System.Text.Json
 @using Kanelson.Domain.Questions
 @inject IQuestionService Service
@@ -10,56 +10,70 @@
 
 @if (_questions is null)
 {
-    <h2>@Loc["Loading"]...</h2>
+    <p class="k-loading">@Loc["Loading"]…</p>
 }
 else
 {
-    <MudCard>
-        <MudTable Elevation="25" Items="_questions" MultiSelection="true" @bind-SelectedItems="_selectedItems">
-         <ToolBarContent>
-             <MudText Typo="Typo.h6">@Loc["Questions"]</MudText>
-             <MudButton Variant="Variant.Filled" Color="Color.Secondary"
-                        Class="ml-auto"
-                        Disabled="@(_selectedItems.Count == 0)" 
-                        StartIcon="@Icons.Material.Filled.CloudDownload"
-                        OnClick="DownloadQuestions">
-                 @Loc["DownloadQuestions"]
-             </MudButton>
-             <MudFileUpload Accept=".json" FilesChanged="UploadFiles" Class="mt-0"
-                            T="IBrowserFile" 
-                            SuppressOnChangeWhenInvalid="true">
-                     <MudButton HtmlTag="label"
-                                Variant="Variant.Filled"
-                                Color="Color.Info"
-                                Class="ml-3"
-                                StartIcon="@Icons.Material.Filled.CloudUpload">
-                         @Loc["UploadQuestions"]
-                     </MudButton>
-             </MudFileUpload>
-             <MudButton StartIcon="@Icons.Material.Filled.Add" 
-                        Variant="Variant.Filled" Class="ml-3"
-                        Color="Color.Primary" OnClick="@(()=>EditQuestion(null))">
-                  @Loc["CreateQuestionButton"]
-              </MudButton>
-         </ToolBarContent>
-        <HeaderContent>
-            <MudTh>@Loc["Name"]</MudTh>
-            <MudTh>@Loc["Edit/Delete"]</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Name">@context.Name</MudTd>
-            <MudTd DataLabel="Edit/Delete">
-                <MudStack AlignItems="AlignItems.Center" Row="true" Spacing="3">
-                    <MudFab @onclick="@(() => EditQuestion(@context.Id))" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small"/>
-                    <MudFab @onclick="@(() => RemoveQuestion(@context.Id))" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small"/>
-                </MudStack>
-
-            </MudTd>
-        </RowTemplate>
-     </MudTable>
-    </MudCard>
-
-
+    <div class="k-card">
+        <div class="k-card__header k-card__header--toolbar">
+            <h2 class="k-card__title">@Loc["Questions"]</h2>
+            <div class="k-toolbar">
+                <button class="k-btn-ghost" disabled="@(_selectedItems.Count == 0)" @onclick="DownloadQuestions">
+                    <svg class="k-btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5v-2z"/></svg>
+                    @Loc["DownloadQuestions"]
+                </button>
+                <label class="k-btn-ghost k-btn-upload">
+                    <svg class="k-btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 15v3H5v-3H3v3c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-3h-2zm-7-9.17L9.83 9H11v6h2V9h1.17L12 5.83zM11 3H5v2h6V3zm2 0v2h6V3h-6z"/><path d="M11 3h2v2h-2z" fill="none"/><path d="M5 3h14v2H5z" fill="none"/><path d="M12 15V9h-1.17L7 5.83 3.83 9H5v6"/></svg>
+                    @Loc["UploadQuestions"]
+                    <InputFile accept=".json" OnChange="UploadFiles" class="k-file-input"/>
+                </label>
+                <button class="k-btn-primary" @onclick="@(() => EditQuestion(null))">
+                    <svg class="k-btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                    @Loc["CreateQuestionButton"]
+                </button>
+            </div>
+        </div>
+        <table class="k-table">
+            <thead>
+                <tr>
+                    <th class="k-table__check-col">
+                        <input type="checkbox" class="k-checkbox"
+                               checked="@(_questions.Any() && _selectedItems.Count == _questions.Count())"
+                               @onchange="ToggleSelectAll"/>
+                    </th>
+                    <th>@Loc["Name"]</th>
+                    <th class="k-table__actions-col">@Loc["Edit/Delete"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var q in _questions)
+                {
+                    <tr class="k-table__row">
+                        <td>
+                            <input type="checkbox" class="k-checkbox"
+                                   checked="@_selectedItems.Contains(q)"
+                                   @onchange="@(e => ToggleItem(q, e))"/>
+                        </td>
+                        <td>@q.Name</td>
+                        <td>
+                            <div class="k-row-actions">
+                                <button class="k-icon-btn k-icon-btn--edit" title="@Loc["Edit"]" @onclick="@(() => EditQuestion(q.Id))">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm17.71-10.21a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                                </button>
+                                <button class="k-icon-btn k-icon-btn--delete" title="@Loc["Delete"]" @onclick="@(() => RemoveQuestion(q.Id))">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2.46-7.12 1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (!_questions.Any())
+        {
+            <div class="k-table__empty">@Loc["NoQuestions"]</div>
+        }
+    </div>
 }
 
 
@@ -68,21 +82,19 @@ else
     private IEnumerable<QuestionSummary>? _questions;
     private HashSet<QuestionSummary> _selectedItems = new();
 
-
     protected override async Task OnInitializedAsync()
     {
         _questions = await Service.GetQuestionsSummary();
         await base.OnInitializedAsync();
-
     }
 
     private async Task DownloadQuestions()
     {
         var selectedIds = _selectedItems.Select(x => x.Id).ToHashSet();
         var selectedQuestions = await Service.GetQuestions(selectedIds);
-        await JsRuntime.InvokeVoidAsync("BlazorDownloadFile", 
+        await JsRuntime.InvokeVoidAsync("BlazorDownloadFile",
             "questions.json",
-            "application/json", 
+            "application/json",
             JsonSerializer.SerializeToUtf8Bytes(selectedQuestions));
         _selectedItems.Clear();
         await InvokeAsync(StateHasChanged);
@@ -92,7 +104,6 @@ else
     {
         Service.RemoveQuestion(id);
         _questions = await Service.GetQuestionsSummary();
-
     }
 
     private void EditQuestion(Guid? id)
@@ -100,8 +111,9 @@ else
         Navigation.NavigateTo($"question/{id}");
     }
 
-    private async Task UploadFiles(IBrowserFile file)
+    private async Task UploadFiles(InputFileChangeEventArgs e)
     {
+        var file = e.File;
         var result = await Service.UploadQuestions(file);
         if (!result.IsValid)
         {
@@ -114,7 +126,6 @@ else
                     config.DuplicatesBehavior = SnackbarDuplicatesBehavior.Allow;
                 });
             }
-
         }
         else
         {
@@ -122,11 +133,24 @@ else
             {
                 config.CloseAfterNavigation = false;
                 config.RequireInteraction = false;
-
             });
         }
         _questions = await Service.GetQuestionsSummary();
         await InvokeAsync(StateHasChanged);
+    }
+
+    private void ToggleSelectAll(ChangeEventArgs e)
+    {
+        if (e.Value is true)
+            _selectedItems = _questions!.ToHashSet();
+        else
+            _selectedItems.Clear();
+    }
+
+    private void ToggleItem(QuestionSummary item, ChangeEventArgs e)
+    {
+        if (e.Value is true) _selectedItems.Add(item);
+        else _selectedItems.Remove(item);
     }
 
 }

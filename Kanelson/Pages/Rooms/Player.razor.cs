@@ -13,7 +13,7 @@ public partial class Player : BaseRoomPage
     private ISnackbar Snackbar { get; set; } = null!;
     
     private PlayerStatus _playerStatus = PlayerStatus.Answering;
-    
+
     private async Task Answer(Guid alternativeId)
     {
         TimerConfiguration.Stop();

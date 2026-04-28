@@ -183,4 +183,43 @@
     <data name="NoHistory" xml:space="preserve">
         <value>Nenhum resultado registrado ainda.</value>
     </data>
+    <data name="NoQuestions" xml:space="preserve">
+        <value>Nenhuma pergunta ainda. Crie uma para começar.</value>
+    </data>
+    <data name="NoTemplates" xml:space="preserve">
+        <value>Nenhum template ainda. Crie um para começar.</value>
+    </data>
+    <data name="HomeTagline" xml:space="preserve">
+        <value>Conduza quizzes ao vivo. Engaje seu público em tempo real.</value>
+    </data>
+    <data name="GoToRooms" xml:space="preserve">
+        <value>Ir para as Salas</value>
+    </data>
+    <data name="SignInTagline" xml:space="preserve">
+        <value>Entre para criar ou participar de um quiz ao vivo.</value>
+    </data>
+    <data name="SignInWithGitHub" xml:space="preserve">
+        <value>Entrar com GitHub</value>
+    </data>
+    <data name="LeaveRoom" xml:space="preserve">
+        <value>Sair</value>
+    </data>
+    <data name="WaitingForHost" xml:space="preserve">
+        <value>Aguardando o host iniciar</value>
+    </data>
+    <data name="WaitingForPlayers" xml:space="preserve">
+        <value>Aguardando jogadores</value>
+    </data>
+    <data name="EditQuestion" xml:space="preserve">
+        <value>Criar / Editar Pergunta</value>
+    </data>
+    <data name="EditTemplate" xml:space="preserve">
+        <value>Criar / Editar Template</value>
+    </data>
+    <data name="PlayOrder" xml:space="preserve">
+        <value>Ordem de Reprodução</value>
+    </data>
+    <data name="DragToReorder" xml:space="preserve">
+        <value>Arraste os itens para definir a ordem das perguntas</value>
+    </data>
 </root>

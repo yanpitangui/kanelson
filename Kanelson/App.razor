@@ -1,14 +1,9 @@
-﻿@inject NavigationManager Navigation
-
-<CascadingAuthenticationState>
+﻿<CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
                 <NotAuthorized>
-                    @{
-                        var returnUrl = Uri.EscapeDataString(new Uri(Navigation.Uri).PathAndQuery);
-                        Navigation.NavigateTo($"/signin?returnUrl={returnUrl}", forceLoad: false);
-                    }
+                    <RedirectToSignIn />
                 </NotAuthorized>
             </AuthorizeRouteView>
             <FocusOnNavigate RouteData="@routeData" Selector="h1"/>

@@ -1,5 +1,6 @@
 @using Kanelson.Domain.Rooms.Models
 @using System.Collections.Immutable
+@inject IStringLocalizer<Shared> Loc
 
 @if (Distribution.Length > 0)
 {
@@ -18,7 +19,7 @@
                     }
                     @if (isYours)
                     {
-                        <span class="vote-dist__badge vote-dist__badge--you">you</span>
+                        <span class="vote-dist__badge vote-dist__badge--you">@Loc["YouPicked"]</span>
                     }
                     <span class="vote-dist__count">@alt.VoteCount</span>
                 </div>

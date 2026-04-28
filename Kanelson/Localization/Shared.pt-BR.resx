@@ -231,4 +231,7 @@
     <data name="SubmitButton" xml:space="preserve">
         <value>Enviar</value>
     </data>
+    <data name="YouPicked" xml:space="preserve">
+        <value>você</value>
+    </data>
 </root>

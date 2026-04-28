@@ -1,18 +1,27 @@
-﻿@using Kanelson.Components.progress
+@using Kanelson.Components.progress
+@using Kanelson.Domain.Rooms.Models
 @inherits BaseRoomPage
+
 @if (CurrentQuestion is not null && _playerStatus != PlayerStatus.Answered)
 {
     @if (TimerConfiguration.Enabled)
     {
         <Progress Status="ProgressStatus.Active" Type="ProgressType.Circle"
                   TrailColor="#ff4d4f"
-                  Percent="@TimerConfiguration.Percentage" Format="TimerConfiguration.Format"></Progress>
+                  Percent="@TimerConfiguration.Percentage" Format="TimerConfiguration.Format"/>
     }
-
-    
     <QuestionComponent AnswerClickCallback="@Answer" Info="@CurrentQuestion"/>
 }
 else if (Rankings != null)
 {
     <UserRanking Ranking="Rankings.Value"/>
+}
+else
+{
+    <div class="lobby-waiting">
+        <div class="lobby-waiting__icon">🎮</div>
+        <p class="lobby-waiting__text">
+            @Loc["WaitingForHost"]<span class="waiting-dots"><span>.</span><span>.</span><span>.</span></span>
+        </p>
+    </div>
 }

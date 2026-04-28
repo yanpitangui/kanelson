@@ -1,5 +1,10 @@
-﻿@page "/"
+@page "/"
+@attribute [Authorize]
+@inject NavigationManager Navigation
 
-<PageTitle>Kanelson</PageTitle>
-
-<MudText Typo="Typo.h3" GutterBottom="true">Hello, world!</MudText>
+@code {
+    protected override void OnInitialized()
+    {
+        Navigation.NavigateTo("/rooms", replace: true);
+    }
+}

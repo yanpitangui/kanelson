@@ -34,7 +34,7 @@ public record Question
     /// </summary>
     [Required]
     [MsgKey(3)]
-    public int TimeLimit { get; set; } = 5;
+    public int TimeLimit { get; set; } = 10;
 
     [Required]
     [Range(0, 2000)]

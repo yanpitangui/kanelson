@@ -183,4 +183,43 @@
     <data name="NoHistory" xml:space="preserve">
         <value>No placements recorded yet.</value>
     </data>
+    <data name="NoQuestions" xml:space="preserve">
+        <value>No questions yet. Create one to get started.</value>
+    </data>
+    <data name="NoTemplates" xml:space="preserve">
+        <value>No templates yet. Create one to get started.</value>
+    </data>
+    <data name="HomeTagline" xml:space="preserve">
+        <value>Host live quizzes. Engage your audience in real time.</value>
+    </data>
+    <data name="GoToRooms" xml:space="preserve">
+        <value>Go to Rooms</value>
+    </data>
+    <data name="SignInTagline" xml:space="preserve">
+        <value>Sign in to host or join a live quiz.</value>
+    </data>
+    <data name="SignInWithGitHub" xml:space="preserve">
+        <value>Sign in with GitHub</value>
+    </data>
+    <data name="LeaveRoom" xml:space="preserve">
+        <value>Leave</value>
+    </data>
+    <data name="WaitingForHost" xml:space="preserve">
+        <value>Waiting for the host to start</value>
+    </data>
+    <data name="WaitingForPlayers" xml:space="preserve">
+        <value>Waiting for players</value>
+    </data>
+    <data name="EditQuestion" xml:space="preserve">
+        <value>Create / Edit Question</value>
+    </data>
+    <data name="EditTemplate" xml:space="preserve">
+        <value>Create / Edit Template</value>
+    </data>
+    <data name="PlayOrder" xml:space="preserve">
+        <value>Play Order</value>
+    </data>
+    <data name="DragToReorder" xml:space="preserve">
+        <value>Drag items to set the question order</value>
+    </data>
 </root>

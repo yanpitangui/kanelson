@@ -1,45 +1,36 @@
-﻿@using Kanelson.Components.progress
+@using Kanelson.Components.progress
 @using Kanelson.Domain.Rooms.Models
 @inherits BaseRoomPage
 
-<MudStack>
-        
-    @if (CurrentQuestion is not null && _roomStatus == RoomStatus.DisplayingQuestion)
-    {
-        
+@if (_roomStatus == RoomStatus.Created)
+{
+    <div class="lobby-waiting">
+        <div class="lobby-waiting__icon">⏳</div>
+        <p class="lobby-waiting__text">
+            @Loc["WaitingForPlayers"]<span class="waiting-dots"><span>.</span><span>.</span><span>.</span></span>
+        </p>
+        <button class="k-btn-primary" @onclick="Start">@Loc["StartButton"]</button>
+    </div>
+}
+else if (CurrentQuestion is not null && _roomStatus == RoomStatus.DisplayingQuestion)
+{
+    <div style="display: flex; justify-content: center; align-items: center; gap: 16px;">
         @if (TimerConfiguration.Enabled)
         {
-            <Progress Status="ProgressStatus.Active" Type="ProgressType.Circle"
-                      TrailColor="#ff4d4f"
-                      Percent="@TimerConfiguration.Percentage" Format="TimerConfiguration.Format"></Progress>
+            <Progress Percent="@TimerConfiguration.Percentage" Format="TimerConfiguration.Format"/>
         }
-        
-        
-        <QuestionComponent Info="CurrentQuestion"/>
-    }
-    
-    else if (Rankings != null)
-    {
-        <UserRanking Ranking="Rankings.Value" />
-    }
+        <span style="font-size: 13px; font-weight: 600; color: var(--k-text-muted); text-transform: uppercase; letter-spacing: 1px;">HOST</span>
+    </div>
+    <QuestionComponent Info="CurrentQuestion"/>
+}
+else if (Rankings != null)
+{
+    <UserRanking Ranking="Rankings.Value"/>
+}
 
-    
-    <MudCardActions>
-        @if (_roomStatus == RoomStatus.Created)
-        {
-            <MudButton @onclick="Start" Color="Color.Primary" 
-                       Variant="Variant.Filled"
-                       StartIcon="@Icons.Material.Filled.Start">@Loc["StartButton"]</MudButton>
-        }
-        
-    
-        @if (_roomStatus == RoomStatus.AwaitingForNextQuestion)
-        {
-            <MudButton @onclick="NextQuestion" Color="Color.Primary" 
-                       Variant="Variant.Filled"
-                       StartIcon="@Icons.Material.Filled.SkipNext">@Loc["NextQuestionButton"]</MudButton>
-        }
-    </MudCardActions>
-    
-</MudStack>
-
+@if (_roomStatus == RoomStatus.AwaitingForNextQuestion)
+{
+    <div style="display: flex; justify-content: center; padding-top: 8px;">
+        <button class="k-btn-primary" @onclick="NextQuestion">@Loc["NextQuestionButton"]</button>
+    </div>
+}

@@ -1,43 +1,24 @@
-@inherits MudComponentBase
-@using  System.Globalization
+@using System.Globalization
 @inject NavigationManager Navigation
 
-
-<MudSelect Margin="Margin.Dense" T="CultureInfo" Variant="Variant.Text" @bind-Value="@Culture">
-    @foreach (var culture in supportedCultures)
+<select class="k-select-culture" value="@CultureInfo.CurrentCulture.Name" @onchange="OnCultureChange">
+    @foreach (var culture in _supportedCultures)
     {
-        <MudSelectItem Value="@culture">@culture.DisplayName</MudSelectItem>
+        <option value="@culture.Name">@culture.DisplayName</option>
     }
-</MudSelect>
+</select>
 
-@code
-{
-    private CultureInfo[] supportedCultures = {
-        new("en-US"),
-        new("pt-BR"),
-    };
+@code {
+    private readonly CultureInfo[] _supportedCultures = { new("en-US"), new("pt-BR") };
 
-    protected override void OnInitialized()
+    private void OnCultureChange(ChangeEventArgs e)
     {
-        Culture = CultureInfo.CurrentCulture;
-    }
+        var cultureName = e.Value?.ToString();
+        if (cultureName is null || cultureName == CultureInfo.CurrentCulture.Name) return;
 
-    private CultureInfo Culture
-    {
-        get => CultureInfo.CurrentCulture;
-        set
-        {
-            if (!Equals(CultureInfo.CurrentCulture, value))
-            {
-                var uri = new Uri(Navigation.Uri)
-                    .GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
-                var cultureEscaped = Uri.EscapeDataString(value.Name);
-                var uriEscaped = Uri.EscapeDataString(uri);
-
-                Navigation.NavigateTo(
-                    $"Culture/Set?culture={cultureEscaped}&redirectUri={uriEscaped}",
-                    forceLoad: true);
-            }
-        }
+        var uri = new Uri(Navigation.Uri).GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+        Navigation.NavigateTo(
+            $"Culture/Set?culture={Uri.EscapeDataString(cultureName)}&redirectUri={Uri.EscapeDataString(uri)}",
+            forceLoad: true);
     }
 }

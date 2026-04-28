@@ -68,6 +68,8 @@ builder.Services.AddAuthentication(o =>
     });
 
 
+builder.Services.AddAuthorization();
+
 builder.Services.AddOptions();
 builder.Services.AddRazorComponents();
 builder.Services.AddRazorPages();
@@ -105,17 +107,17 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseCookiePolicy();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapAuthentication();
 app.MapCulture();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
-app.UseAuthentication();
-app.UseAuthorization();
 app.MapHealthChecks("/healthz");
 
 var supportedCultures = new[] { "en-US", "pt-BR" };
 var localizationOptions = new RequestLocalizationOptions()
-    .SetDefaultCulture(supportedCultures[1])
+    .SetDefaultCulture(supportedCultures[0])
     .AddSupportedCultures(supportedCultures)
     .AddSupportedUICultures(supportedCultures);
 

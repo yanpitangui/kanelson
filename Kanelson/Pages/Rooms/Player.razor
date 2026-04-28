@@ -1,5 +1,6 @@
 @using Kanelson.Components.progress
 @using Kanelson.Domain.Rooms.Models
+@using Kanelson.Domain.Questions
 @inherits BaseRoomPage
 
 @if (CurrentQuestion is not null && _playerStatus != PlayerStatus.Answered)
@@ -10,11 +11,26 @@
                   TrailColor="#ff4d4f"
                   Percent="@TimerConfiguration.Percentage" Format="TimerConfiguration.Format"/>
     }
-    <QuestionComponent AnswerClickCallback="@Answer" Info="@CurrentQuestion"/>
+    <QuestionComponent AnswerClickCallback="@Answer"
+                       OnMultiCorrectSubmit="@AnswerMulti"
+                       Info="@CurrentQuestion"/>
 }
 else if (Rankings != null)
 {
     <UserRanking Ranking="Rankings.Value"/>
+}
+else if (VoteDistribution.HasValue && VoteDistribution.Value.Length > 0)
+{
+    <div class="round-summary">
+        @if (_roundSummary != null)
+        {
+            <div class="@ScoreChipClass(_roundSummary.PointsEarned, _roundSummary.Question.Points)">
+                +@((int)_roundSummary.PointsEarned) pts
+            </div>
+        }
+        <VoteDistributionComponent Distribution="VoteDistribution.Value"
+                                    YourAnswers="@_roundSummary?.Answered" />
+    </div>
 }
 else
 {

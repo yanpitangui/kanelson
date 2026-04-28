@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using Kanelson.Domain.Rooms;
 using Kanelson.Domain.Rooms.Models;
 using Microsoft.AspNetCore.Components;
@@ -8,11 +7,11 @@ namespace Kanelson.Pages.Rooms;
 
 public partial class Player : BaseRoomPage
 {
-
     [Inject]
     private ISnackbar Snackbar { get; set; } = null!;
-    
+
     private PlayerStatus _playerStatus = PlayerStatus.Answering;
+    private UserAnswerSummary? _roundSummary;
 
     private async Task Answer(Guid alternativeId)
     {
@@ -22,12 +21,21 @@ public partial class Player : BaseRoomPage
         await InvokeAsync(StateHasChanged);
     }
 
+    private async Task AnswerMulti(Guid[] alternativeIds)
+    {
+        TimerConfiguration.Stop();
+        _playerStatus = PlayerStatus.Answered;
+        await RoomService.Answer(RoomId, default, alternativeIds);
+        await InvokeAsync(StateHasChanged);
+    }
+
     protected override void HandleEvent(IRoomEvent roomEvent)
     {
         base.HandleEvent(roomEvent);
         switch (roomEvent)
         {
-            case RoomEvents.UserRoundSummary:
+            case RoomEvents.UserRoundSummary summary:
+                _roundSummary = summary.Summary;
                 break;
             case RoomEvents.AnswerRejected rejection:
                 var stringReason = rejection.Reason is RejectionReason.InvalidState
@@ -50,6 +58,14 @@ public partial class Player : BaseRoomPage
     protected override void OnNextQuestion()
     {
         _playerStatus = PlayerStatus.Answering;
+        _roundSummary = null;
+    }
+
+    private string ScoreChipClass(decimal points, int maxPoints)
+    {
+        if (points <= 0) return "score-chip score-chip--bad";
+        if (points >= maxPoints) return "score-chip score-chip--good";
+        return "score-chip score-chip--partial";
     }
 
     private enum PlayerStatus

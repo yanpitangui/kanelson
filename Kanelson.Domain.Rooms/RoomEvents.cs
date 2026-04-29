@@ -19,4 +19,5 @@ public static class RoomEvents
     public record GameFinished(ImmutableArray<UserRanking> Rankings) : IRoomEvent;
     public record RoomDeleted : IRoomEvent;
     public record AnswerRejected(RejectionReason Reason) : IRoomEvent;
+    public record TimeExtended(int AdditionalSeconds) : IRoomEvent;
 }

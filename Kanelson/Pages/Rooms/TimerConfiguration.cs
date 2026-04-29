@@ -35,6 +35,14 @@ public sealed class TimerConfiguration : IDisposable
 
     public Action? OnExpired { get; set; }
 
+    public void Extend(int seconds)
+    {
+        _max += seconds;
+        Percentage = Math.Max(0, (_max - _current) / _max * 100);
+        if (!_timerHandle.Enabled)
+            _timerHandle.Start();
+    }
+
     public void Increment()
     {
         _current++;

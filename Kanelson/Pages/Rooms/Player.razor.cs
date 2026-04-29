@@ -65,12 +65,28 @@ public partial class Player : BaseRoomPage
         foreach (var id in selections) _multiCorrectSelections.Add(id);
     }
 
+    protected override void OnTimeExtended(int additionalSeconds)
+    {
+        _bonusSeconds = additionalSeconds;
+        _ = ClearBonusAfterDelay();
+    }
+
+    private int? _bonusSeconds;
+
+    private async Task ClearBonusAfterDelay()
+    {
+        await Task.Delay(3000);
+        _bonusSeconds = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
     protected override void OnNextQuestion()
     {
         _playerStatus = PlayerStatus.Answering;
         _roundSummary = null;
         _myAnswers = new HashSet<Guid>();
         _multiCorrectSelections.Clear();
+        _bonusSeconds = null;
 
         if (CurrentQuestion?.Question.Type == Domain.Questions.QuestionType.MultiCorrect)
         {

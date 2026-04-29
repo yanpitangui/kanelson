@@ -91,6 +91,12 @@ public class RoomService : IRoomService
         roomShardingRef.Tell(new RoomCommands.SendUserAnswer(roomId, _userService.CurrentUser, alternativeIds));
     }
 
+    public async Task ExtendTime(string roomId, int seconds, CancellationToken ct = default)
+    {
+        var roomShardingRef = await GetRoomShardingRef(roomId, ct);
+        roomShardingRef.Tell(new RoomCommands.ExtendTime(roomId, seconds));
+    }
+
     private async Task<IActorRef> GetRoomShardingRef(string roomId, CancellationToken ct = default)
     {
         var exists = await _actorRegistry.Get<AllRoomsIndexActor>()

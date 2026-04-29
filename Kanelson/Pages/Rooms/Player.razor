@@ -3,6 +3,14 @@
 @using Kanelson.Domain.Questions
 @inherits BaseRoomPage
 
+@if (_bonusSeconds.HasValue)
+{
+    <div class="bonus-time-banner">
+        <span class="bonus-time-icon">⚡</span>
+        <span>@string.Format(Loc["TimeExtendedNotification"], _bonusSeconds.Value)</span>
+    </div>
+}
+
 @if (CurrentQuestion is not null)
 {
     @if (TimerConfiguration.Enabled)

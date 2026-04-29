@@ -33,4 +33,9 @@ public partial class Admin : BaseRoomPage
     {
         await RoomService.NextQuestion(RoomId);
     }
+
+    private async Task ExtendTime(int seconds)
+    {
+        await RoomService.ExtendTime(RoomId, seconds);
+    }
 }

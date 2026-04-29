@@ -71,12 +71,15 @@ public abstract class BaseRoomPage : MudComponentBase, IAsyncDisposable
                 CurrentQuestion = null;
                 VoteDistribution = roundFinished.VoteDistribution;
                 break;
+            case RoomEvents.TimeExtended timeExtended:
+                TimerConfiguration.Extend(timeExtended.AdditionalSeconds);
+                OnTimeExtended(timeExtended.AdditionalSeconds);
+                break;
         }
     }
 
-    protected virtual void OnNextQuestion()
-    {
-    }
+    protected virtual void OnNextQuestion() { }
+    protected virtual void OnTimeExtended(int additionalSeconds) { }
 
     protected virtual async Task AfterConnectedConfiguration()
     {

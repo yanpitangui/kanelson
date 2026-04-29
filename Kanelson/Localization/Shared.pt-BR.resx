@@ -234,6 +234,12 @@
     <data name="AnswerSubmitted" xml:space="preserve">
         <value>Resposta enviada! Aguardando os outros</value>
     </data>
+    <data name="ExtendTime" xml:space="preserve">
+        <value>Adicionar tempo</value>
+    </data>
+    <data name="TimeExtendedNotification" xml:space="preserve">
+        <value>+{0}s — tempo extra!</value>
+    </data>
     <data name="YouPicked" xml:space="preserve">
         <value>você</value>
     </data>

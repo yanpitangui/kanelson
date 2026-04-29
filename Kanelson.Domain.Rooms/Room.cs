@@ -25,6 +25,7 @@ public class Room : BaseWithSnapshotFrequencyActor
     private readonly ActorMaterializer _materializer;
     private IKillSwitch? _timerKillSwitch;
     private Stopwatch? _roundStopwatch;
+    private double _effectiveTimeLimit;
     private readonly string _roomIdentifier;
     private TemplateQuestion CurrentQuestion => _state.Template.Questions[_state.CurrentQuestionIdx];
 
@@ -120,6 +121,23 @@ public class Room : BaseWithSnapshotFrequencyActor
             SetTimeHandler();
         });
         
+        Command<RoomCommands.ExtendTime>(o =>
+        {
+            if (_state.CurrentState is not RoomStatus.DisplayingQuestion) return;
+            _effectiveTimeLimit += o.Seconds;
+            _timerKillSwitch?.Shutdown();
+            _timerKillSwitch = null;
+            var elapsed = _roundStopwatch?.Elapsed.TotalSeconds ?? 0;
+            var remaining = Math.Max(0, _effectiveTimeLimit - elapsed);
+            _timerKillSwitch = Source
+                .Single(RoundExpired.Instance)
+                .Delay(TimeSpan.FromSeconds(remaining) + RoundGracePeriod)
+                .ViaMaterialized(KillSwitches.Single<RoundExpired>(), Keep.Right)
+                .To(Sink.ActorRef<RoundExpired>(Self, TimerStreamCompleted.Instance, _ => TimerStreamCompleted.Instance))
+                .Run(_materializer);
+            Broadcast(new RoomEvents.TimeExtended(o.Seconds));
+        });
+
         Command<RoomQueries.GetOwner>(_ => Sender.Tell(_state.OwnerId));
 
         Command<RoomCommands.SendUserAnswer>(o =>
@@ -137,7 +155,12 @@ public class Room : BaseWithSnapshotFrequencyActor
                 return;
             }
             var questionAnswers = _state.Answers[CurrentQuestion.Id];
-            var alternativeInfo = CalculatePoints(o.AlternativeIds);
+            var alternativeInfo = new RoomAnswer
+            {
+                Alternatives = o.AlternativeIds,
+                TimeToAnswer = _roundStopwatch?.Elapsed ?? TimeSpan.Zero,
+                Points = 0
+            };
             questionAnswers.TryAdd(o.UserId, alternativeInfo);
             var user = _state.CurrentUsers.FirstOrDefault(x => string.Equals(x.Id, o.UserId, StringComparison.OrdinalIgnoreCase));
             if (user != null) user.Answered = true;
@@ -263,6 +286,7 @@ public class Room : BaseWithSnapshotFrequencyActor
     
     private void SendNextQuestion(bool incrementedQuestionIdx = false)
     {
+        _effectiveTimeLimit = CurrentQuestion.TimeLimit;
         UpdateState(RoomStatus.DisplayingQuestion, incrementedQuestionIdx);
         foreach (var user in _state.CurrentUsers)
         {
@@ -278,7 +302,7 @@ public class Room : BaseWithSnapshotFrequencyActor
         _roundStopwatch = Stopwatch.StartNew();
         _timerKillSwitch = Source
             .Single(RoundExpired.Instance)
-            .Delay(TimeSpan.FromSeconds(CurrentQuestion.TimeLimit) + RoundGracePeriod)
+            .Delay(TimeSpan.FromSeconds(_effectiveTimeLimit) + RoundGracePeriod)
             .ViaMaterialized(KillSwitches.Single<RoundExpired>(), Keep.Right)
             .To(Sink.ActorRef<RoundExpired>(Self, TimerStreamCompleted.Instance, _ => TimerStreamCompleted.Instance))
             .Run(_materializer);
@@ -304,45 +328,38 @@ public class Room : BaseWithSnapshotFrequencyActor
         
     }
      
-     private RoomAnswer CalculatePoints(Guid[] alternativeIds)
-     {
-         var timeToAnswer = _roundStopwatch?.Elapsed ?? TimeSpan.Zero;
-         
-         var correctAlternatives = CurrentQuestion
-             .Alternatives
-             .Where(x => x.Correct)
-             .Select(x => x.Id)
-             .ToList();
+    private decimal CalculatePoints(IEnumerable<Guid> alternativeIds, TimeSpan timeToAnswer)
+    {
+        var altArray = alternativeIds as Guid[] ?? alternativeIds.ToArray();
 
-         var maxCorrect = correctAlternatives.Count;
-         
-         var correct = correctAlternatives
-             .Intersect(alternativeIds)
-             .Count();
+        var correctAlternatives = CurrentQuestion
+            .Alternatives
+            .Where(x => x.Correct)
+            .Select(x => x.Id)
+            .ToList();
 
+        var maxCorrect = correctAlternatives.Count;
 
-         var wrong = CurrentQuestion.Alternatives
-             .Where(x => !x.Correct)
-             .Select(x => x.Id)
-             .Intersect(alternativeIds)
-             .Count();
+        var correct = correctAlternatives
+            .Intersect(altArray)
+            .Count();
 
-         var percentage = Math.Max(0m, (correct - wrong) / (decimal)maxCorrect);
-             
-         
-         var timeMinusDelay = Math.Max(timeToAnswer.TotalSeconds - 1d, 0);
-             
-         // Kahoot formula: https://support.kahoot.com/hc/en-us/articles/115002303908-How-points-work
-         var wouldBePoints = Math.Round((decimal)
-             (1 - ( timeMinusDelay  /  CurrentQuestion.TimeLimit) / 2) * CurrentQuestion.Points);
+        var wrong = CurrentQuestion.Alternatives
+            .Where(x => !x.Correct)
+            .Select(x => x.Id)
+            .Intersect(altArray)
+            .Count();
 
-         return new RoomAnswer
-         {
-             Alternatives = alternativeIds,
-             Points = wouldBePoints * percentage,
-             TimeToAnswer = timeToAnswer
-         };
-     }
+        var percentage = Math.Max(0m, (correct - wrong) / (decimal)maxCorrect);
+
+        var timeMinusDelay = Math.Max(timeToAnswer.TotalSeconds - 1d, 0);
+
+        // Kahoot formula: https://support.kahoot.com/hc/en-us/articles/115002303908-How-points-work
+        var wouldBePoints = Math.Round((decimal)
+            (1 - (timeMinusDelay / _effectiveTimeLimit) / 2) * CurrentQuestion.Points);
+
+        return wouldBePoints * percentage;
+    }
 
     private void EndCurrentRound()
     {
@@ -367,6 +384,12 @@ public class Room : BaseWithSnapshotFrequencyActor
         Broadcast(new RoomEvents.RoundFinished(currentQuestion, voteDistribution));
 
         FillAnswersFromUsersThatHaveNotAnswered();
+
+        // Score everyone now that the final effective time limit is known
+        foreach (var answer in _state.Answers[currentQuestion.Id].Values)
+        {
+            answer.Points = CalculatePoints(answer.Alternatives, answer.TimeToAnswer);
+        }
 
         foreach (var userId in Users.Select(x => x.Id))
         {

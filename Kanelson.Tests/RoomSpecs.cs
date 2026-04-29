@@ -1,6 +1,5 @@
 using Akka.Actor;
-using Akka.Persistence.TestKit;
-using Akka.TestKit;
+using Akka.TestKit.Xunit2;
 using AwesomeAssertions;
 using Kanelson.Domain.Questions;
 using Kanelson.Domain.Rooms;
@@ -12,7 +11,7 @@ using System.Threading.Channels;
 
 namespace Kanelson.Tests;
 
-public sealed class RoomSpecs : PersistenceTestKit
+public sealed class RoomSpecs : TestKit
 {
     private const string RoomId = "room-1";
     private static readonly UserInfo Owner = new("owner") { Name = "Owner" };

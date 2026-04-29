@@ -246,16 +246,5 @@
     <data name="ScanToJoin" xml:space="preserve">
         <value>Scan to join</value>
     </data>
-    <data name="ValidationRequired" xml:space="preserve">
-        <value>This field is required.</value>
-    </data>
-    <data name="ValidationStringLength" xml:space="preserve">
-        <value>Must be between {2} and {1} characters.</value>
-    </data>
-    <data name="ValidationRange" xml:space="preserve">
-        <value>Must be between {1} and {2}.</value>
-    </data>
-    <data name="ValidationUrl" xml:space="preserve">
-        <value>Must be a valid URL.</value>
-    </data>
+
 </root>

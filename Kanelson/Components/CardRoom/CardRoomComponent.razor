@@ -1,3 +1,4 @@
+@inject IStringLocalizer<Shared> Loc
 <div class="card-room">
     <div class="card-room__icon">
         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style="opacity:0.7">
@@ -18,5 +19,5 @@
         </div>
         <span class="card-room__id">#@Id</span>
     </div>
-    <button class="card-room__enter" @onclick="HandleEnterRoomClick">Enter</button>
+    <button class="card-room__enter" @onclick="HandleEnterRoomClick">@Loc["Join"]</button>
 </div>

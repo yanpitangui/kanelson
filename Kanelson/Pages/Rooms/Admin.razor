@@ -14,14 +14,21 @@
 }
 else if (CurrentQuestion is not null && _roomStatus == RoomStatus.DisplayingQuestion)
 {
-    <div style="display: flex; justify-content: center; align-items: center; gap: 16px;">
+    <div class="admin-question-header">
         @if (TimerConfiguration.Enabled)
         {
             <Progress Percent="@TimerConfiguration.Percentage" Format="TimerConfiguration.Format"/>
         }
-        <span style="font-size: 13px; font-weight: 600; color: var(--k-text-muted); text-transform: uppercase; letter-spacing: 1px;">HOST</span>
+        <div class="extend-time-group">
+            <span class="extend-time-label">@Loc["ExtendTime"]</span>
+            @foreach (var secs in new[] { 10, 20, 30, 60 })
+            {
+                var s = secs;
+                <button class="k-btn-ghost extend-time-btn" @onclick="@(() => ExtendTime(s))">+@(s)s</button>
+            }
+        </div>
     </div>
-    <QuestionComponent Info="CurrentQuestion"/>
+    <QuestionComponent Info="CurrentQuestion" ViewOnly="true"/>
 }
 else if (Rankings != null)
 {
@@ -30,6 +37,12 @@ else if (Rankings != null)
 
 @if (_roomStatus == RoomStatus.AwaitingForNextQuestion)
 {
+    @if (VoteDistribution.HasValue && VoteDistribution.Value.Length > 0)
+    {
+        <div class="vote-dist-wrapper">
+            <VoteDistributionComponent Distribution="VoteDistribution.Value" />
+        </div>
+    }
     <div style="display: flex; justify-content: center; padding-top: 8px;">
         <button class="k-btn-primary" @onclick="NextQuestion">@Loc["NextQuestionButton"]</button>
     </div>

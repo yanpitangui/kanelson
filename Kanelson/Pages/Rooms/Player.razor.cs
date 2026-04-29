@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using Kanelson.Domain.Rooms;
 using Kanelson.Domain.Rooms.Models;
 using Microsoft.AspNetCore.Components;
@@ -8,17 +7,29 @@ namespace Kanelson.Pages.Rooms;
 
 public partial class Player : BaseRoomPage
 {
-
     [Inject]
     private ISnackbar Snackbar { get; set; } = null!;
-    
+
     private PlayerStatus _playerStatus = PlayerStatus.Answering;
+    private UserAnswerSummary? _roundSummary;
+    private readonly HashSet<Guid> _multiCorrectSelections = new();
+    private HashSet<Guid> _myAnswers = new();
 
     private async Task Answer(Guid alternativeId)
     {
         TimerConfiguration.Stop();
+        _myAnswers = [alternativeId];
         _playerStatus = PlayerStatus.Answered;
-        await RoomService.Answer(RoomId, alternativeId);
+        await RoomService.Answer(RoomId, default, alternativeId);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task AnswerMulti(Guid[] alternativeIds)
+    {
+        TimerConfiguration.Stop();
+        _myAnswers = new HashSet<Guid>(alternativeIds);
+        _playerStatus = PlayerStatus.Answered;
+        await RoomService.Answer(RoomId, default, alternativeIds);
         await InvokeAsync(StateHasChanged);
     }
 
@@ -27,7 +38,8 @@ public partial class Player : BaseRoomPage
         base.HandleEvent(roomEvent);
         switch (roomEvent)
         {
-            case RoomEvents.UserRoundSummary:
+            case RoomEvents.UserRoundSummary summary:
+                _roundSummary = summary.Summary;
                 break;
             case RoomEvents.AnswerRejected rejection:
                 var stringReason = rejection.Reason is RejectionReason.InvalidState
@@ -47,9 +59,47 @@ public partial class Player : BaseRoomPage
         }
     }
 
+    internal void OnMultiSelectionsChanged(IReadOnlyCollection<Guid> selections)
+    {
+        _multiCorrectSelections.Clear();
+        foreach (var id in selections) _multiCorrectSelections.Add(id);
+    }
+
+    protected override void OnTimeExtended(int additionalSeconds)
+    {
+        _bonusSeconds = additionalSeconds;
+        _ = ClearBonusAfterDelay();
+    }
+
+    private int? _bonusSeconds;
+
+    private async Task ClearBonusAfterDelay()
+    {
+        await Task.Delay(3000);
+        _bonusSeconds = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
     protected override void OnNextQuestion()
     {
         _playerStatus = PlayerStatus.Answering;
+        _roundSummary = null;
+        _myAnswers = new HashSet<Guid>();
+        _multiCorrectSelections.Clear();
+        _bonusSeconds = null;
+
+        if (CurrentQuestion?.Question.Type == Domain.Questions.QuestionType.MultiCorrect)
+        {
+            TimerConfiguration.OnExpired = () =>
+                _ = AnswerMulti(_multiCorrectSelections.ToArray());
+        }
+    }
+
+    private string ScoreChipClass(decimal points, int maxPoints)
+    {
+        if (points <= 0) return "score-chip score-chip--bad";
+        if (points >= maxPoints) return "score-chip score-chip--good";
+        return "score-chip score-chip--partial";
     }
 
     private enum PlayerStatus

@@ -1,0 +1,14 @@
+@((MarkupString)_svg)
+
+@code {
+    [Parameter] public string Url { get; set; } = string.Empty;
+    private string _svg = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        using var generator = new QRCodeGenerator();
+        var data = generator.CreateQrCode(Url, QRCodeGenerator.ECCLevel.M);
+        var code = new SvgQRCode(data);
+        _svg = code.GetGraphic(4);
+    }
+}

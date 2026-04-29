@@ -30,6 +30,7 @@
     <PackageVersion Include="MudBlazor" Version="9.4.0" />
     <PackageVersion Include="Npgsql" Version="10.0.2" />
     <PackageVersion Include="OneOf" Version="3.0.271" />
+    <PackageVersion Include="QRCoder" Version="1.8.0" />
     <PackageVersion Include="Serilog" Version="4.3.1" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="Serilog.Exceptions" Version="8.4.0" />

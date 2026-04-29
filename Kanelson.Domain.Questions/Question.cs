@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Kanelson.Common;
 using MessagePack;
 using MsgKey = MessagePack.KeyAttribute;
 
@@ -20,33 +21,30 @@ public record Question
     [MsgKey(0)]
     public Guid Id { get; init; } = Guid.NewGuid();
 
-    [Url]
+    [Url(ErrorMessageResourceType = typeof(ValidationMessages), ErrorMessageResourceName = "ValidationUrl")]
     [MsgKey(1)]
     public string? ImageUrl { get; set; }
 
-    [Required]
-    [StringLength(200, MinimumLength = 3)]
+    [Required(ErrorMessageResourceType = typeof(ValidationMessages), ErrorMessageResourceName = "ValidationRequired")]
+    [StringLength(200, MinimumLength = 3, ErrorMessageResourceType = typeof(ValidationMessages), ErrorMessageResourceName = "ValidationStringLength")]
     [MsgKey(2)]
     public string Name { get; set; } = null!;
 
-    /// <summary>
-    /// Time limit in seconds for someone to answer it
-    /// </summary>
-    [Required]
+    [Required(ErrorMessageResourceType = typeof(ValidationMessages), ErrorMessageResourceName = "ValidationRequired")]
     [MsgKey(3)]
     public int TimeLimit { get; set; } = 10;
 
-    [Required]
-    [Range(0, 2000)]
+    [Required(ErrorMessageResourceType = typeof(ValidationMessages), ErrorMessageResourceName = "ValidationRequired")]
+    [Range(0, 2000, ErrorMessageResourceType = typeof(ValidationMessages), ErrorMessageResourceName = "ValidationRange")]
     [MsgKey(4)]
     public int Points { get; set; } = 1000;
 
-    [Required]
+    [Required(ErrorMessageResourceType = typeof(ValidationMessages), ErrorMessageResourceName = "ValidationRequired")]
     [ValidateComplexType]
     [MsgKey(5)]
     public List<Alternative> Alternatives { get; init; } = new(2);
 
-    [Required]
+    [Required(ErrorMessageResourceType = typeof(ValidationMessages), ErrorMessageResourceName = "ValidationRequired")]
     [MsgKey(6)]
     public QuestionType Type { get; set; }
 }
@@ -63,12 +61,12 @@ public record Alternative
     [MsgKey(0)]
     public Guid Id { get; set; } = Guid.NewGuid();
 
-    [Required]
-    [StringLength(200, MinimumLength = 4)]
+    [Required(ErrorMessageResourceType = typeof(ValidationMessages), ErrorMessageResourceName = "ValidationRequired")]
+    [StringLength(200, MinimumLength = 1, ErrorMessageResourceType = typeof(ValidationMessages), ErrorMessageResourceName = "ValidationStringLength")]
     [MsgKey(1)]
     public string Description { get; set; } = null!;
 
-    [Required]
+    [Required(ErrorMessageResourceType = typeof(ValidationMessages), ErrorMessageResourceName = "ValidationRequired")]
     [MsgKey(2)]
     public bool Correct { get; set; }
 }
@@ -76,5 +74,6 @@ public record Alternative
 public enum QuestionType
 {
     TrueFalse,
-    Quiz
+    Quiz,
+    MultiCorrect
 }

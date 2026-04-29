@@ -93,6 +93,9 @@
     <data name="QuestionType_Quiz" xml:space="preserve">
         <value>Quiz</value>
     </data>
+    <data name="QuestionType_MultiCorrect" xml:space="preserve">
+        <value>Multiple Correct</value>
+    </data>
     <data name="Create/Edit_Templates" xml:space="preserve">
         <value>Create/Edit Templates</value>
     </data>
@@ -222,4 +225,26 @@
     <data name="DragToReorder" xml:space="preserve">
         <value>Drag items to set the question order</value>
     </data>
+    <data name="SelectAllThatApply" xml:space="preserve">
+        <value>Select all that apply</value>
+    </data>
+    <data name="SubmitButton" xml:space="preserve">
+        <value>Submit</value>
+    </data>
+    <data name="AnswerSubmitted" xml:space="preserve">
+        <value>Answer submitted! Waiting for others</value>
+    </data>
+    <data name="ExtendTime" xml:space="preserve">
+        <value>Add time</value>
+    </data>
+    <data name="TimeExtendedNotification" xml:space="preserve">
+        <value>+{0}s — bonus time!</value>
+    </data>
+    <data name="YouPicked" xml:space="preserve">
+        <value>you</value>
+    </data>
+    <data name="ScanToJoin" xml:space="preserve">
+        <value>Scan to join</value>
+    </data>
+
 </root>

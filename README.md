@@ -1,60 +1,102 @@
 # Kanelson
 
-[![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-white.svg)](https://sonarcloud.io/summary/overall?id=yanpitangui_kanelson)
+**[Português 🇧🇷](README.pt-BR.md)**
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=yanpitangui_kanelson&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=yanpitangui_kanelson)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=yanpitangui_kanelson&metric=coverage)](https://sonarcloud.io/summary/new_code?id=yanpitangui_kanelson)
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=yanpitangui_kanelson&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=yanpitangui_kanelson)
-[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=yanpitangui_kanelson&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=yanpitangui_kanelson)
-[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=yanpitangui_kanelson&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=yanpitangui_kanelson)
-## O que é?
-Kanelson é uma aplicação de quiz, inspirada no Kahoot, porém free e open source.
+A free, open-source real-time quiz platform inspired by Kahoot. Hosts run live sessions from a browser; players join instantly — no app required.
 
-## Como rodar?
-### Integração github
-A aplicação utiliza autenticação do github para identificar os usuários. Para rodar, é necessário fornecer um ClientId e um ClientSecret.
-Segue como configurar:
-https://scribehow.com/shared/Adicionar_um_aplicativo_oauth_ao_github__39rxHtPjTRaEgOCZ-vPCfA
+## Features
 
-Após configurado um aplicativo oauth no github, na raiz do projeto, execute os comandos a seguir, substituindo os valores pelos fornecidos pelo github:
+- **Multiple question types** — True/False, single-answer Quiz, and Multi-correct (select all that apply)
+- **Real-time gameplay** — answers, scores, and round transitions pushed to all clients simultaneously over SignalR
+- **Vote distribution** — bar chart shown between rounds so everyone sees how others answered
+- **Latency-aware scoring** — faster correct answers earn more points; the scoring formula accounts for network latency
+- **Time extension** — host can add extra seconds mid-round; scoring adjusts fairly for all players
+- **QR code join** — host screen shows a scannable QR code so players can jump straight into the room
+- **Localization** — English and Brazilian Portuguese (pt-BR)
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Language | C# / .NET 10 |
+| Frontend | Blazor Server + SignalR |
+| UI components | MudBlazor |
+| Actor model | Akka.NET (Cluster Sharding, Persistence) |
+| Persistence | PostgreSQL via Akka.Persistence.Sql |
+| Auth | GitHub OAuth |
+| Orchestration | .NET Aspire |
+
+## Running Locally
+
+### 1. GitHub OAuth
+
+The app authenticates users via GitHub. Create an OAuth app at [github.com/settings/developers](https://github.com/settings/developers) with the callback URL `https://localhost:<port>/signin-github`, then store the credentials as user secrets:
+
+```bash
+dotnet user-secrets set "GithubAuth:ClientSecret" "<your-secret>" --project "./Kanelson/"
+dotnet user-secrets set "GithubAuth:ClientId" "<your-client-id>" --project "./Kanelson/"
 ```
-dotnet user-secrets set "GithubAuth:ClientSecret" "seuClientSecret" --project ".\Kanelson\"
-dotnet user-secrets set "GithubAuth:ClientId" "seuClientId" --project ".\Kanelson\"
+
+### 2. Start with Docker Compose
+
+The easiest way to run everything locally:
+
+```bash
+docker-compose up
 ```
-Dessa forma, suas credenciais não são expostas.
 
-### Localmente
+This starts PostgreSQL and the application together.
 
-- Azurite - `npm install -g azurite` Depois, use `npm run azurite`.
-A aplicação depende de tablestorage e blobstorage para a persistência. Ambos já estão configurados no appsettings para as portas padrões. Rodando o azurite, já deve funcionar.
+### 3. Run without Docker
 
-- Dotnet 7.0 - Baixe a ultima versão do sdk aqui: https://dotnet.microsoft.com/en-us/download/dotnet/7.0.
+You need a running PostgreSQL instance, then:
 
-### Produção
-A aplicação está configurada para utilizar a plataforma Azure, mais especificamente o AppConfiguration, para obter as connections apropriadas.
-Utiliza managed identity para se autenticar com os serviços do azure, portanto não contém nenhuma connection string com senha.
-Atualmente roda de maneira containerizada em um Azure Container App. O dockerfile pode ser encontrado em [Dockerfile](Dockerfile).
+```bash
+dotnet run --project Kanelson/Kanelson.csproj
+```
 
-Acesse a aplicação através do link [https://kanelson.yanpitangui.com](https://kanelson.yanpitangui.com).
+Or use the Aspire AppHost for a full local orchestration experience:
 
-## Arquitetura da aplicação
+```bash
+dotnet run --project Kanelson.AppHost/Kanelson.AppHost.csproj
+```
 
-Essa aplicação utiliza [akka.net](https://getakka.net/), um conjunto de bibliotecas que ajuda a fazer aplicação distribuidas e resilientes entre cores do processador e até redes,
-através da utilização do actor model ([clique para saber mais](https://en.wikipedia.org/wiki/Actor_model#:~:text=The%20actor%20model%20in%20computer%20science%20is%20a,how%20to%20respond%20to%20the%20next%20message%20received)).
+## Development
 
-Para o frontend, utilizamos Blazor Server Side. Para mais informações, consulte a [documentação oficial](https://learn.microsoft.com/pt-br/aspnet/core/blazor/hosting-models?view=aspnetcore-7.0).
+```bash
+# Build
+dotnet build Kanelson.sln
 
-O Akka.Net nos permite utilizar varios provedores para persistência. Já que a aplicação utilizará serviços azures, 
-aproveitei que a solução de storage é barata e por isso utilizamos Azure Storage.
+# Run all tests
+dotnet test Kanelson.sln
 
-Para os journals, usamos Table Storage. Para os snapshots, Blob Storage.
+# Run a specific test
+dotnet test Kanelson.Tests/Kanelson.Tests.csproj --filter "ClassName.MethodName"
+```
 
+## Architecture
 
+Kanelson uses the **actor model** via [Akka.NET](https://getakka.net/) with event sourcing. All game state lives in persistent actors distributed across the cluster via Akka Cluster Sharding.
 
+```
+AllRoomsIndexActor (singleton)       ← registry of active rooms
+└── Room (sharded per room ID)        ← core game state machine (in-memory)
+    └── SignalrActor (per room)       ← bridges actor events to browser clients
+        └── LocalRoomActorManager     ← per-node local proxy for room actors
 
+RoomTemplateIndex (sharded)          ← quiz template CRUD
 
+User (sharded per user ID)           ← user profiles          [persistent]
+UserHistory (sharded per user ID)    ← game results history   [persistent]
+UserQuestions (sharded per user ID)  ← user question bank     [persistent]
+```
 
+User, UserHistory, UserQuestions, and RoomTemplateIndex persist their state as events to PostgreSQL. Snapshots are taken every N events and on graceful shutdown to speed up recovery. Room state is in-memory only.
 
+## Contributing
 
+Pull requests are welcome. Please open an issue first to discuss significant changes.
 
+## License
 
+[MIT](LICENSE)

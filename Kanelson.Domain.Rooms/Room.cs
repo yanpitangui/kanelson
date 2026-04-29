@@ -1,5 +1,4 @@
 using Akka.Actor;
-using Akka.Persistence;
 using Akka.Streams;
 using Akka.Streams.Dsl;
 using Kanelson.Common;
@@ -7,16 +6,13 @@ using Kanelson.Domain.Rooms.Local;
 using Kanelson.Domain.Rooms.Models;
 using Kanelson.Domain.Templates.Models;
 using Kanelson.Domain.Users;
-using MessagePack;
-using System.Diagnostics;
 using System.Collections.Immutable;
+using System.Diagnostics;
 
 namespace Kanelson.Domain.Rooms;
 
-public class Room : BaseWithSnapshotFrequencyActor
+public class Room : ReceiveActor
 {
-    public override string PersistenceId { get; }
-
     private RoomState _state;
 
     private readonly IActorRef _roomsIndexActor;
@@ -25,6 +21,7 @@ public class Room : BaseWithSnapshotFrequencyActor
     private readonly ActorMaterializer _materializer;
     private IKillSwitch? _timerKillSwitch;
     private Stopwatch? _roundStopwatch;
+    private double _effectiveTimeLimit;
     private readonly string _roomIdentifier;
     private TemplateQuestion CurrentQuestion => _state.Template.Questions[_state.CurrentQuestionIdx];
 
@@ -37,87 +34,72 @@ public class Room : BaseWithSnapshotFrequencyActor
         _roomsIndexActor = roomsIndexActor;
         _userHistoryShard = userHistoryShard;
         _localRoomManager = Context.ActorSelection("/user/local-room-manager");
-        PersistenceId = $"room-{roomIdentifier}";
 
         _materializer = ActorMaterializer.Create(Context);
-        
+
         _state = new RoomState();
-        
-        Recover<RoomCommands.SetBase>(HandleSetBase);
-        
-        Command<RoomCommands.SetBase>(o =>
+
+        Receive<RoomCommands.SetBase>(o =>
         {
-            Persist(o, HandleSetBase);
+            HandleSetBase(o);
+            Sender.Tell(Akka.Done.Instance);
         });
-        
-        Command<RoomQueries.GetCurrentState>(_ =>
+
+        Receive<RoomQueries.GetCurrentState>(_ =>
         {
             Sender.Tell(_state.CurrentState);
         });
-        
-        CommandAsync<RoomQueries.GetSummary>(async _ =>
+
+        ReceiveAsync<RoomQueries.GetSummary>(async _ =>
         {
-            var ownerInfo = await userService.GetUserInfo(_state.OwnerId); 
+            var ownerInfo = await userService.GetUserInfo(_state.OwnerId);
             var summary = new RoomSummary(roomIdentifier,
                 _state.Name,
                 ownerInfo);
             Sender.Tell(summary);
         });
 
-        Command<RoomCommands.UpdateCurrentUsers>(HandleUpdateUsers);
+        Receive<RoomCommands.UpdateCurrentUsers>(HandleUpdateUsers);
 
-        Command<RoomQueries.GetCurrentQuestion>(_ => Sender.Tell(GetCurrentQuestionInfo()));
+        Receive<RoomQueries.GetCurrentQuestion>(_ => Sender.Tell(GetCurrentQuestionInfo()));
 
-        Command<RoomCommands.Start>(_ =>
+        Receive<RoomCommands.Start>(_ =>
         {
             SetStartedState();
             SendNextQuestion();
             SetTimeHandler();
         });
-        
-        
-        Command<RoundExpired>(_ => EndCurrentRound());
-        
-        Recover<StatusChanged>(o =>
-        {
-            // Sala não pode ficar num estado de mostrando questão
-            if (o.Status == RoomStatus.DisplayingQuestion)
-            {
-                if (!o.IncrementedQuestionIdx)
-                {
-                    _state.CurrentState = RoomStatus.Created;
-                    // reseta todas as respostas que possivelmente aconteram
-                    foreach (var respostas in _state.Answers)
-                    {
-                        respostas.Value.Clear();
-                    }
-                }
-                else
-                {
-                    // Retorna round ao estado anterior
-                    _state.CurrentState = RoomStatus.AwaitingForNextQuestion;
-                    var currentAnswers = _state.Answers[CurrentQuestion.Id];
-                    currentAnswers.Clear();
-                    _state.CurrentQuestionIdx--;
-                }
-            }
-            else
-            {
-                _state.CurrentState = o.Status;
-            }
-        });
 
-        Command<RoomCommands.NextQuestion>(_ =>
+        Receive<RoundExpired>(_ => EndCurrentRound());
+
+        Receive<RoomCommands.NextQuestion>(_ =>
         {
-            if (_state.CurrentQuestionIdx + 1 > _state.MaxQuestionIdx || _state.CurrentState == RoomStatus.DisplayingQuestion) return; 
+            if (_state.CurrentQuestionIdx + 1 > _state.MaxQuestionIdx || _state.CurrentState == RoomStatus.DisplayingQuestion) return;
             _state.CurrentQuestionIdx+= 1;
             SendNextQuestion(incrementedQuestionIdx: true);
             SetTimeHandler();
         });
-        
-        Command<RoomQueries.GetOwner>(_ => Sender.Tell(_state.OwnerId));
 
-        Command<RoomCommands.SendUserAnswer>(o =>
+        Receive<RoomCommands.ExtendTime>(o =>
+        {
+            if (_state.CurrentState is not RoomStatus.DisplayingQuestion) return;
+            _effectiveTimeLimit += o.Seconds;
+            _timerKillSwitch?.Shutdown();
+            _timerKillSwitch = null;
+            var elapsed = _roundStopwatch?.Elapsed.TotalSeconds ?? 0;
+            var remaining = Math.Max(0, _effectiveTimeLimit - elapsed);
+            _timerKillSwitch = Source
+                .Single(RoundExpired.Instance)
+                .Delay(TimeSpan.FromSeconds(remaining) + RoundGracePeriod)
+                .ViaMaterialized(KillSwitches.Single<RoundExpired>(), Keep.Right)
+                .To(Sink.ActorRef<RoundExpired>(Self, TimerStreamCompleted.Instance, _ => TimerStreamCompleted.Instance))
+                .Run(_materializer);
+            Broadcast(new RoomEvents.TimeExtended(o.Seconds));
+        });
+
+        Receive<RoomQueries.GetOwner>(_ => Sender.Tell(_state.OwnerId));
+
+        Receive<RoomCommands.SendUserAnswer>(o =>
         {
             var possibleAlternatives = CurrentQuestion.Alternatives.Select(static x => x.Id);
             if (!Array.TrueForAll(o.AlternativeIds, x => possibleAlternatives.Contains(x)))
@@ -132,7 +114,12 @@ public class Room : BaseWithSnapshotFrequencyActor
                 return;
             }
             var questionAnswers = _state.Answers[CurrentQuestion.Id];
-            var alternativeInfo = CalculatePoints(o.AlternativeIds);
+            var alternativeInfo = new RoomAnswer
+            {
+                Alternatives = o.AlternativeIds,
+                TimeToAnswer = _roundStopwatch?.Elapsed ?? TimeSpan.Zero,
+                Points = 0
+            };
             questionAnswers.TryAdd(o.UserId, alternativeInfo);
             var user = _state.CurrentUsers.FirstOrDefault(x => string.Equals(x.Id, o.UserId, StringComparison.OrdinalIgnoreCase));
             if (user != null) user.Answered = true;
@@ -143,51 +130,29 @@ public class Room : BaseWithSnapshotFrequencyActor
                 EndCurrentRound();
             }
         });
-        
-        Command<RoomCommands.UserConnected>(o =>
+
+        Receive<RoomCommands.UserConnected>(o =>
         {
             SendToUser(o.UserId, new RoomEvents.CurrentUsersUpdated(_state.CurrentUsers));
-            if(_state.CurrentState == RoomStatus.Finished) 
+            if(_state.CurrentState == RoomStatus.Finished)
                 SendToUser(o.UserId, new RoomEvents.GameFinished(GetRanking()));
         });
-        
-                
-        Command<RoomCommands.Shutdown>(_ =>
+
+        Receive<RoomCommands.Shutdown>(_ =>
         {
             _roomsIndexActor.Tell(new AllRoomsPublisherMessages.RoomUnregistered(_roomIdentifier));
             Broadcast(new RoomEvents.RoomDeleted());
-            DeleteMessages(Int64.MaxValue);
-            DeleteSnapshots(SnapshotSelectionCriteria.Latest);
+            Context.Stop(Self);
         });
 
-        Command<ShutdownCommand>(_ =>
+        Receive<ShutdownCommand>(_ =>
         {
             _roomsIndexActor.Tell(new AllRoomsPublisherMessages.RoomUnregistered(_roomIdentifier));
             Broadcast(new RoomEvents.RoomDeleted());
-            DeleteMessages(Int64.MaxValue);
-            DeleteSnapshots(SnapshotSelectionCriteria.Latest);
-        });
-        
-        Command<SaveSnapshotSuccess>(_ => { });
-        Command<TimerStreamCompleted>(_ => { });
-
-        
-        Recover<SnapshotOffer>(o =>
-        {
-            if (o.Snapshot is RoomState state)
-            {
-                _state = state;
-            }
+            Context.Stop(Self);
         });
 
-        Command<DeleteSnapshotsSuccess>(o =>
-        {
-            if (o.Criteria.Equals(SnapshotSelectionCriteria.Latest))
-            {
-                Context.Stop(Self);
-            }
-        });
-        Command<DeleteMessagesSuccess>(_ => { });
+        Receive<TimerStreamCompleted>(_ => { });
     }
 
     private void FillAnswersFromUsersThatHaveNotAnswered()
@@ -214,12 +179,17 @@ public class Room : BaseWithSnapshotFrequencyActor
     private UserAnswerSummary GetUserRoundSummary(string userId)
     {
         var userAnswer = _state.Answers[CurrentQuestion.Id][userId];
-        return new UserAnswerSummary(CurrentQuestion, userAnswer.Alternatives);
+        return new UserAnswerSummary(CurrentQuestion, userAnswer.Alternatives, userAnswer.Points);
     }
 
     private CurrentQuestionInfo GetCurrentQuestionInfo()
     {
-        return new CurrentQuestionInfo(_state.Template.Questions[_state.CurrentQuestionIdx], _state.CurrentQuestionIdx + 1, _state.MaxQuestionIdx + 1);
+        var question = _state.Template.Questions[_state.CurrentQuestionIdx];
+        var safeQuestion = question with
+        {
+            Alternatives = question.Alternatives.Select(a => a with { Correct = false }).ToList()
+        };
+        return new CurrentQuestionInfo(safeQuestion, _state.CurrentQuestionIdx + 1, _state.MaxQuestionIdx + 1);
     }
 
 
@@ -253,7 +223,8 @@ public class Room : BaseWithSnapshotFrequencyActor
     
     private void SendNextQuestion(bool incrementedQuestionIdx = false)
     {
-        UpdateState(RoomStatus.DisplayingQuestion, incrementedQuestionIdx);
+        _effectiveTimeLimit = CurrentQuestion.TimeLimit;
+        UpdateState(RoomStatus.DisplayingQuestion);
         foreach (var user in _state.CurrentUsers)
         {
             user.Answered = false;
@@ -261,12 +232,14 @@ public class Room : BaseWithSnapshotFrequencyActor
         Broadcast(new RoomEvents.NextQuestion(GetCurrentQuestionInfo()));
     }
     
+    private static readonly TimeSpan RoundGracePeriod = TimeSpan.FromSeconds(1);
+
     private void SetTimeHandler()
     {
         _roundStopwatch = Stopwatch.StartNew();
         _timerKillSwitch = Source
             .Single(RoundExpired.Instance)
-            .Delay(TimeSpan.FromSeconds(CurrentQuestion.TimeLimit))
+            .Delay(TimeSpan.FromSeconds(_effectiveTimeLimit) + RoundGracePeriod)
             .ViaMaterialized(KillSwitches.Single<RoundExpired>(), Keep.Right)
             .To(Sink.ActorRef<RoundExpired>(Self, TimerStreamCompleted.Instance, _ => TimerStreamCompleted.Instance))
             .Run(_materializer);
@@ -274,63 +247,44 @@ public class Room : BaseWithSnapshotFrequencyActor
 
 
 
-    private void UpdateState(RoomStatus destination, bool incrementedQuestionIdx = false)
+    private void UpdateState(RoomStatus destination)
     {
         _state.CurrentState = destination;
-
-        Persist(new StatusChanged(destination, incrementedQuestionIdx), _ => {});
-        if (destination is RoomStatus.Finished or RoomStatus.Abandoned)
-        {
-            SaveSnapshot(_state);
-        }
-        else
-        {
-            SaveSnapshotIfPassedInterval(_state);
-        }
         SendToUser(_state.OwnerId, new RoomEvents.RoomStatusChanged(_state.CurrentState));
-        
-        
     }
      
-     private RoomAnswer CalculatePoints(Guid[] alternativeIds)
-     {
-         var timeToAnswer = _roundStopwatch?.Elapsed ?? TimeSpan.Zero;
-         
-         var correctAlternatives = CurrentQuestion
-             .Alternatives
-             .Where(x => x.Correct)
-             .Select(x => x.Id)
-             .ToList();
+    private decimal CalculatePoints(IEnumerable<Guid> alternativeIds, TimeSpan timeToAnswer)
+    {
+        var altArray = alternativeIds as Guid[] ?? alternativeIds.ToArray();
 
-         var maxCorrect = correctAlternatives.Count;
-         
-         var correct = correctAlternatives
-             .Intersect(alternativeIds)
-             .Count();
+        var correctAlternatives = CurrentQuestion
+            .Alternatives
+            .Where(x => x.Correct)
+            .Select(x => x.Id)
+            .ToList();
 
+        var maxCorrect = correctAlternatives.Count;
 
-         var wrong = CurrentQuestion.Alternatives
-             .Where(x => !x.Correct)
-             .Select(x => x.Id)
-             .Intersect(alternativeIds)
-             .Count();
+        var correct = correctAlternatives
+            .Intersect(altArray)
+            .Count();
 
-         var percentage = wrong >= correct ? 0 : maxCorrect / (correct - (decimal)wrong); 
-             
-         
-         var timeMinusDelay = Math.Max(timeToAnswer.TotalSeconds - 0.2d , 0); // Retira 200ms do cálculo para considerar delay  
-             
-         // Kahoot formula: https://support.kahoot.com/hc/en-us/articles/115002303908-How-points-work
-         var wouldBePoints = Math.Round((decimal)
-             (1 - ( timeMinusDelay  /  CurrentQuestion.TimeLimit) / 2) * CurrentQuestion.Points);
+        var wrong = CurrentQuestion.Alternatives
+            .Where(x => !x.Correct)
+            .Select(x => x.Id)
+            .Intersect(altArray)
+            .Count();
 
-         return new RoomAnswer
-         {
-             Alternatives = alternativeIds,
-             Points = wouldBePoints * percentage,
-             TimeToAnswer = timeToAnswer
-         };
-     }
+        var percentage = Math.Max(0m, (correct - wrong) / (decimal)maxCorrect);
+
+        var timeMinusDelay = Math.Max(timeToAnswer.TotalSeconds - 1d, 0);
+
+        // Kahoot formula: https://support.kahoot.com/hc/en-us/articles/115002303908-How-points-work
+        var wouldBePoints = Math.Round((decimal)
+            (1 - (timeMinusDelay / _effectiveTimeLimit) / 2) * CurrentQuestion.Points);
+
+        return wouldBePoints * percentage;
+    }
 
     private void EndCurrentRound()
     {
@@ -344,9 +298,23 @@ public class Room : BaseWithSnapshotFrequencyActor
         _roundStopwatch?.Stop();
 
         var currentQuestion = CurrentQuestion;
-        Broadcast(new RoomEvents.RoundFinished(currentQuestion));
+        var answers = _state.Answers.TryGetValue(currentQuestion.Id, out var ans) ? ans : new Dictionary<string, RoomAnswer>();
+        var voteDistribution = currentQuestion.Alternatives
+            .Select(alt => new AlternativeVoteSummary(
+                alt.Id,
+                alt.Description,
+                answers.Values.Count(a => a.Alternatives != null && a.Alternatives.Contains(alt.Id)),
+                alt.Correct))
+            .ToImmutableArray();
+        Broadcast(new RoomEvents.RoundFinished(currentQuestion, voteDistribution));
 
         FillAnswersFromUsersThatHaveNotAnswered();
+
+        // Score everyone now that the final effective time limit is known
+        foreach (var answer in _state.Answers[currentQuestion.Id].Values)
+        {
+            answer.Points = CalculatePoints(answer.Alternatives, answer.TimeToAnswer);
+        }
 
         foreach (var userId in Users.Select(x => x.Id))
         {
@@ -407,7 +375,6 @@ public class Room : BaseWithSnapshotFrequencyActor
         {
             Broadcast(new RoomEvents.CurrentUsersUpdated(_state.CurrentUsers));
         }
-        SaveSnapshotIfPassedInterval(_state);
     }
 
     private void HandleSetBase(RoomCommands.SetBase r)
@@ -418,20 +385,18 @@ public class Room : BaseWithSnapshotFrequencyActor
         _state.MaxQuestionIdx = Math.Clamp(_state.Template.Questions.Count - 1, 0, 100);
         _state.CurrentQuestionIdx = 0;
         _roomsIndexActor.Tell(new AllRoomsPublisherMessages.RoomRegistered(_roomIdentifier, r.RoomName, r.OwnerId));
-        SaveSnapshotIfPassedInterval(_state);
     }
     
     private void SetStartedState()
-     {
-         UpdateState(RoomStatus.Started);
-         _state.Answers.Clear();
-         _state.CurrentQuestionIdx = 0;
-         foreach (var question in _state.Template.Questions)
-         {
-             _state.Answers.TryAdd(question.Id, new Dictionary<string, RoomAnswer>(StringComparer.OrdinalIgnoreCase));
-         }
-         SaveSnapshot(_state);
-     }
+    {
+        UpdateState(RoomStatus.Started);
+        _state.Answers.Clear();
+        _state.CurrentQuestionIdx = 0;
+        foreach (var question in _state.Template.Questions)
+        {
+            _state.Answers.TryAdd(question.Id, new Dictionary<string, RoomAnswer>(StringComparer.OrdinalIgnoreCase));
+        }
+    }
     
     private bool CheckEveryoneAnswered()
     {
@@ -470,8 +435,6 @@ public class Room : BaseWithSnapshotFrequencyActor
         public static TimerStreamCompleted Instance { get; } = new();
     }
 
-    [MessagePackObject]
-    internal sealed record StatusChanged([property: Key(0)] RoomStatus Status, [property: Key(1)] bool IncrementedQuestionIdx);
 
 
 

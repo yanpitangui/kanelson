@@ -13,6 +13,7 @@ public interface IRoomService
     Task NextQuestion(string roomId, CancellationToken ct = default);
     Task Start(string roomId, CancellationToken ct = default);
     Task Delete(string roomId, CancellationToken ct = default);
-    Task Answer(string roomId, Guid alternativeId, CancellationToken ct = default);
+    Task Answer(string roomId, CancellationToken ct = default, params Guid[] alternativeIds);
+    Task ExtendTime(string roomId, int seconds, CancellationToken ct = default);
     Task<RoomStatus> GetCurrentState(string roomId, CancellationToken ct = default);
 }

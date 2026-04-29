@@ -37,6 +37,7 @@ public sealed partial class RoomPage : ComponentBase, IAsyncDisposable
     private IRequiredActor<LocalRoomActorManager> LocalRoomActorManager { get; set; } = null!;
 
     private RoomSummary? _summary;
+    private string? _roomUrl;
     private HashSet<RoomUser> _connectedUsers = new();
     private readonly TimerConfiguration _timerConfig = new();
     private CancellationTokenSource? _cts;
@@ -49,6 +50,8 @@ public sealed partial class RoomPage : ComponentBase, IAsyncDisposable
         try
         {
             _summary = await RoomService.Get(Id);
+            if (_summary.Owner.Id == UserService.CurrentUser)
+                _roomUrl = Navigation.BaseUri.TrimEnd('/') + "/room/" + Id;
             var userInfo = await UserService.GetUserInfo(UserService.CurrentUser);
             _localRoomActor = await LocalRoomActorManager.ActorRef.Ask<IActorRef>(new GetLocalRoom(Id));
             var subscription = await _localRoomActor.Ask<SubscriptionResult>(

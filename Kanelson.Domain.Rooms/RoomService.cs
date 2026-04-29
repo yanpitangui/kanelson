@@ -34,7 +34,8 @@ public class RoomService : IRoomService
         var roomId = _idGenerator.CreateId().ToString(NumberFormatInfo.InvariantInfo);
         var template = await _templateService.GetTemplate(templateId);
         var roomShard = await _actorRegistry.GetAsync<Room>(ct);
-        roomShard.Tell(new RoomCommands.SetBase(roomId, roomName, _userService.CurrentUser, template));
+        await roomShard.Ask<Akka.Done>(
+            new RoomCommands.SetBase(roomId, roomName, _userService.CurrentUser, template), ct);
         return roomId;
     }
 
@@ -84,10 +85,16 @@ public class RoomService : IRoomService
         roomShardingRef.Tell(new RoomCommands.Shutdown(roomId));
     }
 
-    public async Task Answer(string roomId, Guid alternativeId, CancellationToken ct = default)
+    public async Task Answer(string roomId, CancellationToken ct = default, params Guid[] alternativeIds)
     {
         var roomShardingRef = await GetRoomShardingRef(roomId, ct);
-        roomShardingRef.Tell(new RoomCommands.SendUserAnswer(roomId, _userService.CurrentUser, [alternativeId]));
+        roomShardingRef.Tell(new RoomCommands.SendUserAnswer(roomId, _userService.CurrentUser, alternativeIds));
+    }
+
+    public async Task ExtendTime(string roomId, int seconds, CancellationToken ct = default)
+    {
+        var roomShardingRef = await GetRoomShardingRef(roomId, ct);
+        roomShardingRef.Tell(new RoomCommands.ExtendTime(roomId, seconds));
     }
 
     private async Task<IActorRef> GetRoomShardingRef(string roomId, CancellationToken ct = default)

@@ -43,7 +43,7 @@ public record RoomAnswer
     public required TimeSpan TimeToAnswer { get; init; } = new();
 
     [Key(2)]
-    public required decimal Points { get; init; }
+    public required decimal Points { get; set; }
 }
 
 [MessagePackObject]

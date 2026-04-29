@@ -37,4 +37,9 @@ public static class RoomCommands
         [property: Key(0)] string RoomId,
         [property: Key(1)] string UserId,
         [property: Key(2)] Guid[] AlternativeIds) : IWithRoomId;
+
+    [MessagePackObject]
+    public sealed record ExtendTime(
+        [property: Key(0)] string RoomId,
+        [property: Key(1)] int Seconds) : IWithRoomId;
 }

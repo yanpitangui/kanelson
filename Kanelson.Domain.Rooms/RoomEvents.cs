@@ -11,10 +11,13 @@ public static class RoomEvents
     public record CurrentUsersUpdated(HashSet<RoomUser> Users) : IRoomEvent;
     public record RoomStatusChanged(RoomStatus Status) : IRoomEvent;
     public record NextQuestion(CurrentQuestionInfo Info) : IRoomEvent;
-    public record RoundFinished(TemplateQuestion Question) : IRoomEvent;
+    public record RoundFinished(
+        TemplateQuestion Question,
+        ImmutableArray<AlternativeVoteSummary> VoteDistribution) : IRoomEvent;
     public record UserRoundSummary(UserAnswerSummary Summary) : IRoomEvent;
     public record UserAnswered(string UserId) : IRoomEvent;
     public record GameFinished(ImmutableArray<UserRanking> Rankings) : IRoomEvent;
     public record RoomDeleted : IRoomEvent;
     public record AnswerRejected(RejectionReason Reason) : IRoomEvent;
+    public record TimeExtended(int AdditionalSeconds) : IRoomEvent;
 }

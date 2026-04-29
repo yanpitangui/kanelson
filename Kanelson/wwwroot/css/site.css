@@ -12,7 +12,7 @@ html, body {
 :root {
     --k-bg:           #100a0a;
     --k-bg-deep:      #0d0808;
-    --k-surface:      rgba(255, 255, 255, 0.04);
+    --k-surface:      #1e1b2e;
     --k-border:       rgba(255, 255, 255, 0.06);
     --k-accent:       #ff4500;
     --k-accent-dark:  #c73500;
@@ -272,29 +272,32 @@ a, .btn-link { color: var(--k-accent); }
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 60px;
+    height: 60px;
 }
 
-.k-timer__ring {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
+.k-timer__svg {
+    width: 60px;
+    height: 60px;
+    transform: rotate(-90deg);
 }
 
-.k-timer__ring::before {
-    content: '';
+.k-timer__track {
+    fill: none;
+    stroke: var(--k-timer-track);
+    stroke-width: 3;
+}
+
+.k-timer__fill {
+    fill: none;
+    stroke: var(--k-accent);
+    stroke-width: 3;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.9s linear;
+}
+
+.k-timer__label {
     position: absolute;
-    inset: 6px;
-    border-radius: 50%;
-    background: var(--k-bg);
-}
-
-.k-timer__value {
-    position: relative;
-    z-index: 1;
     font-size: 14px;
     font-weight: 700;
     color: var(--k-text);
@@ -965,4 +968,96 @@ a, .btn-link { color: var(--k-accent); }
     opacity: 0.38;
     cursor: not-allowed;
     pointer-events: none;
+}
+
+/* ── Multi-correct alternative state ── */
+.alt-tile--selected { outline: 3px solid #fff; outline-offset: 2px; }
+.alt-tile-checkbox { font-size: 18px; line-height: 1; }
+
+/* ── Question hint ── */
+.question-hint { font-size: 11px; text-align: center; color: #90cdf4; background: rgba(99,179,237,0.1); border-radius: 6px; padding: 4px 10px; margin-bottom: 12px; font-weight: 600; }
+
+/* ── Vote distribution chart ── */
+.vote-dist { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.vote-dist__row { display: flex; flex-direction: column; gap: 4px; }
+.vote-dist__label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--k-text, #fff); }
+.vote-dist__count { margin-left: auto; color: var(--k-text-muted, #888); font-size: 12px; }
+.vote-dist__badge { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; }
+.vote-dist__badge--correct { background: rgba(39,174,96,0.2); color: #2ecc71; }
+.vote-dist__badge--you { background: rgba(99,179,237,0.2); color: #90cdf4; }
+.vote-dist__bar-bg { background: rgba(255,255,255,0.07); border-radius: 6px; height: 20px; overflow: hidden; }
+.vote-dist__bar-fill { height: 100%; border-radius: 6px; background: rgba(255,255,255,0.2); transition: width 0.4s ease; }
+.vote-dist__bar-fill--correct { background: #27ae60; }
+
+/* ── Vote distribution wrapper ── */
+.vote-dist-wrapper { padding: 16px 0 8px; }
+
+/* ── Post-round score chip ── */
+.round-summary { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 16px 0; width: 100%; }
+.score-chip { font-size: 14px; font-weight: 700; padding: 6px 18px; border-radius: 20px; }
+.score-chip--good { background: rgba(39,174,96,0.15); color: #2ecc71; }
+.score-chip--partial { background: rgba(237,192,78,0.15); color: #ecc94b; }
+.score-chip--bad { background: rgba(231,76,60,0.15); color: #e74c3c; }
+
+/* ── Answered state ── */
+.question-container--answered { opacity: 0.75; pointer-events: none; }
+.answer-submitted { text-align: center; font-size: 13px; font-weight: 600; color: #90cdf4; padding: 12px 0 4px; }
+
+/* ── Extend-time toolbar (admin) ── */
+.admin-question-header { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; padding-bottom: 8px; }
+.extend-time-group { display: flex; align-items: center; gap: 6px; }
+.extend-time-label { font-size: 11px; font-weight: 600; color: var(--k-text-muted); text-transform: uppercase; letter-spacing: 1px; }
+.extend-time-btn { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 8px; background: rgba(255,255,255,0.06); color: var(--k-text); border: 1px solid rgba(255,255,255,0.12); cursor: pointer; transition: background 0.15s; }
+.extend-time-btn:hover { background: rgba(255,255,255,0.12); }
+
+/* ── Bonus time banner (player) ── */
+@keyframes bonus-pop {
+    0%   { transform: translateX(-50%) scale(0.7) translateY(-20px); opacity: 0; }
+    60%  { transform: translateX(-50%) scale(1.06) translateY(0);    opacity: 1; }
+    100% { transform: translateX(-50%) scale(1)    translateY(0);    opacity: 1; }
+}
+@keyframes bonus-fade-out {
+    0%   { opacity: 1; }
+    100% { opacity: 0; pointer-events: none; }
+}
+.bonus-time-banner {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, rgba(30,27,46,0.95), rgba(60,40,90,0.95));
+    border: 1px solid rgba(99,179,237,0.5);
+    border-radius: 16px;
+    padding: 12px 24px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #90cdf4;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,179,237,0.15);
+    white-space: nowrap;
+    pointer-events: none;
+    animation: bonus-pop 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards,
+               bonus-fade-out 0.5s ease 2.5s forwards;
+}
+.bonus-time-icon { font-size: 24px; }
+
+/* ── QR code join panel ── */
+.qr-join {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    margin-bottom: 8px;
+}
+.qr-join__label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--k-text-muted, #888);
 }

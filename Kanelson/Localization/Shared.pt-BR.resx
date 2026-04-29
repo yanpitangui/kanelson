@@ -243,4 +243,7 @@
     <data name="YouPicked" xml:space="preserve">
         <value>você</value>
     </data>
+    <data name="ScanToJoin" xml:space="preserve">
+        <value>Escaneie para entrar</value>
+    </data>
 </root>

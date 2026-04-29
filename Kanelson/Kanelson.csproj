@@ -29,6 +29,7 @@
       <PackageReference Include="MudBlazor" />
       <PackageReference Include="Npgsql" />
       <PackageReference Include="OneOf" />
+      <PackageReference Include="QRCoder" />
       <PackageReference Include="Serilog" />
       <PackageReference Include="Serilog.AspNetCore" />
       <PackageReference Include="Serilog.Exceptions" />

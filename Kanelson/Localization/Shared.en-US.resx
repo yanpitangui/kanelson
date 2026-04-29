@@ -243,4 +243,7 @@
     <data name="YouPicked" xml:space="preserve">
         <value>you</value>
     </data>
+    <data name="ScanToJoin" xml:space="preserve">
+        <value>Scan to join</value>
+    </data>
 </root>

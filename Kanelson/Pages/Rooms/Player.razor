@@ -3,7 +3,7 @@
 @using Kanelson.Domain.Questions
 @inherits BaseRoomPage
 
-@if (CurrentQuestion is not null && _playerStatus != PlayerStatus.Answered)
+@if (CurrentQuestion is not null)
 {
     @if (TimerConfiguration.Enabled)
     {
@@ -14,7 +14,15 @@
     <QuestionComponent AnswerClickCallback="@Answer"
                        OnMultiCorrectSubmit="@AnswerMulti"
                        OnSelectionsChanged="@(ids => OnMultiSelectionsChanged(ids))"
+                       Disabled="@(_playerStatus == PlayerStatus.Answered)"
+                       PreSelectedAnswers="@_myAnswers"
                        Info="@CurrentQuestion"/>
+    @if (_playerStatus == PlayerStatus.Answered)
+    {
+        <div class="answer-submitted">
+            @Loc["AnswerSubmitted"]<span class="waiting-dots"><span>.</span><span>.</span><span>.</span></span>
+        </div>
+    }
 }
 else if (Rankings != null)
 {

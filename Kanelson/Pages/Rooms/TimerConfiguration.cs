@@ -13,7 +13,7 @@ public sealed class TimerConfiguration : IDisposable
 
     public string Format(double percentage)
     {
-        return $"{_max - _current}s";
+        return $"{Math.Max(0, _max - _current):0}s";
     }
 
     public void SetupAction(ElapsedEventHandler action)
@@ -38,9 +38,10 @@ public sealed class TimerConfiguration : IDisposable
     public void Increment()
     {
         _current++;
-        Percentage = (_max - _current) / _max * 100;
+        Percentage = Math.Max(0, (_max - _current) / _max * 100);
         if (_current >= _max)
         {
+            _timerHandle.Stop();
             var handler = OnExpired;
             OnExpired = null;
             handler?.Invoke();

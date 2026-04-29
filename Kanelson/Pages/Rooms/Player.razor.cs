@@ -13,10 +13,12 @@ public partial class Player : BaseRoomPage
     private PlayerStatus _playerStatus = PlayerStatus.Answering;
     private UserAnswerSummary? _roundSummary;
     private readonly HashSet<Guid> _multiCorrectSelections = new();
+    private HashSet<Guid> _myAnswers = new();
 
     private async Task Answer(Guid alternativeId)
     {
         TimerConfiguration.Stop();
+        _myAnswers = [alternativeId];
         _playerStatus = PlayerStatus.Answered;
         await RoomService.Answer(RoomId, default, alternativeId);
         await InvokeAsync(StateHasChanged);
@@ -25,6 +27,7 @@ public partial class Player : BaseRoomPage
     private async Task AnswerMulti(Guid[] alternativeIds)
     {
         TimerConfiguration.Stop();
+        _myAnswers = new HashSet<Guid>(alternativeIds);
         _playerStatus = PlayerStatus.Answered;
         await RoomService.Answer(RoomId, default, alternativeIds);
         await InvokeAsync(StateHasChanged);
@@ -66,6 +69,7 @@ public partial class Player : BaseRoomPage
     {
         _playerStatus = PlayerStatus.Answering;
         _roundSummary = null;
+        _myAnswers = new HashSet<Guid>();
         _multiCorrectSelections.Clear();
 
         if (CurrentQuestion?.Question.Type == Domain.Questions.QuestionType.MultiCorrect)

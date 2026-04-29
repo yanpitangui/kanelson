@@ -34,7 +34,8 @@ public class RoomService : IRoomService
         var roomId = _idGenerator.CreateId().ToString(NumberFormatInfo.InvariantInfo);
         var template = await _templateService.GetTemplate(templateId);
         var roomShard = await _actorRegistry.GetAsync<Room>(ct);
-        roomShard.Tell(new RoomCommands.SetBase(roomId, roomName, _userService.CurrentUser, template));
+        await roomShard.Ask<Akka.Done>(
+            new RoomCommands.SetBase(roomId, roomName, _userService.CurrentUser, template), ct);
         return roomId;
     }
 

@@ -47,7 +47,12 @@ public class Room : BaseWithSnapshotFrequencyActor
         
         Command<RoomCommands.SetBase>(o =>
         {
-            Persist(o, HandleSetBase);
+            var sender = Sender;
+            Persist(o, r =>
+            {
+                HandleSetBase(r);
+                sender.Tell(Akka.Done.Instance);
+            });
         });
         
         Command<RoomQueries.GetCurrentState>(_ =>

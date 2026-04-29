@@ -1,10 +1,14 @@
 @namespace Kanelson.Components.progress
+@using System.Globalization
 
 <div class="k-timer">
-    <div class="k-timer__ring"
-         style="background: conic-gradient(var(--k-accent) @(Percent)%, var(--k-timer-track) @(Percent)%);">
-        <span class="k-timer__value">@Format(Percent)</span>
-    </div>
+    <svg class="k-timer__svg" viewBox="0 0 36 36" aria-hidden="true">
+        <circle class="k-timer__track" cx="18" cy="18" r="15.9155" />
+        <circle class="k-timer__fill" cx="18" cy="18" r="15.9155"
+                stroke-dasharray="100 100"
+                stroke-dashoffset="@((100 - Percent).ToString("F2", CultureInfo.InvariantCulture))" />
+    </svg>
+    <span class="k-timer__label">@Format(Percent)</span>
 </div>
 
 @code {

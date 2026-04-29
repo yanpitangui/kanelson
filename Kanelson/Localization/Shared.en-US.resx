@@ -231,6 +231,9 @@
     <data name="SubmitButton" xml:space="preserve">
         <value>Submit</value>
     </data>
+    <data name="AnswerSubmitted" xml:space="preserve">
+        <value>Answer submitted! Waiting for others</value>
+    </data>
     <data name="YouPicked" xml:space="preserve">
         <value>you</value>
     </data>

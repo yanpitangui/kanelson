@@ -2,7 +2,7 @@
 @using Kanelson.Domain.Rooms.Models
 @inject IStringLocalizer<Shared> Loc
 
-<div class="question-container">
+<div class="question-container @(Disabled && !ViewOnly ? "question-container--answered" : "")">
     @if (Info.Question.ImageUrl != null)
     {
         <div class="question-image">
@@ -13,7 +13,7 @@
     <div class="question-counter">@Loc["Question"] @Info.CurrentNumber / @Info.MaxNumber</div>
     <div class="question-text">@Info.Question.Name</div>
 
-    @if (Info.Question.Type == QuestionType.MultiCorrect)
+    @if (Info.Question.Type == QuestionType.MultiCorrect && !Disabled && !ViewOnly)
     {
         <div class="question-hint">@Loc["SelectAllThatApply"]</div>
     }
@@ -29,15 +29,17 @@
         {
             var alternative = Info.Question.Alternatives[i];
             var idx = i;
+            var isSelected = _selectedAlternatives.Contains(alternative.Id)
+                             || (PreSelectedAnswers?.Contains(alternative.Id) ?? false);
             <AlternativeComponent Alternative="alternative"
                                    OnClickCallback="@HandleAlternativeClick"
                                    MultiSelectMode="@(Info.Question.Type == QuestionType.MultiCorrect)"
-                                   IsSelected="@_selectedAlternatives.Contains(alternative.Id)"
+                                   IsSelected="@isSelected"
                                    Idx="@idx" />
         }
     </div>
 
-    @if (Info.Question.Type == QuestionType.MultiCorrect)
+    @if (Info.Question.Type == QuestionType.MultiCorrect && !Disabled && !ViewOnly)
     {
         <div style="display: flex; justify-content: center; padding-top: 12px;">
             <button class="k-btn-primary"
@@ -54,6 +56,9 @@
     [Parameter] public EventCallback<Guid> AnswerClickCallback { get; set; }
     [Parameter] public EventCallback<Guid[]> OnMultiCorrectSubmit { get; set; }
     [Parameter] public EventCallback<IReadOnlyCollection<Guid>> OnSelectionsChanged { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public bool ViewOnly { get; set; }
+    [Parameter] public IReadOnlySet<Guid>? PreSelectedAnswers { get; set; }
 
     private HashSet<Guid> _selectedAlternatives = new();
 
@@ -65,6 +70,8 @@
 
     private async Task HandleAlternativeClick(Guid id)
     {
+        if (Disabled || ViewOnly) return;
+
         if (Info.Question.Type == QuestionType.MultiCorrect)
         {
             if (!_selectedAlternatives.Add(id))

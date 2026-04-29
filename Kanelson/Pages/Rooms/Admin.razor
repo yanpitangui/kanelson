@@ -21,7 +21,7 @@ else if (CurrentQuestion is not null && _roomStatus == RoomStatus.DisplayingQues
         }
         <span style="font-size: 13px; font-weight: 600; color: var(--k-text-muted); text-transform: uppercase; letter-spacing: 1px;">HOST</span>
     </div>
-    <QuestionComponent Info="CurrentQuestion"/>
+    <QuestionComponent Info="CurrentQuestion" ViewOnly="true"/>
 }
 else if (Rankings != null)
 {

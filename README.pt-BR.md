@@ -2,12 +2,6 @@
 
 **[English 🇺🇸](README.md)**
 
-[![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-white.svg)](https://sonarcloud.io/summary/overall?id=yanpitangui_kanelson)
-
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=yanpitangui_kanelson&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=yanpitangui_kanelson)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=yanpitangui_kanelson&metric=coverage)](https://sonarcloud.io/summary/new_code?id=yanpitangui_kanelson)
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=yanpitangui_kanelson&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=yanpitangui_kanelson)
-
 Uma plataforma de quiz ao vivo, gratuita e open source, inspirada no Kahoot. O host conduz sessões pelo navegador; jogadores entram instantaneamente — sem precisar instalar nada.
 
 ## Funcionalidades
@@ -85,18 +79,19 @@ dotnet test Kanelson.Tests/Kanelson.Tests.csproj --filter "ClassName.MethodName"
 O Kanelson utiliza o **actor model** via [Akka.NET](https://getakka.net/) com event sourcing. Todo o estado do jogo vive em actors persistentes distribuídos pelo cluster via Akka Cluster Sharding.
 
 ```
-RoomIndex (singleton)
-└── Room (sharded por ID da sala)     ← máquina de estados principal do jogo
-    └── SignalrActor (por sala)       ← ponte entre os actors e os clientes no browser
+AllRoomsIndexActor (singleton)          ← registro de salas ativas
+└── Room (sharded por ID da sala)        ← máquina de estados do jogo (in-memory)
+    └── SignalrActor (por sala)          ← ponte entre actors e clientes no browser
+        └── LocalRoomActorManager        ← proxy local por nó para os actors de sala
 
-RoomTemplateIndex (singleton)
-└── RoomTemplate (sharded)
+RoomTemplateIndex (sharded)             ← CRUD de templates de quiz
 
-User (sharded por ID do usuário)
-UserQuestions (sharded por ID do usuário)
+User (sharded por ID do usuário)        ← perfis de usuário      [persistente]
+UserHistory (sharded por ID do usuário) ← histórico de partidas  [persistente]
+UserQuestions (sharded por ID usuário)  ← banco de questões      [persistente]
 ```
 
-Mudanças de estado são persistidas como eventos no PostgreSQL. Snapshots são tirados a cada N eventos e no desligamento gracioso para acelerar a recuperação.
+User, UserHistory, UserQuestions e RoomTemplateIndex persistem seu estado como eventos no PostgreSQL. Snapshots são tirados a cada N eventos e no desligamento gracioso. O estado da Room é in-memory apenas.
 
 ## Contribuindo
 

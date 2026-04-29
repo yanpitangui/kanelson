@@ -2,12 +2,6 @@
 
 **[Português 🇧🇷](README.pt-BR.md)**
 
-[![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-white.svg)](https://sonarcloud.io/summary/overall?id=yanpitangui_kanelson)
-
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=yanpitangui_kanelson&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=yanpitangui_kanelson)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=yanpitangui_kanelson&metric=coverage)](https://sonarcloud.io/summary/new_code?id=yanpitangui_kanelson)
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=yanpitangui_kanelson&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=yanpitangui_kanelson)
-
 A free, open-source real-time quiz platform inspired by Kahoot. Hosts run live sessions from a browser; players join instantly — no app required.
 
 ## Features
@@ -85,18 +79,19 @@ dotnet test Kanelson.Tests/Kanelson.Tests.csproj --filter "ClassName.MethodName"
 Kanelson uses the **actor model** via [Akka.NET](https://getakka.net/) with event sourcing. All game state lives in persistent actors distributed across the cluster via Akka Cluster Sharding.
 
 ```
-RoomIndex (singleton)
-└── Room (sharded per room ID)        ← core game state machine
+AllRoomsIndexActor (singleton)       ← registry of active rooms
+└── Room (sharded per room ID)        ← core game state machine (in-memory)
     └── SignalrActor (per room)       ← bridges actor events to browser clients
+        └── LocalRoomActorManager     ← per-node local proxy for room actors
 
-RoomTemplateIndex (singleton)
-└── RoomTemplate (sharded)
+RoomTemplateIndex (sharded)          ← quiz template CRUD
 
-User (sharded per user ID)
-UserQuestions (sharded per user ID)
+User (sharded per user ID)           ← user profiles          [persistent]
+UserHistory (sharded per user ID)    ← game results history   [persistent]
+UserQuestions (sharded per user ID)  ← user question bank     [persistent]
 ```
 
-State changes are persisted as events to PostgreSQL. Snapshots are taken every N events and on graceful shutdown to speed up recovery.
+User, UserHistory, UserQuestions, and RoomTemplateIndex persist their state as events to PostgreSQL. Snapshots are taken every N events and on graceful shutdown to speed up recovery. Room state is in-memory only.
 
 ## Contributing
 

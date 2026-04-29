@@ -20,33 +20,33 @@ public record Question
     [MsgKey(0)]
     public Guid Id { get; init; } = Guid.NewGuid();
 
-    [Url]
+    [Url(ErrorMessage = "ValidationUrl")]
     [MsgKey(1)]
     public string? ImageUrl { get; set; }
 
-    [Required]
-    [StringLength(200, MinimumLength = 3)]
+    [Required(ErrorMessage = "ValidationRequired")]
+    [StringLength(200, MinimumLength = 3, ErrorMessage = "ValidationStringLength")]
     [MsgKey(2)]
     public string Name { get; set; } = null!;
 
     /// <summary>
     /// Time limit in seconds for someone to answer it
     /// </summary>
-    [Required]
+    [Required(ErrorMessage = "ValidationRequired")]
     [MsgKey(3)]
     public int TimeLimit { get; set; } = 10;
 
-    [Required]
-    [Range(0, 2000)]
+    [Required(ErrorMessage = "ValidationRequired")]
+    [Range(0, 2000, ErrorMessage = "ValidationRange")]
     [MsgKey(4)]
     public int Points { get; set; } = 1000;
 
-    [Required]
+    [Required(ErrorMessage = "ValidationRequired")]
     [ValidateComplexType]
     [MsgKey(5)]
     public List<Alternative> Alternatives { get; init; } = new(2);
 
-    [Required]
+    [Required(ErrorMessage = "ValidationRequired")]
     [MsgKey(6)]
     public QuestionType Type { get; set; }
 }
@@ -63,12 +63,12 @@ public record Alternative
     [MsgKey(0)]
     public Guid Id { get; set; } = Guid.NewGuid();
 
-    [Required]
-    [StringLength(200, MinimumLength = 1)]
+    [Required(ErrorMessage = "ValidationRequired")]
+    [StringLength(200, MinimumLength = 1, ErrorMessage = "ValidationStringLength")]
     [MsgKey(1)]
     public string Description { get; set; } = null!;
 
-    [Required]
+    [Required(ErrorMessage = "ValidationRequired")]
     [MsgKey(2)]
     public bool Correct { get; set; }
 }

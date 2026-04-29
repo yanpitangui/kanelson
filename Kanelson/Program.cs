@@ -1,4 +1,5 @@
 using Kanelson.Domain.Users;
+using Kanelson.Localization;
 using Kanelson.Endpoints;
 using System.Diagnostics;
 using System.Security.Claims;
@@ -72,7 +73,10 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddOptions();
 builder.Services.AddRazorComponents();
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages()
+    .AddDataAnnotationsLocalization(options =>
+        options.DataAnnotationLocalizerProvider = (_, factory) =>
+            factory.Create(typeof(Shared)));
 builder.Services.AddServerSideBlazor().AddHubOptions(o =>
 {
     o.ClientTimeoutInterval = TimeSpan.FromSeconds(60);
